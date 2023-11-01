@@ -17,7 +17,7 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include "esp_sleep.h"
-//#include "driver/gptimer.h"
+#include "driver/gptimer.h"
 //#include "timer_config.h"
 #include "timing_functions.h"
 #include "espnow_example.h"
@@ -162,7 +162,9 @@ static void neighbor_detection_task(void *pvParameter){
     int ret;
     
     TickType_t wait_duration = portMAX_DELAY;
-    int64_t exchange_count = 0;
+    
+    uint8_t peer_count = 0;
+    uint8_t exchange_count = 0;
     int64_t time_offset_sum = 0;
 
 
@@ -221,7 +223,7 @@ static void neighbor_detection_task(void *pvParameter){
                 example_espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
                 
                 // calculate RTC offset and adjust time 
-                int64_t time_TX= ((example_espnow_data_t*)(recv_cb->data))->timestamp;
+                int64_t time_TX = ((example_espnow_data_t*)(recv_cb->data))->timestamp;
                 int64_t time_RX = evt.timestamp;
                 int64_t delta = time_TX - time_RX; //- time_air;
                 exchange_count++;
@@ -237,6 +239,7 @@ static void neighbor_detection_task(void *pvParameter){
 
                     /* If MAC address does not exist in peer list, add it to peer list. */
                     if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {
+                        peer_count++;
                         esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
                         if (peer == NULL) {
                             ESP_LOGE(TAG1, "Malloc peer information fail");
@@ -264,17 +267,19 @@ static void neighbor_detection_task(void *pvParameter){
         }
     }
 
+    ESP_LOGW(TAG2, "A total of %u timing exchanges from %d peers took place", exchange_count, peer_count);
+
     int64_t avg_time_offset_us = 0;
     if (exchange_count > 0){
-        avg_time_offset_us = time_offset_sum / exchange_count;
+        avg_time_offset_us = time_offset_sum / (int64_t)exchange_count;
         ESP_LOGW(TAG2, "correct time offset of: %lld us", avg_time_offset_us);
-        adjust_time(avg_time_offset_us);
+        correct_time(avg_time_offset_us);
     }else{
         ESP_LOGE(TAG2, "No time exchanges took place");
     }
 
     example_espnow_deinit(send_param);
-    vTaskDelay(100/portTICK_PERIOD_MS);     // delay 100 ms
+    //vTaskDelay(100/portTICK_PERIOD_MS);     // delay 100 ms
     esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);
 }
 

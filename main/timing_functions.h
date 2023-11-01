@@ -28,7 +28,7 @@ static IRAM_ATTR void reset_time(void){
     }
 }
 
-/* static IRAM_ATTR void correct_time(int64_t offset_us){ // changes time according to offset instantly
+static IRAM_ATTR void correct_time(int64_t offset_us){ // changes time according to offset instantly
     struct timeval new;
     gettimeofday(&new, NULL);
     new.tv_sec = new.tv_sec - (offset_us/1000000);  // convert microseconds to seconds and substract from now.sec
@@ -39,9 +39,9 @@ static IRAM_ATTR void reset_time(void){
     if (ret == -1){
         ESP_LOGE(TAG3, "correct time failed!");
     }
-} */
+}
 
-static IRAM_ATTR void adjust_time(int64_t offset_us){ // adjusts time gradually - adjustment does not survive in deepsleep
+/* static IRAM_ATTR void adjust_time(int64_t offset_us){ // adjusts time gradually - adjustment does not survive in deepsleep
     struct timeval offset;
     offset.tv_sec = offset_us / 1000000;  // convert microseconds to seconds
     offset.tv_usec = offset_us % 1000000; // remainder in microseconds
@@ -51,4 +51,4 @@ static IRAM_ATTR void adjust_time(int64_t offset_us){ // adjusts time gradually 
     if (ret == -1){
         ESP_LOGE(TAG3, "adjust time failed!");
     }
-}
+} */
