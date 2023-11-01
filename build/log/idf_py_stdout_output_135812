@@ -1,0 +1,3419 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (30) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (30) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (38) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (43) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (57) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (68) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (83) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (151) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) load[0m
+[0;32mI (151) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (162) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (186) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (371) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (389) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) load[0m
+[0;32mI (400) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (400) boot: Disabling RNG early entropy source...[0m
+[0;32mI (412) cpu_start: Multicore app[0m
+[0;32mI (412) cpu_start: Pro cpu up.[0m
+[0;32mI (412) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (430) cpu_start: Pro cpu start user code[0m
+[0;32mI (430) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (430) cpu_start: Application information:[0m
+[0;32mI (435) cpu_start: Project name:     espnow_example[0m
+[0;32mI (441) cpu_start: App version:      1[0m
+[0;32mI (445) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (451) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (457) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (462) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (467) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (471) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (476) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (484) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (489) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (496) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (502) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (509) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (516) spi_flash: detected chip: generic[0m
+[0;32mI (519) spi_flash: flash io: dio[0m
+[0;32mI (524) app_start: Starting scheduler on CPU0[0m
+[0;32mI (528) app_start: Starting scheduler on CPU1[0m
+[0;32mI (528) main_task: Started on CPU0[0m
+[0;32mI (538) main_task: Calling app_main()[0m
+[0;31mE (538) neighbor detection: Reset not triggert by deepsleep wakeup!!![0m
+I (588) wifi:wifi driver task: 3ffbf520, prio:23, stack:6656, core=0
+I (608) wifi:wifi firmware version: ce9244d
+I (608) wifi:wifi certification version: v7.0
+I (608) wifi:config NVS flash: enabled
+I (608) wifi:config nano formating: disabled
+I (608) wifi:Init data frame dynamic rx buffer num: 32
+I (618) wifi:Init management frame dynamic rx buffer num: 32
+I (618) wifi:Init management short buffer num: 32
+I (628) wifi:Init dynamic tx buffer num: 32
+I (628) wifi:Init static rx buffer size: 1600
+I (628) wifi:Init static rx buffer num: 10
+I (638) wifi:Init dynamic rx buffer num: 32
+[0;32mI (638) wifi_init: rx ba win: 6[0m
+[0;32mI (648) wifi_init: tcpip mbox: 32[0m
+[0;32mI (648) wifi_init: udp mbox: 6[0m
+[0;32mI (648) wifi_init: tcp mbox: 6[0m
+[0;32mI (658) wifi_init: tcp tx win: 5744[0m
+[0;32mI (658) wifi_init: tcp rx win: 5744[0m
+[0;32mI (668) wifi_init: tcp mss: 1440[0m
+[0;32mI (668) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (668) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (678) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (778) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (788) wifi:Total power save buffer number: 16
+I (788) wifi:Init max length of beacon: 752/752
+I (788) wifi:Init max length of beacon: 752/752
+I (798) ESPNOW: espnow [version: 1.0] init
+I (798) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (798) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (808) main_task: Returned from app_main()[0m
+[0;32mI (908) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1008) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1108) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1208) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1308) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1408) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1508) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1608) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1708) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1808) neighbor detection: last broadcast sent[0m
+[0;31mE (3808) timing: No time exchanges took place[0m
+I (3808) ESPNOW: espnow [version: 1.0] deinit
+E (3808) wifi:NAN WiFi stop
+I (3808) wifi:flush txq
+I (3808) wifi:stop sw txq
+I (3808) wifi:lmac stop hw txq
+I (3818) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;33mW (466) timing: time_TX = 5677405[0m
+[0;33mW (466) timing: time_RX = 14295[0m
+[0;33mW (466) timing: delta = 5663110 us | exchange_count = 1 [0m
+[0;32mI (466) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (576) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (576) timing: time_TX = 5777405[0m
+[0;33mW (576) timing: time_RX = 128118[0m
+[0;33mW (576) timing: delta = 5649287 us | exchange_count = 2 [0m
+[0;32mI (576) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (686) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (686) timing: time_TX = 5887405[0m
+[0;33mW (686) timing: time_RX = 226429[0m
+[0;33mW (686) timing: delta = 5660976 us | exchange_count = 3 [0m
+[0;32mI (686) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (796) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (796) timing: time_TX = 5997345[0m
+[0;33mW (796) timing: time_RX = 352785[0m
+[0;33mW (796) timing: delta = 5644560 us | exchange_count = 4 [0m
+[0;32mI (796) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (906) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (906) timing: time_TX = 6107341[0m
+[0;33mW (906) timing: time_RX = 455179[0m
+[0;33mW (906) timing: delta = 5652162 us | exchange_count = 5 [0m
+[0;32mI (906) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1016) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1016) timing: time_TX = 6217347[0m
+[0;33mW (1016) timing: time_RX = 557587[0m
+[0;33mW (1016) timing: delta = 5659760 us | exchange_count = 6 [0m
+[0;32mI (1016) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1126) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1126) timing: time_TX = 6327347[0m
+[0;33mW (1126) timing: time_RX = 659982[0m
+[0;33mW (1126) timing: delta = 5667365 us | exchange_count = 7 [0m
+[0;32mI (1126) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1236) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1236) timing: time_TX = 6437478[0m
+[0;33mW (1236) timing: time_RX = 792367[0m
+[0;33mW (1236) timing: delta = 5645111 us | exchange_count = 8 [0m
+[0;32mI (1236) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1346) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1346) timing: time_TX = 6547470[0m
+[0;33mW (1346) timing: time_RX = 893951[0m
+[0;33mW (1346) timing: delta = 5653519 us | exchange_count = 9 [0m
+[0;32mI (1346) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1456) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1556) neighbor detection: last broadcast sent[0m
+[0;33mW (3556) timing: correcting timeoffset of: 5655094 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;33mW (1456) timing: time_TX = 257834[0m
+[0;33mW (1456) timing: time_RX = 992294[0m
+[0;33mW (1456) timing: delta = -734460 us | exchange_count = 1 [0m
+[0;32mI (1456) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1526) timing: time_TX = 359821[0m
+[0;33mW (1526) timing: time_RX = 1091215[0m
+[0;33mW (1526) timing: delta = -731394 us | exchange_count = 2 [0m
+[0;32mI (1526) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1616) timing: time_TX = 459739[0m
+[0;33mW (1616) timing: time_RX = 1181414[0m
+[0;33mW (1616) timing: delta = -721675 us | exchange_count = 3 [0m
+[0;32mI (1626) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1716) timing: time_TX = 559755[0m
+[0;33mW (1716) timing: time_RX = 1282804[0m
+[0;33mW (1716) timing: delta = -723049 us | exchange_count = 4 [0m
+[0;32mI (1726) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1826) timing: time_TX = 659715[0m
+[0;33mW (1826) timing: time_RX = 1395139[0m
+[0;33mW (1826) timing: delta = -735424 us | exchange_count = 5 [0m
+[0;32mI (1826) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1916) timing: time_TX = 759751[0m
+[0;33mW (1916) timing: time_RX = 1483868[0m
+[0;33mW (1916) timing: delta = -724117 us | exchange_count = 6 [0m
+[0;32mI (1926) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2016) timing: time_TX = 859755[0m
+[0;33mW (2016) timing: time_RX = 1580354[0m
+[0;33mW (2016) timing: delta = -720599 us | exchange_count = 7 [0m
+[0;32mI (2026) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2116) timing: time_TX = 959751[0m
+[0;33mW (2116) timing: time_RX = 1687525[0m
+[0;33mW (2116) timing: delta = -727774 us | exchange_count = 8 [0m
+[0;32mI (2126) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2216) timing: time_TX = 1059905[0m
+[0;33mW (2216) timing: time_RX = 1774293[0m
+[0;33mW (2216) timing: delta = -714388 us | exchange_count = 9 [0m
+[0;32mI (2226) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2316) timing: time_TX = 1159779[0m
+[0;33mW (2316) timing: time_RX = 1867610[0m
+[0;33mW (2316) timing: delta = -707831 us | exchange_count = 10 [0m
+[0;32mI (2326) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (4326) timing: correcting timeoffset of: -724071 us[0m
+I (4326) ESPNOW: espnow [version: 1.0] deinit
+E (4326) wifi:NAN WiFi stop
+I (4326) wifi:flush txq
+I (4326) wifi:stop sw txq
+I (4326) wifi:lmac stop hw txq
+I (4336) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (446) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;31mE (3456) timing: No time exchanges took place[0m
+I (3456) ESPNOW: espnow [version: 1.0] deinit
+E (3456) wifi:NAN WiFi stop
+I (3456) wifi:flush txq
+I (3456) wifi:stop sw txq
+I (3456) wifi:lmac stop hw txq
+I (3466) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (656) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (756) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (856) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (956) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1056) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1156) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1256) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1356) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1456) neighbor detection: last broadcast sent[0m
+[0;33mW (1526) timing: time_TX = 254186[0m
+[0;33mW (1526) timing: time_RX = 1075149[0m
+[0;33mW (1526) timing: delta = -820963 us | exchange_count = 1 [0m
+[0;32mI (1526) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1616) timing: time_TX = 359848[0m
+[0;33mW (1616) timing: time_RX = 1177554[0m
+[0;33mW (1616) timing: delta = -817706 us | exchange_count = 2 [0m
+[0;32mI (1626) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1716) timing: time_TX = 459759[0m
+[0;33mW (1716) timing: time_RX = 1279949[0m
+[0;33mW (1716) timing: delta = -820190 us | exchange_count = 3 [0m
+[0;32mI (1726) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1816) timing: time_TX = 559751[0m
+[0;33mW (1816) timing: time_RX = 1382350[0m
+[0;33mW (1816) timing: delta = -822599 us | exchange_count = 4 [0m
+[0;32mI (1826) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1916) timing: time_TX = 659755[0m
+[0;33mW (1916) timing: time_RX = 1484752[0m
+[0;33mW (1916) timing: delta = -824997 us | exchange_count = 5 [0m
+[0;32mI (1926) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2016) timing: time_TX = 759735[0m
+[0;33mW (2016) timing: time_RX = 1587159[0m
+[0;33mW (2016) timing: delta = -827424 us | exchange_count = 6 [0m
+[0;32mI (2026) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2116) timing: time_TX = 859731[0m
+[0;33mW (2116) timing: time_RX = 1661790[0m
+[0;33mW (2116) timing: delta = -802059 us | exchange_count = 7 [0m
+[0;32mI (2126) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2216) timing: time_TX = 959751[0m
+[0;33mW (2216) timing: time_RX = 1745815[0m
+[0;33mW (2216) timing: delta = -786064 us | exchange_count = 8 [0m
+[0;32mI (2226) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2316) timing: time_TX = 1059901[0m
+[0;33mW (2316) timing: time_RX = 1830952[0m
+[0;33mW (2316) timing: delta = -771051 us | exchange_count = 9 [0m
+[0;32mI (2326) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (2416) timing: time_TX = 1159779[0m
+[0;33mW (2416) timing: time_RX = 1971001[0m
+[0;33mW (2416) timing: delta = -811222 us | exchange_count = 10 [0m
+[0;32mI (2426) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (30) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (30) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (38) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (43) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (47) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (57) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (68) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (83) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (151) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) load[0m
+[0;32mI (151) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (162) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (186) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (371) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (389) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) load[0m
+[0;32mI (400) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (400) boot: Disabling RNG early entropy source...[0m
+[0;32mI (412) cpu_start: Multicore app[0m
+[0;32mI (412) cpu_start: Pro cpu up.[0m
+[0;32mI (412) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (430) cpu_start: Pro cpu start user code[0m
+[0;32mI (430) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (430) cpu_start: Application information:[0m
+[0;32mI (435) cpu_start: Project name:     espnow_example[0m
+[0;32mI (441) cpu_start: App version:      1[0m
+[0;32mI (445) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (451) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (457) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (462) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (467) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (471) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (476) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (484) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (489) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (496) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (502) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (508) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (516) spi_flash: detected chip: generic[0m
+[0;32mI (519) spi_flash: flash io: dio[0m
+[0;32mI (524) app_start: Starting scheduler on CPU0[0m
+[0;32mI (528) app_start: Starting scheduler on CPU1[0m
+[0;32mI (528) main_task: Started on CPU0[0m
+[0;32mI (538) main_task: Calling app_main()[0m
+[0;31mE (538) neighbor detection: Reset not triggert by deepsleep wakeup!!![0m
+I (588) wifi:wifi driver task: 3ffbf520, prio:23, stack:6656, core=0
+I (608) wifi:wifi firmware version: ce9244d
+I (608) wifi:wifi certification version: v7.0
+I (608) wifi:config NVS flash: enabled
+I (608) wifi:config nano formating: disabled
+I (608) wifi:Init data frame dynamic rx buffer num: 32
+I (618) wifi:Init management frame dynamic rx buffer num: 32
+I (618) wifi:Init management short buffer num: 32
+I (628) wifi:Init dynamic tx buffer num: 32
+I (628) wifi:Init static rx buffer size: 1600
+I (628) wifi:Init static rx buffer num: 10
+I (638) wifi:Init dynamic rx buffer num: 32
+[0;32mI (638) wifi_init: rx ba win: 6[0m
+[0;32mI (648) wifi_init: tcpip mbox: 32[0m
+[0;32mI (648) wifi_init: udp mbox: 6[0m
+[0;32mI (648) wifi_init: tcp mbox: 6[0m
+[0;32mI (658) wifi_init: tcp tx win: 5744[0m
+[0;32mI (658) wifi_init: tcp rx win: 5744[0m
+[0;32mI (668) wifi_init: tcp mss: 1440[0m
+[0;32mI (668) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (668) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (678) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (788) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (788) wifi:Total power save buffer number: 16
+I (788) wifi:Init max length of beacon: 752/752
+I (788) wifi:Init max length of beacon: 752/752
+I (798) ESPNOW: espnow [version: 1.0] init
+I (798) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (798) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (808) main_task: Returned from app_main()[0m
+[0;32mI (908) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (908) timing: time_TX = 256287[0m
+[0;33mW (908) timing: time_RX = 16244[0m
+[0;33mW (908) timing: delta = 240043 us | exchange_count = 1 [0m
+[0;32mI (908) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1018) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1018) timing: time_TX = 389968[0m
+[0;33mW (1018) timing: time_RX = 142651[0m
+[0;33mW (1018) timing: delta = 247317 us | exchange_count = 2 [0m
+[0;32mI (1018) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1128) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1128) timing: time_TX = 499791[0m
+[0;33mW (1128) timing: time_RX = 210116[0m
+[0;33mW (1128) timing: delta = 289675 us | exchange_count = 3 [0m
+[0;32mI (1128) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1238) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1238) timing: time_TX = 609787[0m
+[0;33mW (1238) timing: time_RX = 368607[0m
+[0;33mW (1238) timing: delta = 241180 us | exchange_count = 4 [0m
+[0;32mI (1238) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1348) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1348) timing: time_TX = 719787[0m
+[0;33mW (1348) timing: time_RX = 466868[0m
+[0;33mW (1348) timing: delta = 252919 us | exchange_count = 5 [0m
+[0;32mI (1348) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1458) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1458) timing: time_TX = 829787[0m
+[0;33mW (1458) timing: time_RX = 580657[0m
+[0;33mW (1458) timing: delta = 249130 us | exchange_count = 6 [0m
+[0;32mI (1458) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1568) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1568) timing: time_TX = 939787[0m
+[0;33mW (1568) timing: time_RX = 697392[0m
+[0;33mW (1568) timing: delta = 242395 us | exchange_count = 7 [0m
+[0;32mI (1568) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1678) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1678) timing: time_TX = 1049906[0m
+[0;33mW (1678) timing: time_RX = 784100[0m
+[0;33mW (1678) timing: delta = 265806 us | exchange_count = 8 [0m
+[0;32mI (1678) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1788) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1788) timing: time_TX = 1159815[0m
+[0;33mW (1788) timing: time_RX = 907829[0m
+[0;33mW (1788) timing: delta = 251986 us | exchange_count = 9 [0m
+[0;32mI (1788) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1898) neighbor detection: last broadcast sent[0m
+[0;33mW (1898) timing: time_TX = 1269767[0m
+[0;33mW (1898) timing: time_RX = 1020274[0m
+[0;33mW (1898) timing: delta = 249493 us | exchange_count = 10 [0m
+[0;32mI (1898) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3908) timing: correcting timeoffset of: 252994 us[0m
+I (3908) ESPNOW: espnow [version: 1.0] deinit
+E (3908) wifi:NAN WiFi stop
+I (3908) wifi:flush txq
+I (3908) wifi:stop sw txq
+I (3908) wifi:lmac stop hw txq
+I (3918) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 4851313[0m
+[0;33mW (556) timing: time_RX = 39000[0m
+[0;33mW (556) timing: delta = 4812313 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 4977530[0m
+[0;33mW (666) timing: time_RX = 132541[0m
+[0;33mW (666) timing: delta = 4844989 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 5087439[0m
+[0;33mW (776) timing: time_RX = 263914[0m
+[0;33mW (776) timing: delta = 4823525 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 5197427[0m
+[0;33mW (886) timing: time_RX = 376823[0m
+[0;33mW (886) timing: delta = 4820604 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 5307427[0m
+[0;33mW (996) timing: time_RX = 466083[0m
+[0;33mW (996) timing: delta = 4841344 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 5417429[0m
+[0;33mW (1106) timing: time_RX = 567559[0m
+[0;33mW (1106) timing: delta = 4849870 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 5527429[0m
+[0;33mW (1216) timing: time_RX = 709573[0m
+[0;33mW (1216) timing: delta = 4817856 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 5637433[0m
+[0;33mW (1326) timing: time_RX = 812010[0m
+[0;33mW (1326) timing: delta = 4825423 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 5747564[0m
+[0;33mW (1436) timing: time_RX = 915350[0m
+[0;33mW (1436) timing: delta = 4832214 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 5857437[0m
+[0;33mW (1546) timing: time_RX = 1042974[0m
+[0;33mW (1546) timing: delta = 4814463 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 4828260 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 9438296[0m
+[0;33mW (556) timing: time_RX = 52533[0m
+[0;33mW (556) timing: delta = 9385763 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 9545053[0m
+[0;33mW (666) timing: time_RX = 151003[0m
+[0;33mW (666) timing: delta = 9394050 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 9654942[0m
+[0;33mW (776) timing: time_RX = 258385[0m
+[0;33mW (776) timing: delta = 9396557 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 9764878[0m
+[0;33mW (886) timing: time_RX = 372099[0m
+[0;33mW (886) timing: delta = 9392779 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 9874878[0m
+[0;33mW (996) timing: time_RX = 478313[0m
+[0;33mW (996) timing: delta = 9396565 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 9984878[0m
+[0;33mW (1106) timing: time_RX = 576901[0m
+[0;33mW (1106) timing: delta = 9407977 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 10094880[0m
+[0;33mW (1216) timing: time_RX = 680780[0m
+[0;33mW (1216) timing: delta = 9414100 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 10204884[0m
+[0;33mW (1326) timing: time_RX = 809387[0m
+[0;33mW (1326) timing: delta = 9395497 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 10315003[0m
+[0;33mW (1436) timing: time_RX = 921759[0m
+[0;33mW (1436) timing: delta = 9393244 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 10424904[0m
+[0;33mW (1546) timing: time_RX = 1011797[0m
+[0;33mW (1546) timing: delta = 9413107 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 9398963 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 14005796[0m
+[0;33mW (556) timing: time_RX = 16201[0m
+[0;33mW (556) timing: delta = 13989595 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 14112554[0m
+[0;33mW (666) timing: time_RX = 99678[0m
+[0;33mW (666) timing: delta = 14012876 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 14222447[0m
+[0;33mW (776) timing: time_RX = 202076[0m
+[0;33mW (776) timing: delta = 14020371 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 14332379[0m
+[0;33mW (886) timing: time_RX = 304477[0m
+[0;33mW (886) timing: delta = 14027902 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 14442379[0m
+[0;33mW (996) timing: time_RX = 471940[0m
+[0;33mW (996) timing: delta = 13970439 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 14552379[0m
+[0;33mW (1106) timing: time_RX = 578597[0m
+[0;33mW (1106) timing: delta = 13973782 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 14662381[0m
+[0;33mW (1216) timing: time_RX = 691082[0m
+[0;33mW (1216) timing: delta = 13971299 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 14772385[0m
+[0;33mW (1326) timing: time_RX = 792488[0m
+[0;33mW (1326) timing: delta = 13979897 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 14882524[0m
+[0;33mW (1436) timing: time_RX = 908286[0m
+[0;33mW (1436) timing: delta = 13974238 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 14992389[0m
+[0;33mW (1546) timing: time_RX = 1021283[0m
+[0;33mW (1546) timing: delta = 13971106 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 13989150 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 18573416[0m
+[0;33mW (556) timing: time_RX = 22786[0m
+[0;33mW (556) timing: delta = 18550630 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 18700093[0m
+[0;33mW (666) timing: time_RX = 145480[0m
+[0;33mW (666) timing: delta = 18554613 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 18809993[0m
+[0;33mW (776) timing: time_RX = 253992[0m
+[0;33mW (776) timing: delta = 18556001 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 18919997[0m
+[0;33mW (886) timing: time_RX = 359020[0m
+[0;33mW (886) timing: delta = 18560977 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 19029993[0m
+[0;33mW (996) timing: time_RX = 441587[0m
+[0;33mW (996) timing: delta = 18588406 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 19139995[0m
+[0;33mW (1106) timing: time_RX = 572047[0m
+[0;33mW (1106) timing: delta = 18567948 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 19249995[0m
+[0;33mW (1216) timing: time_RX = 685155[0m
+[0;33mW (1216) timing: delta = 18564840 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 19359995[0m
+[0;33mW (1326) timing: time_RX = 809279[0m
+[0;33mW (1326) timing: delta = 18550716 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 19470130[0m
+[0;33mW (1436) timing: time_RX = 916266[0m
+[0;33mW (1436) timing: delta = 18553864 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 19579991[0m
+[0;33mW (1546) timing: time_RX = 1022904[0m
+[0;33mW (1546) timing: delta = 18557087 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 18560508 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 23161000[0m
+[0;33mW (556) timing: time_RX = 32149[0m
+[0;33mW (556) timing: delta = 23128851 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 23267757[0m
+[0;33mW (666) timing: time_RX = 131768[0m
+[0;33mW (666) timing: delta = 23135989 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 23377650[0m
+[0;33mW (776) timing: time_RX = 234172[0m
+[0;33mW (776) timing: delta = 23143478 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 23487582[0m
+[0;33mW (886) timing: time_RX = 352438[0m
+[0;33mW (886) timing: delta = 23135144 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 23597582[0m
+[0;33mW (996) timing: time_RX = 467276[0m
+[0;33mW (996) timing: delta = 23130306 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 23707582[0m
+[0;33mW (1106) timing: time_RX = 578680[0m
+[0;33mW (1106) timing: delta = 23128902 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 23817584[0m
+[0;33mW (1216) timing: time_RX = 681081[0m
+[0;33mW (1216) timing: delta = 23136503 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 23927588[0m
+[0;33mW (1326) timing: time_RX = 791994[0m
+[0;33mW (1326) timing: delta = 23135594 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 24037727[0m
+[0;33mW (1436) timing: time_RX = 885883[0m
+[0;33mW (1436) timing: delta = 23151844 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 24147592[0m
+[0;33mW (1546) timing: time_RX = 988284[0m
+[0;33mW (1546) timing: delta = 23159308 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 23138591 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (446) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 27728582[0m
+[0;33mW (556) timing: time_RX = 18932[0m
+[0;33mW (556) timing: delta = 27709650 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 27855266[0m
+[0;33mW (666) timing: time_RX = 122377[0m
+[0;33mW (666) timing: delta = 27732889 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 27965159[0m
+[0;33mW (776) timing: time_RX = 212379[0m
+[0;33mW (776) timing: delta = 27752780 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 28075155[0m
+[0;33mW (886) timing: time_RX = 358882[0m
+[0;33mW (886) timing: delta = 27716273 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 28185155[0m
+[0;33mW (996) timing: time_RX = 473758[0m
+[0;33mW (996) timing: delta = 27711397 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 28295157[0m
+[0;33mW (1106) timing: time_RX = 576155[0m
+[0;33mW (1106) timing: delta = 27719002 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 28405157[0m
+[0;33mW (1216) timing: time_RX = 678558[0m
+[0;33mW (1216) timing: delta = 27726599 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 28515161[0m
+[0;33mW (1326) timing: time_RX = 806284[0m
+[0;33mW (1326) timing: delta = 27708877 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 28625292[0m
+[0;33mW (1436) timing: time_RX = 910048[0m
+[0;33mW (1436) timing: delta = 27715244 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 28735157[0m
+[0;33mW (1546) timing: time_RX = 1023054[0m
+[0;33mW (1546) timing: delta = 27712103 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 27720481 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 32316195[0m
+[0;33mW (556) timing: time_RX = 36871[0m
+[0;33mW (556) timing: delta = 32279324 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 32422933[0m
+[0;33mW (666) timing: time_RX = 136086[0m
+[0;33mW (666) timing: delta = 32286847 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 32532850[0m
+[0;33mW (776) timing: time_RX = 229043[0m
+[0;33mW (776) timing: delta = 32303807 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 32642774[0m
+[0;33mW (886) timing: time_RX = 329104[0m
+[0;33mW (886) timing: delta = 32313670 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 32752774[0m
+[0;33mW (996) timing: time_RX = 463727[0m
+[0;33mW (996) timing: delta = 32289047 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 32862774[0m
+[0;33mW (1106) timing: time_RX = 555297[0m
+[0;33mW (1106) timing: delta = 32307477 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 32972776[0m
+[0;33mW (1216) timing: time_RX = 685210[0m
+[0;33mW (1216) timing: delta = 32287566 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 33082780[0m
+[0;33mW (1326) timing: time_RX = 783752[0m
+[0;33mW (1326) timing: delta = 32299028 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 33192919[0m
+[0;33mW (1436) timing: time_RX = 852892[0m
+[0;33mW (1436) timing: delta = 32340027 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 33302784[0m
+[0;33mW (1546) timing: time_RX = 1016455[0m
+[0;33mW (1546) timing: delta = 32286329 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 32299312 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (566) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (566) timing: time_TX = 36883729[0m
+[0;33mW (566) timing: time_RX = 33696[0m
+[0;33mW (566) timing: delta = 36850033 us | exchange_count = 1 [0m
+[0;32mI (566) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (676) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (676) timing: time_TX = 37010485[0m
+[0;33mW (676) timing: time_RX = 134046[0m
+[0;33mW (676) timing: delta = 36876439 us | exchange_count = 2 [0m
+[0;32mI (676) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (786) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (786) timing: time_TX = 37120310[0m
+[0;33mW (786) timing: time_RX = 246482[0m
+[0;33mW (786) timing: delta = 36873828 us | exchange_count = 3 [0m
+[0;32mI (786) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (896) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (896) timing: time_TX = 37230306[0m
+[0;33mW (896) timing: time_RX = 364662[0m
+[0;33mW (896) timing: delta = 36865644 us | exchange_count = 4 [0m
+[0;32mI (896) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1006) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1006) timing: time_TX = 37340306[0m
+[0;33mW (1006) timing: time_RX = 471503[0m
+[0;33mW (1006) timing: delta = 36868803 us | exchange_count = 5 [0m
+[0;32mI (1006) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1116) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1116) timing: time_TX = 37450308[0m
+[0;33mW (1116) timing: time_RX = 583929[0m
+[0;33mW (1116) timing: delta = 36866379 us | exchange_count = 6 [0m
+[0;32mI (1116) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1226) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1226) timing: time_TX = 37560308[0m
+[0;33mW (1226) timing: time_RX = 696412[0m
+[0;33mW (1226) timing: delta = 36863896 us | exchange_count = 7 [0m
+[0;32mI (1226) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1336) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1336) timing: time_TX = 37670312[0m
+[0;33mW (1336) timing: time_RX = 800149[0m
+[0;33mW (1336) timing: delta = 36870163 us | exchange_count = 8 [0m
+[0;32mI (1336) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1446) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1446) timing: time_TX = 37780447[0m
+[0;33mW (1446) timing: time_RX = 910291[0m
+[0;33mW (1446) timing: delta = 36870156 us | exchange_count = 9 [0m
+[0;32mI (1446) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1556) neighbor detection: last broadcast sent[0m
+[0;33mW (1556) timing: time_TX = 37890316[0m
+[0;33mW (1556) timing: time_RX = 1022627[0m
+[0;33mW (1556) timing: delta = 36867689 us | exchange_count = 10 [0m
+[0;32mI (1556) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3566) timing: correcting timeoffset of: 36867303 us[0m
+I (3566) ESPNOW: espnow [version: 1.0] deinit
+E (3566) wifi:NAN WiFi stop
+I (3566) wifi:flush txq
+I (3566) wifi:stop sw txq
+I (3566) wifi:lmac stop hw txq
+I (3576) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (566) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (566) timing: time_TX = 41471289[0m
+[0;33mW (566) timing: time_RX = 11358[0m
+[0;33mW (566) timing: delta = 41459931 us | exchange_count = 1 [0m
+[0;32mI (566) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (676) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (676) timing: time_TX = 41598048[0m
+[0;33mW (676) timing: time_RX = 137353[0m
+[0;33mW (676) timing: delta = 41460695 us | exchange_count = 2 [0m
+[0;32mI (676) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (786) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (786) timing: time_TX = 41707873[0m
+[0;33mW (786) timing: time_RX = 184110[0m
+[0;33mW (786) timing: delta = 41523763 us | exchange_count = 3 [0m
+[0;32mI (786) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (896) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (896) timing: time_TX = 41817869[0m
+[0;33mW (896) timing: time_RX = 364655[0m
+[0;33mW (896) timing: delta = 41453214 us | exchange_count = 4 [0m
+[0;32mI (896) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1006) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1006) timing: time_TX = 41927869[0m
+[0;33mW (1006) timing: time_RX = 466322[0m
+[0;33mW (1006) timing: delta = 41461547 us | exchange_count = 5 [0m
+[0;32mI (1006) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1116) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1116) timing: time_TX = 42037871[0m
+[0;33mW (1116) timing: time_RX = 579523[0m
+[0;33mW (1116) timing: delta = 41458348 us | exchange_count = 6 [0m
+[0;32mI (1116) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1226) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1226) timing: time_TX = 42147871[0m
+[0;33mW (1226) timing: time_RX = 695834[0m
+[0;33mW (1226) timing: delta = 41452037 us | exchange_count = 7 [0m
+[0;32mI (1226) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1336) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1336) timing: time_TX = 42257875[0m
+[0;33mW (1336) timing: time_RX = 804357[0m
+[0;33mW (1336) timing: delta = 41453518 us | exchange_count = 8 [0m
+[0;32mI (1336) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1446) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1446) timing: time_TX = 42368010[0m
+[0;33mW (1446) timing: time_RX = 912813[0m
+[0;33mW (1446) timing: delta = 41455197 us | exchange_count = 9 [0m
+[0;32mI (1446) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1556) neighbor detection: last broadcast sent[0m
+[0;33mW (1556) timing: time_TX = 42477867[0m
+[0;33mW (1556) timing: time_RX = 1019087[0m
+[0;33mW (1556) timing: delta = 41458780 us | exchange_count = 10 [0m
+[0;32mI (1556) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3566) timing: correcting timeoffset of: 41463703 us[0m
+I (3566) ESPNOW: espnow [version: 1.0] deinit
+E (3566) wifi:NAN WiFi stop
+I (3566) wifi:flush txq
+I (3566) wifi:stop sw txq
+I (3566) wifi:lmac stop hw txq
+I (3576) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 46058856[0m
+[0;33mW (556) timing: time_RX = 15513[0m
+[0;33mW (556) timing: delta = 46043343 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 46185613[0m
+[0;33mW (666) timing: time_RX = 113028[0m
+[0;33mW (666) timing: delta = 46072585 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 46295438[0m
+[0;33mW (776) timing: time_RX = 214270[0m
+[0;33mW (776) timing: delta = 46081168 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 46405434[0m
+[0;33mW (886) timing: time_RX = 315072[0m
+[0;33mW (886) timing: delta = 46090362 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 46515434[0m
+[0;33mW (996) timing: time_RX = 461866[0m
+[0;33mW (996) timing: delta = 46053568 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 46625436[0m
+[0;33mW (1106) timing: time_RX = 563105[0m
+[0;33mW (1106) timing: delta = 46062331 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 46735436[0m
+[0;33mW (1216) timing: time_RX = 695097[0m
+[0;33mW (1216) timing: delta = 46040339 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 46845440[0m
+[0;33mW (1326) timing: time_RX = 797498[0m
+[0;33mW (1326) timing: delta = 46047942 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 46955575[0m
+[0;33mW (1436) timing: time_RX = 899899[0m
+[0;33mW (1436) timing: delta = 46055676 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 47065432[0m
+[0;33mW (1546) timing: time_RX = 1015896[0m
+[0;33mW (1546) timing: delta = 46049536 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 46059685 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 50646879[0m
+[0;33mW (556) timing: time_RX = 17351[0m
+[0;33mW (556) timing: delta = 50629528 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 50773092[0m
+[0;33mW (666) timing: time_RX = 140950[0m
+[0;33mW (666) timing: delta = 50632142 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 50882992[0m
+[0;33mW (776) timing: time_RX = 256502[0m
+[0;33mW (776) timing: delta = 50626490 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 50992996[0m
+[0;33mW (886) timing: time_RX = 354698[0m
+[0;33mW (886) timing: delta = 50638298 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 51102992[0m
+[0;33mW (996) timing: time_RX = 473988[0m
+[0;33mW (996) timing: delta = 50629004 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1106) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1106) timing: time_TX = 51212994[0m
+[0;33mW (1106) timing: time_RX = 579681[0m
+[0;33mW (1106) timing: delta = 50633313 us | exchange_count = 6 [0m
+[0;32mI (1106) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1216) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1216) timing: time_TX = 51323105[0m
+[0;33mW (1216) timing: time_RX = 683335[0m
+[0;33mW (1216) timing: delta = 50639770 us | exchange_count = 7 [0m
+[0;32mI (1216) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1326) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1326) timing: time_TX = 51433006[0m
+[0;33mW (1326) timing: time_RX = 754793[0m
+[0;33mW (1326) timing: delta = 50678213 us | exchange_count = 8 [0m
+[0;32mI (1326) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (1436) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1436) timing: time_TX = 51543121[0m
+[0;33mW (1436) timing: time_RX = 892459[0m
+[0;33mW (1436) timing: delta = 50650662 us | exchange_count = 9 [0m
+[0;32mI (1436) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (1546) neighbor detection: last broadcast sent[0m
+[0;33mW (1546) timing: time_TX = 51652998[0m
+[0;33mW (1546) timing: time_RX = 1018577[0m
+[0;33mW (1546) timing: delta = 50634421 us | exchange_count = 10 [0m
+[0;32mI (1546) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;33mW (3556) timing: correcting timeoffset of: 50639184 us[0m
+I (3556) ESPNOW: espnow [version: 1.0] deinit
+E (3556) wifi:NAN WiFi stop
+I (3556) wifi:flush txq
+I (3556) wifi:stop sw txq
+I (3556) wifi:lmac stop hw txq
+I (3566) wifi:Deinit lldesc rx mblock:10
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (31) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (39) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (53) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=20250h (131664) map[0m
+[0;32mI (67) esp_image: segment 1: paddr=00030278 vaddr=3ff80063 size=00008h (     8) [0m
+[0;32mI (75) esp_image: segment 2: paddr=00030288 vaddr=3ffb0000 size=03760h ( 14176) load[0m
+[0;32mI (85) esp_image: segment 3: paddr=000339f0 vaddr=40080000 size=0c628h ( 50728) load[0m
+[0;32mI (100) esp_image: segment 4: paddr=00040020 vaddr=400d0020 size=7cf5ch (511836) map[0m
+[0;32mI (100) esp_image: segment 5: paddr=000bcf84 vaddr=4008c628 size=0a11ch ( 41244) load[0m
+[0;32mI (115) esp_image: segment 6: paddr=000c70a8 vaddr=400c0000 size=00064h (   100) [0m
+[0;32mI (117) boot: Fast booting app from partition at offset 0x10000[0m
+[0;32mI (123) boot: Disabling RNG early entropy source...[0m
+[0;32mI (140) cpu_start: Multicore app[0m
+[0;32mI (140) cpu_start: Pro cpu up.[0m
+[0;32mI (140) cpu_start: Starting app cpu, entry point is 0x40081504[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (158) cpu_start: Pro cpu start user code[0m
+[0;32mI (158) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (158) cpu_start: Application information:[0m
+[0;32mI (163) cpu_start: Project name:     espnow_example[0m
+[0;32mI (169) cpu_start: App version:      1[0m
+[0;32mI (173) cpu_start: Compile time:     Oct 30 2023 21:24:43[0m
+[0;32mI (179) cpu_start: ELF file SHA256:  bccbe0c726065dd9...[0m
+[0;32mI (185) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (190) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (195) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (200) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (204) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB7848 len 000287B8 (161 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 40096744 len 000098BC (38 KiB): IRAM[0m
+[0;32mI (244) spi_flash: detected chip: generic[0m
+[0;32mI (247) spi_flash: flash io: dio[0m
+[0;32mI (252) app_start: Starting scheduler on CPU0[0m
+[0;32mI (256) app_start: Starting scheduler on CPU1[0m
+[0;32mI (256) main_task: Started on CPU0[0m
+[0;32mI (266) main_task: Calling app_main()[0m
+I (316) wifi:wifi driver task: 3ffbf470, prio:23, stack:6656, core=0
+I (336) wifi:wifi firmware version: ce9244d
+I (336) wifi:wifi certification version: v7.0
+I (336) wifi:config NVS flash: enabled
+I (336) wifi:config nano formating: disabled
+I (336) wifi:Init data frame dynamic rx buffer num: 32
+I (346) wifi:Init management frame dynamic rx buffer num: 32
+I (346) wifi:Init management short buffer num: 32
+I (356) wifi:Init dynamic tx buffer num: 32
+I (356) wifi:Init static rx buffer size: 1600
+I (356) wifi:Init static rx buffer num: 10
+I (366) wifi:Init dynamic rx buffer num: 32
+[0;32mI (366) wifi_init: rx ba win: 6[0m
+[0;32mI (376) wifi_init: tcpip mbox: 32[0m
+[0;32mI (376) wifi_init: udp mbox: 6[0m
+[0;32mI (376) wifi_init: tcp mbox: 6[0m
+[0;32mI (386) wifi_init: tcp tx win: 5744[0m
+[0;32mI (386) wifi_init: tcp rx win: 5744[0m
+[0;32mI (396) wifi_init: tcp mss: 1440[0m
+[0;32mI (396) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (396) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (406) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (426) wifi:mode : softAP (7c:9e:bd:61:49:65)
+I (436) wifi:Total power save buffer number: 16
+I (436) wifi:Init max length of beacon: 752/752
+I (436) wifi:Init max length of beacon: 752/752
+I (436) ESPNOW: espnow [version: 1.0] init
+I (436) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (446) neighbor detection: Starting broadcast discovery of peers[0m
+[0;32mI (456) main_task: Returned from app_main()[0m
+[0;32mI (556) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (556) timing: time_TX = 55233963[0m
+[0;33mW (556) timing: time_RX = 47934[0m
+[0;33mW (556) timing: delta = 55186029 us | exchange_count = 1 [0m
+[0;32mI (556) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (666) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (666) timing: time_TX = 55340708[0m
+[0;33mW (666) timing: time_RX = 101653[0m
+[0;33mW (666) timing: delta = 55239055 us | exchange_count = 2 [0m
+[0;32mI (666) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (776) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (776) timing: time_TX = 55450625[0m
+[0;33mW (776) timing: time_RX = 252733[0m
+[0;33mW (776) timing: delta = 55197892 us | exchange_count = 3 [0m
+[0;32mI (776) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (886) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (886) timing: time_TX = 55560549[0m
+[0;33mW (886) timing: time_RX = 360646[0m
+[0;33mW (886) timing: delta = 55199903 us | exchange_count = 4 [0m
+[0;32mI (886) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m
+[0;32mI (996) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (996) timing: time_TX = 55670549[0m
+[0;33mW (996) timing: time_RX = 472914[0m
+[0;33mW (996) timing: delta = 55197635 us | exchange_count = 5 [0m
+[0;32mI (996) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:65:b2:3d, len: 20[0m

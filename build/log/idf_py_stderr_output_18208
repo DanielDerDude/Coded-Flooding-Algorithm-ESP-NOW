@@ -1,0 +1,151 @@
+[0;33m--- WARNING: GDB cannot open serial ports accessed as COMx[0m
+[0;33m--- Using \\.\COM7 instead...[0m
+[0;33m--- esp-idf-monitor 1.3.2 on \\.\COM7 115200 ---[0m
+[0;33m--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H ---[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x400819ea: panic_abort at C:/Users/Daniel/esp/esp-idf/components/esp_system/panic.c:452
+[0m
+[0;33m0x40088cbd: esp_system_abort at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/esp_system_chip.c:84
+[0m
+[0;33m0x4008b9ce: vApplicationStackOverflowHook at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:581
+[0m
+[0;33m0x4008a38b: vTaskSwitchContext at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/tasks.c:3729
+[0m
+[0;33m0x4008bb1c: _frxt_dispatch at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/portasm.S:450
+[0m
+[0;33m0x4008bace: _frxt_int_exit at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/portasm.S:245
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0;33m0x4000cb55: __divdi3 in ROM
+[0m
+[0;33m0x400852a0: mutex_lock_wrapper at C:/Users/Daniel/esp/esp-idf/components/esp_wifi/esp32/esp_adapter.c:246
+[0m
+[0;33m0x400014fd: strlen in ROM
+[0m
+[0;33m0x4000150d: strlen in ROM
+[0m
+[0;33m0x4000cb52: __divdi3 in ROM
+[0m
+[0;33m0x400d61d3: neighbor_detection_task at C:/Users/Daniel/Desktop/Bachelor_Arbeit/Testing/espnow/main/my_example.c:269
+[0m
+[0;33m0x4008b69d: vPortTaskWrapper at C:/Users/Daniel/esp/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/port.c:162
+[0m
+[0;33m0x40080400: _init at ??:?
+[0m
+[0;33m0x40081384: call_start_cpu1 at C:/Users/Daniel/esp/esp-idf/components/esp_system/port/cpu_start.c:154
+[0m
+[0m

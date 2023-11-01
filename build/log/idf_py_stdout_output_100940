@@ -1,0 +1,304 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (30) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (30) boot: Multicore bootloader[0m
+[0;32mI (34) boot: chip revision: v1.0[0m
+[0;32mI (38) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (43) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (47) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (57) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (68) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (83) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1f75ch (128860) map[0m
+[0;32mI (150) esp_image: segment 1: paddr=0002f784 vaddr=3ffb0000 size=00894h (  2196) load[0m
+[0;32mI (151) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=7c2b4h (508596) map[0m
+[0;32mI (339) esp_image: segment 3: paddr=000ac2dc vaddr=3ffb0894 size=02e34h ( 11828) load[0m
+[0;32mI (344) esp_image: segment 4: paddr=000af118 vaddr=40080000 size=15718h ( 87832) load[0m
+[0;32mI (392) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (392) boot: Disabling RNG early entropy source...[0m
+[0;32mI (404) cpu_start: Multicore app[0m
+[0;32mI (404) cpu_start: Pro cpu up.[0m
+[0;32mI (404) cpu_start: Starting app cpu, entry point is 0x40081384[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (422) cpu_start: Pro cpu start user code[0m
+[0;32mI (422) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (422) cpu_start: Application information:[0m
+[0;32mI (427) cpu_start: Project name:     espnow_example[0m
+[0;32mI (432) cpu_start: App version:      1[0m
+[0;32mI (437) cpu_start: Compile time:     Oct 30 2023 14:20:27[0m
+[0;32mI (443) cpu_start: ELF file SHA256:  4bdd1c44ecc9e505...[0m
+[0;32mI (449) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (454) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (458) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (463) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (468) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (475) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (481) heap_init: At 3FFB77A8 len 00028858 (162 KiB): DRAM[0m
+[0;32mI (487) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (494) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (500) heap_init: At 40095718 len 0000A8E8 (42 KiB): IRAM[0m
+[0;32mI (508) spi_flash: detected chip: generic[0m
+[0;32mI (511) spi_flash: flash io: dio[0m
+[0;32mI (516) app_start: Starting scheduler on CPU0[0m
+[0;32mI (520) app_start: Starting scheduler on CPU1[0m
+[0;32mI (520) main_task: Started on CPU0[0m
+[0;32mI (530) main_task: Calling app_main()[0m
+I (580) wifi:wifi driver task: 3ffbf480, prio:23, stack:6656, core=0
+I (600) wifi:wifi firmware version: ce9244d
+I (600) wifi:wifi certification version: v7.0
+I (600) wifi:config NVS flash: enabled
+I (600) wifi:config nano formating: disabled
+I (600) wifi:Init data frame dynamic rx buffer num: 32
+I (610) wifi:Init management frame dynamic rx buffer num: 32
+I (610) wifi:Init management short buffer num: 32
+I (620) wifi:Init dynamic tx buffer num: 32
+I (620) wifi:Init static rx buffer size: 1600
+I (620) wifi:Init static rx buffer num: 10
+I (630) wifi:Init dynamic rx buffer num: 32
+[0;32mI (630) wifi_init: rx ba win: 6[0m
+[0;32mI (640) wifi_init: tcpip mbox: 32[0m
+[0;32mI (640) wifi_init: udp mbox: 6[0m
+[0;32mI (640) wifi_init: tcp mbox: 6[0m
+[0;32mI (650) wifi_init: tcp tx win: 5744[0m
+[0;32mI (650) wifi_init: tcp rx win: 5744[0m
+[0;32mI (660) wifi_init: tcp mss: 1440[0m
+[0;32mI (660) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (660) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (670) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (780) wifi:mode : softAP (7c:9e:bd:65:b2:3d)
+I (780) wifi:Total power save buffer number: 16
+I (780) wifi:Init max length of beacon: 752/752
+I (780) wifi:Init max length of beacon: 752/752
+I (790) ESPNOW: espnow [version: 1.0] init
+I (790) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (790) neighbor detection: broadcast discovery of peers[0m
+[0;32mI (800) main_task: Returned from app_main()[0m
+[0;32mI (1810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (2810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (3810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (4810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (5810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (6810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (7810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (8810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (9810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (10810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (11810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (12810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (13810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (14810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (15810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (16810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (17810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (17810) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (18810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (18810) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (19810) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (19810) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (30) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (30) boot: Multicore bootloader[0m
+[0;32mI (34) boot: chip revision: v1.0[0m
+[0;32mI (38) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (43) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (47) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (57) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (68) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (83) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1f75ch (128860) map[0m
+[0;32mI (150) esp_image: segment 1: paddr=0002f784 vaddr=3ffb0000 size=00894h (  2196) load[0m
+[0;32mI (151) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=7c2b4h (508596) map[0m
+[0;32mI (339) esp_image: segment 3: paddr=000ac2dc vaddr=3ffb0894 size=02e34h ( 11828) load[0m
+[0;32mI (344) esp_image: segment 4: paddr=000af118 vaddr=40080000 size=15718h ( 87832) load[0m
+[0;32mI (392) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (392) boot: Disabling RNG early entropy source...[0m
+[0;32mI (404) cpu_start: Multicore app[0m
+[0;32mI (404) cpu_start: Pro cpu up.[0m
+[0;32mI (404) cpu_start: Starting app cpu, entry point is 0x40081384[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (422) cpu_start: Pro cpu start user code[0m
+[0;32mI (422) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (422) cpu_start: Application information:[0m
+[0;32mI (427) cpu_start: Project name:     espnow_example[0m
+[0;32mI (432) cpu_start: App version:      1[0m
+[0;32mI (437) cpu_start: Compile time:     Oct 30 2023 14:20:27[0m
+[0;32mI (443) cpu_start: ELF file SHA256:  4bdd1c44ecc9e505...[0m
+[0;32mI (449) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (454) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (458) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (463) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (468) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (475) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (481) heap_init: At 3FFB77A8 len 00028858 (162 KiB): DRAM[0m
+[0;32mI (487) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (494) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (500) heap_init: At 40095718 len 0000A8E8 (42 KiB): IRAM[0m
+[0;32mI (508) spi_flash: detected chip: generic[0m
+[0;32mI (511) spi_flash: flash io: dio[0m
+[0;32mI (516) app_start: Starting scheduler on CPU0[0m
+[0;32mI (520) app_start: Starting scheduler on CPU1[0m
+[0;32mI (520) main_task: Started on CPU0[0m
+[0;32mI (530) main_task: Calling app_main()[0m
+I (580) wifi:wifi driver task: 3ffbf480, prio:23, stack:6656, core=0
+I (600) wifi:wifi firmware version: ce9244d
+I (600) wifi:wifi certification version: v7.0
+I (600) wifi:config NVS flash: enabled
+I (600) wifi:config nano formating: disabled
+I (600) wifi:Init data frame dynamic rx buffer num: 32
+I (610) wifi:Init management frame dynamic rx buffer num: 32
+I (610) wifi:Init management short buffer num: 32
+I (620) wifi:Init dynamic tx buffer num: 32
+I (620) wifi:Init static rx buffer size: 1600
+I (620) wifi:Init static rx buffer num: 10
+I (630) wifi:Init dynamic rx buffer num: 32
+[0;32mI (630) wifi_init: rx ba win: 6[0m
+[0;32mI (640) wifi_init: tcpip mbox: 32[0m
+[0;32mI (640) wifi_init: udp mbox: 6[0m
+[0;32mI (640) wifi_init: tcp mbox: 6[0m
+[0;32mI (650) wifi_init: tcp tx win: 5744[0m
+[0;32mI (650) wifi_init: tcp rx win: 5744[0m
+[0;32mI (660) wifi_init: tcp mss: 1440[0m
+[0;32mI (660) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (660) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (670) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (780) wifi:mode : softAP (7c:9e:bd:65:b2:3d)
+I (780) wifi:Total power save buffer number: 16
+I (780) wifi:Init max length of beacon: 752/752
+I (780) wifi:Init max length of beacon: 752/752
+I (790) ESPNOW: espnow [version: 1.0] init
+I (790) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (790) neighbor detection: broadcast discovery of peers[0m
+[0;32mI (800) main_task: Returned from app_main()[0m
+[0;32mI (1800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (1800) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (2800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (2800) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (3800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (3800) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (4800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (4800) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (5800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (5800) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (6800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (6800) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (7800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (7800) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (8800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (8800) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (9800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (9800) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (10800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (10800) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (11800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (11800) neighbor detection: Receive 10th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (12800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (12800) neighbor detection: Receive 11th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (13800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (13800) neighbor detection: Receive 12th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (14800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (14800) neighbor detection: Receive 13th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (15800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (15800) neighbor detection: Receive 14th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (16800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (16800) neighbor detection: Receive 15th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (17800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (17800) neighbor detection: Receive 16th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (18800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (18800) neighbor detection: Receive 17th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (19800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (19800) neighbor detection: Receive 18th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (20800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (20800) neighbor detection: Receive 19th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (21800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (21800) neighbor detection: Receive 20th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (22800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (22800) neighbor detection: Receive 21th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (23800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (23800) neighbor detection: Receive 22th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (24800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (24800) neighbor detection: Receive 23th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (25800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (25800) neighbor detection: Receive 24th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (26800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (26800) neighbor detection: Receive 25th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (27800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (27800) neighbor detection: Receive 26th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (28800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (28800) neighbor detection: Receive 27th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (29800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (29800) neighbor detection: Receive 28th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (30800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (30800) neighbor detection: Receive 29th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (31800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (31800) neighbor detection: Receive 30th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (32800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (32800) neighbor detection: Receive 31th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (33800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (33800) neighbor detection: Receive 32th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (34800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (34800) neighbor detection: Receive 33th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (35800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (35800) neighbor detection: Receive 34th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (36800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (36800) neighbor detection: Receive 35th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (37800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (37800) neighbor detection: Receive 36th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (38800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (38800) neighbor detection: Receive 37th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (39800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (39800) neighbor detection: Receive 38th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (40800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (40800) neighbor detection: Receive 39th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (41800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (41800) neighbor detection: Receive 40th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (42800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (42800) neighbor detection: Receive 41th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (43800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (43800) neighbor detection: Receive 42th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (44800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (44800) neighbor detection: Receive 43th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (45800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (45800) neighbor detection: Receive 44th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (46800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (46800) neighbor detection: Receive 45th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (47800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (47800) neighbor detection: Receive 46th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (48800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (48800) neighbor detection: Receive 47th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (49800) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (49800) neighbor detection: Receive 48th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (50800) neighbor detection: last broadcast sent[0m
+I (50800) ESPNOW: espnow [version: 1.0] deinit

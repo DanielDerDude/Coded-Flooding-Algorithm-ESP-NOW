@@ -1,0 +1,313 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7280
+load:0x40078000,len:15892
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3880
+entry 0x4008064c
+[0;32mI (30) boot: ESP-IDF v5.1.1 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time Oct 30 2023 14:20:37[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (35) boot: chip revision: v1.0[0m
+[0;32mI (38) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (43) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (68) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (83) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1f7ech (129004) map[0m
+[0;32mI (150) esp_image: segment 1: paddr=0002f814 vaddr=3ffb0000 size=00804h (  2052) load[0m
+[0;32mI (151) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=7c2e4h (508644) map[0m
+[0;32mI (339) esp_image: segment 3: paddr=000ac30c vaddr=3ffb0804 size=02ec4h ( 11972) load[0m
+[0;32mI (344) esp_image: segment 4: paddr=000af1d8 vaddr=40080000 size=1572ch ( 87852) load[0m
+[0;32mI (393) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (393) boot: Disabling RNG early entropy source...[0m
+[0;32mI (404) cpu_start: Multicore app[0m
+[0;32mI (404) cpu_start: Pro cpu up.[0m
+[0;32mI (405) cpu_start: Starting app cpu, entry point is 0x40081388[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (422) cpu_start: Pro cpu start user code[0m
+[0;32mI (422) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (422) cpu_start: Application information:[0m
+[0;32mI (427) cpu_start: Project name:     espnow_example[0m
+[0;32mI (433) cpu_start: App version:      1[0m
+[0;32mI (437) cpu_start: Compile time:     Oct 30 2023 14:20:27[0m
+[0;32mI (443) cpu_start: ELF file SHA256:  a9d53014f378de70...[0m
+[0;32mI (449) cpu_start: ESP-IDF:          v5.1.1[0m
+[0;32mI (454) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (459) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (464) cpu_start: Chip rev:         v1.0[0m
+[0;32mI (469) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (476) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (482) heap_init: At 3FFB77A8 len 00028858 (162 KiB): DRAM[0m
+[0;32mI (488) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (494) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (501) heap_init: At 4009572C len 0000A8D4 (42 KiB): IRAM[0m
+[0;32mI (508) spi_flash: detected chip: generic[0m
+[0;32mI (511) spi_flash: flash io: dio[0m
+[0;32mI (516) app_start: Starting scheduler on CPU0[0m
+[0;32mI (521) app_start: Starting scheduler on CPU1[0m
+[0;32mI (521) main_task: Started on CPU0[0m
+[0;32mI (531) main_task: Calling app_main()[0m
+I (581) wifi:wifi driver task: 3ffbf480, prio:23, stack:6656, core=0
+I (601) wifi:wifi firmware version: ce9244d
+I (601) wifi:wifi certification version: v7.0
+I (601) wifi:config NVS flash: enabled
+I (601) wifi:config nano formating: disabled
+I (601) wifi:Init data frame dynamic rx buffer num: 32
+I (611) wifi:Init management frame dynamic rx buffer num: 32
+I (611) wifi:Init management short buffer num: 32
+I (621) wifi:Init dynamic tx buffer num: 32
+I (621) wifi:Init static rx buffer size: 1600
+I (621) wifi:Init static rx buffer num: 10
+I (631) wifi:Init dynamic rx buffer num: 32
+[0;32mI (631) wifi_init: rx ba win: 6[0m
+[0;32mI (641) wifi_init: tcpip mbox: 32[0m
+[0;32mI (641) wifi_init: udp mbox: 6[0m
+[0;32mI (641) wifi_init: tcp mbox: 6[0m
+[0;32mI (651) wifi_init: tcp tx win: 5744[0m
+[0;32mI (651) wifi_init: tcp rx win: 5744[0m
+[0;32mI (661) wifi_init: tcp mss: 1440[0m
+[0;32mI (661) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (661) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (671) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07[0m
+I (771) wifi:mode : softAP (7c:9e:bd:65:b2:3d)
+I (781) wifi:Total power save buffer number: 16
+I (781) wifi:Init max length of beacon: 752/752
+I (781) wifi:Init max length of beacon: 752/752
+I (791) ESPNOW: espnow [version: 1.0] init
+I (791) wifi:Set ps type: 0, coexist: 0
+
+[0;32mI (791) neighbor detection: broadcast discovery of peers[0m
+[0;32mI (801) main_task: Returned from app_main()[0m
+[0;33mW (1401) timing: extracted timestamp: 586862 [0m
+[0;32mI (1811) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (1811) timing: Calculated time offset: -561508 [0m
+[0;33mW (1811) timing: Sig_len: 63 [0m
+[0;33mW (1811) timing: transmission time: 0 [0m
+[0;32mI (1811) neighbor detection: Receive 25th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (2421) timing: extracted timestamp: 1635938 [0m
+[0;32mI (2821) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (2821) timing: Calculated time offset: -1609574 [0m
+[0;33mW (2821) timing: Sig_len: 63 [0m
+[0;33mW (2821) timing: transmission time: 0 [0m
+[0;32mI (2821) neighbor detection: Receive 26th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;32mI (3831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (4831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (5831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (6831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (7831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (8831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (9831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (10831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (11831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (12831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (13831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (14831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (15831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (16831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;32mI (17831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (18591) timing: extracted timestamp: 17808905 [0m
+[0;32mI (18831) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (18831) timing: Calculated time offset: -17808644 [0m
+[0;33mW (18831) timing: Sig_len: 63 [0m
+[0;33mW (18831) timing: transmission time: 0 [0m
+[0;32mI (18831) neighbor detection: Receive 0th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (19581) timing: extracted timestamp: 18808818 [0m
+[0;32mI (19841) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (19841) timing: Calculated time offset: -18807554 [0m
+[0;33mW (19841) timing: Sig_len: 63 [0m
+[0;33mW (19841) timing: transmission time: 0 [0m
+[0;32mI (19841) neighbor detection: Receive 1th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (20591) timing: extracted timestamp: 19805550 [0m
+[0;32mI (20851) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (20851) timing: Calculated time offset: -19803276 [0m
+[0;33mW (20851) timing: Sig_len: 63 [0m
+[0;33mW (20851) timing: transmission time: 0 [0m
+[0;32mI (20851) neighbor detection: Receive 2th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (21601) timing: extracted timestamp: 20825726 [0m
+[0;32mI (21861) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (21861) timing: Calculated time offset: -20822442 [0m
+[0;33mW (21861) timing: Sig_len: 63 [0m
+[0;33mW (21861) timing: transmission time: 0 [0m
+[0;32mI (21861) neighbor detection: Receive 3th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (22611) timing: extracted timestamp: 21836011 [0m
+[0;32mI (22871) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (22871) timing: Calculated time offset: -21831717 [0m
+[0;33mW (22871) timing: Sig_len: 63 [0m
+[0;33mW (22871) timing: transmission time: 0 [0m
+[0;32mI (22871) neighbor detection: Receive 4th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (23621) timing: extracted timestamp: 22835982 [0m
+[0;32mI (23881) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (23881) timing: Calculated time offset: -22830678 [0m
+[0;33mW (23881) timing: Sig_len: 63 [0m
+[0;33mW (23881) timing: transmission time: 0 [0m
+[0;32mI (23881) neighbor detection: Receive 5th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (24631) timing: extracted timestamp: 23836895 [0m
+[0;32mI (24891) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (24891) timing: Calculated time offset: -23830581 [0m
+[0;33mW (24891) timing: Sig_len: 63 [0m
+[0;33mW (24891) timing: transmission time: 0 [0m
+[0;32mI (24891) neighbor detection: Receive 6th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (25641) timing: extracted timestamp: 24860782 [0m
+[0;32mI (25901) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (25901) timing: Calculated time offset: -24853458 [0m
+[0;33mW (25901) timing: Sig_len: 63 [0m
+[0;33mW (25901) timing: transmission time: 0 [0m
+[0;32mI (25901) neighbor detection: Receive 7th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (26651) timing: extracted timestamp: 25880373 [0m
+[0;32mI (26911) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (26911) timing: Calculated time offset: -25872039 [0m
+[0;33mW (26911) timing: Sig_len: 63 [0m
+[0;33mW (26911) timing: transmission time: 0 [0m
+[0;32mI (26911) neighbor detection: Receive 8th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (27661) timing: extracted timestamp: 26857074 [0m
+[0;32mI (27921) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (27921) timing: Calculated time offset: -26847730 [0m
+[0;33mW (27921) timing: Sig_len: 63 [0m
+[0;33mW (27921) timing: transmission time: 0 [0m
+[0;32mI (27921) neighbor detection: Receive 9th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (28671) timing: extracted timestamp: 27899153 [0m
+[0;32mI (28931) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (28931) timing: Calculated time offset: -27888799 [0m
+[0;33mW (28931) timing: Sig_len: 63 [0m
+[0;33mW (28931) timing: transmission time: 0 [0m
+[0;32mI (28931) neighbor detection: Receive 10th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (29681) timing: extracted timestamp: 28906587 [0m
+[0;32mI (29941) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (29941) timing: Calculated time offset: -28895223 [0m
+[0;33mW (29941) timing: Sig_len: 63 [0m
+[0;33mW (29941) timing: transmission time: 0 [0m
+[0;32mI (29941) neighbor detection: Receive 11th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (30691) timing: extracted timestamp: 29918032 [0m
+[0;32mI (30951) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (30951) timing: Calculated time offset: -29905658 [0m
+[0;33mW (30951) timing: Sig_len: 63 [0m
+[0;33mW (30951) timing: transmission time: 0 [0m
+[0;32mI (30951) neighbor detection: Receive 12th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (31701) timing: extracted timestamp: 30915941 [0m
+[0;32mI (31961) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (31961) timing: Calculated time offset: -30902557 [0m
+[0;33mW (31961) timing: Sig_len: 63 [0m
+[0;33mW (31961) timing: transmission time: 0 [0m
+[0;32mI (31961) neighbor detection: Receive 13th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (32721) timing: extracted timestamp: 31942291 [0m
+[0;32mI (32971) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (32971) timing: Calculated time offset: -31927897 [0m
+[0;33mW (32971) timing: Sig_len: 63 [0m
+[0;33mW (32971) timing: transmission time: 0 [0m
+[0;32mI (32971) neighbor detection: Receive 14th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (33721) timing: extracted timestamp: 32946148 [0m
+[0;32mI (33981) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (33981) timing: Calculated time offset: -32930744 [0m
+[0;33mW (33981) timing: Sig_len: 63 [0m
+[0;33mW (33981) timing: transmission time: 0 [0m
+[0;32mI (33981) neighbor detection: Receive 15th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (34731) timing: extracted timestamp: 33952785 [0m
+[0;32mI (34991) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (34991) timing: Calculated time offset: -33936371 [0m
+[0;33mW (34991) timing: Sig_len: 63 [0m
+[0;33mW (34991) timing: transmission time: 0 [0m
+[0;32mI (34991) neighbor detection: Receive 16th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (35751) timing: extracted timestamp: 34970965 [0m
+[0;32mI (36001) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (36001) timing: Calculated time offset: -34953541 [0m
+[0;33mW (36001) timing: Sig_len: 63 [0m
+[0;33mW (36001) timing: transmission time: 0 [0m
+[0;32mI (36001) neighbor detection: Receive 17th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (36751) timing: extracted timestamp: 35979824 [0m
+[0;32mI (37011) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (37011) timing: Calculated time offset: -35961390 [0m
+[0;33mW (37011) timing: Sig_len: 63 [0m
+[0;33mW (37011) timing: transmission time: 0 [0m
+[0;32mI (37011) neighbor detection: Receive 18th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (37761) timing: extracted timestamp: 36989755 [0m
+[0;32mI (38021) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (38021) timing: Calculated time offset: -36970311 [0m
+[0;33mW (38021) timing: Sig_len: 63 [0m
+[0;33mW (38021) timing: transmission time: 0 [0m
+[0;32mI (38021) neighbor detection: Receive 19th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (38771) timing: extracted timestamp: 37983221 [0m
+[0;32mI (39031) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (39031) timing: Calculated time offset: -37962767 [0m
+[0;33mW (39031) timing: Sig_len: 63 [0m
+[0;33mW (39031) timing: transmission time: 0 [0m
+[0;32mI (39031) neighbor detection: Receive 20th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (39781) timing: extracted timestamp: 39005721 [0m
+[0;32mI (40041) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (40041) timing: Calculated time offset: -38984257 [0m
+[0;33mW (40041) timing: Sig_len: 63 [0m
+[0;33mW (40041) timing: transmission time: 0 [0m
+[0;32mI (40041) neighbor detection: Receive 21th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (40801) timing: extracted timestamp: 40008444 [0m
+[0;32mI (41051) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (41051) timing: Calculated time offset: -39985970 [0m
+[0;33mW (41051) timing: Sig_len: 63 [0m
+[0;33mW (41051) timing: transmission time: 0 [0m
+[0;32mI (41051) neighbor detection: Receive 22th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (41811) timing: extracted timestamp: 41027393 [0m
+[0;32mI (42061) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (42061) timing: Calculated time offset: -41003909 [0m
+[0;33mW (42061) timing: Sig_len: 63 [0m
+[0;33mW (42061) timing: transmission time: 0 [0m
+[0;32mI (42061) neighbor detection: Receive 23th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (42811) timing: extracted timestamp: 42037427 [0m
+[0;32mI (43071) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (43071) timing: Calculated time offset: -42012933 [0m
+[0;33mW (43071) timing: Sig_len: 63 [0m
+[0;33mW (43071) timing: transmission time: 0 [0m
+[0;32mI (43071) neighbor detection: Receive 24th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (43821) timing: extracted timestamp: 43046626 [0m
+[0;32mI (44081) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (44081) timing: Calculated time offset: -43021122 [0m
+[0;33mW (44081) timing: Sig_len: 63 [0m
+[0;33mW (44081) timing: transmission time: 0 [0m
+[0;32mI (44081) neighbor detection: Receive 25th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (44831) timing: extracted timestamp: 44057476 [0m
+[0;32mI (45091) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (45091) timing: Calculated time offset: -44030962 [0m
+[0;33mW (45091) timing: Sig_len: 63 [0m
+[0;33mW (45091) timing: transmission time: 0 [0m
+[0;32mI (45091) neighbor detection: Receive 26th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (45841) timing: extracted timestamp: 45067545 [0m
+[0;32mI (46101) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (46101) timing: Calculated time offset: -45040021 [0m
+[0;33mW (46101) timing: Sig_len: 63 [0m
+[0;33mW (46101) timing: transmission time: 0 [0m
+[0;32mI (46101) neighbor detection: Receive 27th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (46851) timing: extracted timestamp: 46077569 [0m
+[0;32mI (47111) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (47111) timing: Calculated time offset: -46049035 [0m
+[0;33mW (47111) timing: Sig_len: 63 [0m
+[0;33mW (47111) timing: transmission time: 0 [0m
+[0;32mI (47111) neighbor detection: Receive 28th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (47871) timing: extracted timestamp: 47065613 [0m
+[0;32mI (48121) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (48121) timing: Calculated time offset: -47036069 [0m
+[0;33mW (48121) timing: Sig_len: 63 [0m
+[0;33mW (48121) timing: transmission time: 0 [0m
+[0;32mI (48121) neighbor detection: Receive 29th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (48871) timing: extracted timestamp: 48091360 [0m
+[0;32mI (49131) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (49131) timing: Calculated time offset: -48060806 [0m
+[0;33mW (49131) timing: Sig_len: 63 [0m
+[0;33mW (49131) timing: transmission time: 0 [0m
+[0;32mI (49131) neighbor detection: Receive 30th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (49881) timing: extracted timestamp: 49105031 [0m
+[0;32mI (50141) neighbor detection: send data to ff:ff:ff:ff:ff:ff[0m
+[0;33mW (50141) timing: Calculated time offset: -49073467 [0m
+[0;33mW (50141) timing: Sig_len: 63 [0m
+[0;33mW (50141) timing: transmission time: 0 [0m
+[0;32mI (50141) neighbor detection: Receive 31th broadcast data from: 7c:9e:bd:61:49:65, len: 20[0m
+[0;33mW (50891) timing: extracted timestamp: 50112154 [0m
+[0;33mW (51151) neighbor detection: last broadcast sent[0m
+I (51151) ESPNOW: espnow [version: 1.0] deinit
