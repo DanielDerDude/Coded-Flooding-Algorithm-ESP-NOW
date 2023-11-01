@@ -17,13 +17,10 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include "esp_sleep.h"
-
 //#include "driver/gptimer.h"
-
 //#include "timer_config.h"
 #include "timing_functions.h"
 #include "espnow_example.h"
-
 
 #define ESPNOW_MAXDELAY 512
 
@@ -167,7 +164,7 @@ static void neighbor_detection_task(void *pvParameter){
     TickType_t wait_duration = portMAX_DELAY;
     int64_t exchange_count = 0;
     int64_t time_offset_sum = 0;
-    
+
 
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
 
