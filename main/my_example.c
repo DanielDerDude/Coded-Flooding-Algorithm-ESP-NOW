@@ -167,6 +167,7 @@ static void neighbor_detection_task(void *pvParameter){
     TickType_t wait_duration = portMAX_DELAY;
     int64_t exchange_count = 0;
     int64_t time_offset_sum = 0;
+    
 
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
 
