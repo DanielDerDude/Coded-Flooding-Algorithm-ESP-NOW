@@ -84,11 +84,17 @@ menu "Example Configuration"
             ESPNOW wake interval
     
     config DEEPSLEEP_DURATION_MS
-        int "Deepsleep duration"
+        int "Deepsleep duration, unit in ms"
         range 50 60000
         default 1000
         help
             Duration each device stays in deepsleep, unit in milliseconds.
+
+    config MSG_EXCHANGE_DURATION_MS
+        int "Message exchange duration, unit in ms"
+        range 500 10000
+        default 1000
+        help
+            Duration of the message exchange phase, unit in milliseconds.
         
-            
 endmenu
