@@ -22,6 +22,9 @@
     "memory": "c",
     "random": "c",
     "future": "c",
-    "optional": "c"
+    "optional": "c",
+    "condition_variable": "c",
+    "ctime": "c",
+    "mutex": "c"
   }
 }
