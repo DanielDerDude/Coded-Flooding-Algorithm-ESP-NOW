@@ -27,7 +27,6 @@
 // log TAGs
 
 static const char *TAG1 = "neighbor detection task";
-static const char *TAG2 = "systime";
 static const char *TAG3 = "timer";
 
 // queue handles
@@ -43,11 +42,6 @@ static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0
 static uint16_t s_example_espnow_seq[EXAMPLE_ESPNOW_DATA_MAX] = { 0, 0 };
 
 static void example_espnow_deinit(example_espnow_send_param_t *send_param);
-
-static void msg_exchange_timer_cb(void);
-static void shutdown_timer_cb(void);
-static void init_deepsleep_timer_cb(void);
-
 
 static void example_wifi_init(void)
 {
@@ -119,36 +113,35 @@ static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const u
     }
 }
 
-static void msg_exchange_timer_cb(void){
-    esp_timer_start_once(shutdown_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000);
-
+static void msg_exchange_timer_cb(void* arg){
     // delete timer that called this cb
-    ESP_ERROR_CHECK(esp_timer_stop(msg_exchange_timer_handle));
     ESP_ERROR_CHECK(esp_timer_delete(msg_exchange_timer_handle));
+    
+    esp_timer_start_once(shutdown_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000);
     ESP_LOGI(TAG3, "Msg exchange timer triggered - beginning message exchange");
 
     // insert vTaskCreate() for message exchange with ONC here
 }
 
-static void shutdown_timer_cb(void){
-    esp_timer_enable_once(init_deepsleep_timer_handle, 100000);     // set init deepsleep timer
-    // delete timer that called this cb
-    ESP_ERROR_CHECK(esp_timer_stop(shutdown_timer_handle));
+static void shutdown_timer_cb(void* arg){
     ESP_ERROR_CHECK(esp_timer_delete(shutdown_timer_handle));
+    
+    esp_timer_start_once(init_deepsleep_timer_handle, 100000);     // set init deepsleep timer
+    // delete timer that called this cb
+
     ESP_LOGW(TAG3, "Shutdown timer triggered - finishing tasks");
 
     // maybe create a timekeeper task which supervises the cleanup
 }
 
-static void init_deepsleep_timer_cb(void){
+static void init_deepsleep_timer_cb(void* arg){
     // delete timer that called this cb
-    ESP_ERROR_CHECK(esp_timer_stop(init_deepsleep_timer_handle));
     ESP_ERROR_CHECK(esp_timer_delete(init_deepsleep_timer_handle));
     
-    ESP_LOGI(TAG3, "Going into deepsleep for %d", #CONFIG_DEEPSLEEP_DURATION_MS);
+    ESP_LOGI(TAG3, "Going into deepsleep for %d", CONFIG_DEEPSLEEP_DURATION_MS);
 
-    // init deepsleep
-    ESP_ERROR_CHECK(esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000));
+    // enter deepsleep
+    esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);
 }
 
 int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
@@ -268,7 +261,7 @@ static void neighbor_detection_task(void *pvParameter){
                 exchange_count++;
                 time_offset_sum += delta;
 
-                //ESP_LOGW(TAG2, "time_TX = %lld | time_RX = %lld | time_tm = %lld | delta = %lld us | count = %u ", time_TX, time_RX, time_tm, delta, exchange_count);
+                ESP_LOGI(TAG2, "time_TX = %lld | time_RX = %lld | time_tm = %lld | delta = %lld us | count = %u ", time_TX, time_RX, time_tm, delta, exchange_count);
 
                 ret = example_espnow_data_parse(recv_cb->data, recv_cb->data_len, &recv_seq);
                 free(recv_cb->data);
@@ -307,28 +300,32 @@ static void neighbor_detection_task(void *pvParameter){
     }
 
     ESP_LOGW(TAG2, "A total of %u timing exchanges from %d peers took place", exchange_count, peer_count);
+    ESP_LOGW(TAG2, "time_offset_sum = %lld", time_offset_sum);
 
     int64_t avg_time_offset_us = 0;
     if (exchange_count > 0){
         avg_time_offset_us = time_offset_sum / (int64_t)exchange_count;
-        ESP_LOGW(TAG2, "correct time offset of: %lld us", avg_time_offset_us);
+        ESP_LOGW(TAG2, "Correct time offset of: %lld us", avg_time_offset_us);
         correct_systime(avg_time_offset_us);
+        //vTaskDelay(100/portTICK_PERIOD_MS); // wait 100 ms
     }else{
         ESP_LOGE(TAG2, "No time exchanges took place");
     }
     
     uint64_t delay_us = 0;
-    uint64_t time_subsec_us = get_systime_us() % 1000000;     // time under a second
+    uint64_t time_subsec_us = get_systime_us() % 1000000L;     // time under a second
 
-    // set timer on next full millisecond
+    // set timer on next n-th of a millisecond
     for(uint8_t i = 1; i <= 10; i++){
-        if(time_subsec_us < 100000*i){
-            delay_us = 100000*i - time_subsec_us;   // compute time to next tenth of a second
+        uint64_t next_us = 100000L*i;    // next n-th of a second
+        if(time_subsec_us < next_us){
+            delay_us = next_us - time_subsec_us;   // compute time to next n-th of a second
             break;
         }
     }
 
     ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer on next tenth of a second
+    vTaskDelete(NULL);
 }
 
 static esp_err_t example_espnow_init(void)
@@ -398,7 +395,7 @@ static esp_err_t example_espnow_init(void)
     return ESP_OK;
 }
 
-static esp_err_t setup_timer(){
+static void setup_timer(){
     
     // timer zum starten der mesaage exchange phase
     const esp_timer_create_args_t msg_exchange_timer_args = {
@@ -449,7 +446,7 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( ret );
 
-    timer_setup();
+    setup_timer();
     example_wifi_init();
     example_espnow_init();
 }
