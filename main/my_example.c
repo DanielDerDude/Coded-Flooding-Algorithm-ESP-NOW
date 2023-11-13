@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -29,9 +28,13 @@
 static const char *TAG1 = "neighbor detection task";
 static const char *TAG3 = "timer";
 
+// mutexes
+StaticSemaphore_t mutexTimePlaced;
+SemaphoreHandle_t time_placed;
+
 // queue handles
-static QueueHandle_t s_example_espnow_queue;
-//static QueueHandle_t s_time_offset_queue;
+static QueueHandle_t s_example_espnow_queue;        // espnow event queue
+static QueueHandle_t s_time_send_placed_queue;      // queue for timestamps when espnow_send was called
 
 //timer handles
 esp_timer_handle_t msg_exchange_timer_handle;
@@ -64,11 +67,19 @@ static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_
 {
     int64_t time_now = get_systime_us();
 
-    // compute send offset here
-    
     example_espnow_event_t evt;
     example_espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
     evt.timestamp = time_now;
+
+    // compute send offset here
+    int64_t time_placed;
+    if (xQueueReceive(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
+        ESP_LOGW(TAG1, "Send time_send_placed_queue queue fail");
+        send_cb->send_offset = 0;
+    }else{
+        send_cb->send_offset = time_now - time_placed;
+        ESP_LOGW(TAG1, "Computed send offset = %lld us", send_cb->send_offset);
+    }
 
     if (mac_addr == NULL) {
         ESP_LOGE(TAG1, "Send cb arg error");
@@ -192,13 +203,23 @@ static void neighbor_detection_task(void *pvParameter){
     TickType_t wait_duration = portMAX_DELAY;
     
     uint8_t peer_count = 0;
-    uint8_t exchange_count = 0;
+    uint8_t bc_recv_count = 0;
+    uint8_t bc_send_count = 0;
     int64_t time_offset_sum = 0;
+    int64_t send_offset_sum = 0;
 
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
 
     /* Start sending a broadcast frame with ESPNOW data. */
     example_espnow_send_param_t *send_param = (example_espnow_send_param_t *)pvParameter;
+    
+    // post timestamp of calling esp_now_send() to queue 
+    int64_t time_placed = get_systime_us(); 
+    if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
+        ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
+        example_espnow_deinit(send_param);
+        vTaskDelete(NULL);
+    }
     if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
         ESP_LOGE(TAG1, "Send error");
         example_espnow_deinit(send_param);
@@ -209,6 +230,8 @@ static void neighbor_detection_task(void *pvParameter){
         switch (evt.id) {
             case EXAMPLE_ESPNOW_SEND_CB:
             {
+                bc_send_count++;
+                
                 example_espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 is_broadcast = IS_BROADCAST_ADDR(send_cb->mac_addr);
 
@@ -223,6 +246,8 @@ static void neighbor_detection_task(void *pvParameter){
                     vTaskDelay(send_param->delay/portTICK_PERIOD_MS);
                 }
 
+                send_offset_sum += send_cb->send_offset;
+
                 send_param->count--;
                 if (send_param->count > 0) {    	    // send next bc if still got some to send
 
@@ -230,6 +255,14 @@ static void neighbor_detection_task(void *pvParameter){
 
                     memcpy(send_param->dest_mac, send_cb->mac_addr, ESP_NOW_ETH_ALEN);
                     example_espnow_data_prepare(send_param);
+                    
+                    // post timestamp of calling esp_now_send() to queue 
+                    time_placed = get_systime_us();
+                    if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
+                        ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
+                        example_espnow_deinit(send_param);
+                        vTaskDelete(NULL);
+                    }
 
                     /* Send the next data after the previous data is sent. */
                     if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
@@ -258,10 +291,10 @@ static void neighbor_detection_task(void *pvParameter){
                 //ESP_LOGW(TAG2, "time_tm = %lld", time_tm);
 
                 int64_t delta = time_TX - time_RX - time_tm;
-                exchange_count++;
+                bc_recv_count++;
                 time_offset_sum += delta;
 
-                ESP_LOGI(TAG2, "time_TX = %lld | time_RX = %lld | time_tm = %lld | delta = %lld us | count = %u ", time_TX, time_RX, time_tm, delta, exchange_count);
+                //ESP_LOGI(TAG2, "time_TX = %lld | time_RX = %lld | time_tm = %lld | delta = %lld us | count = %u ", time_TX, time_RX, time_tm, delta, bc_recv_count);
 
                 ret = example_espnow_data_parse(recv_cb->data, recv_cb->data_len, &recv_seq);
                 free(recv_cb->data);
@@ -299,17 +332,23 @@ static void neighbor_detection_task(void *pvParameter){
         }
     }
 
-    ESP_LOGW(TAG2, "A total of %u timing exchanges from %d peers took place", exchange_count, peer_count);
-    ESP_LOGW(TAG2, "time_offset_sum = %lld", time_offset_sum);
+    ESP_LOGW(TAG2, "A total of %u timing exchanges from %d peers took place", bc_recv_count, peer_count);
+    
+    // compute average send offset
+    int64_t avg_send_offset = send_offset_sum / bc_send_count;
+    ESP_LOGW(TAG2, "avg_send_offset = %lld us", avg_send_offset);
 
     int64_t avg_time_offset_us = 0;
-    if (exchange_count > 0){
-        avg_time_offset_us = time_offset_sum / (int64_t)exchange_count;
-        ESP_LOGW(TAG2, "Correct time offset of: %lld us", avg_time_offset_us);
-        correct_systime(avg_time_offset_us);
-        //vTaskDelay(100/portTICK_PERIOD_MS); // wait 100 ms
+    if (bc_recv_count > 0){
+
+        avg_time_offset_us = time_offset_sum / (int64_t)bc_recv_count;
+        ESP_LOGW(TAG2, "avg_time_offset_us = %lld us", avg_time_offset_us);
+        
+        int64_t offset = avg_time_offset_us - avg_send_offset;
+        ESP_LOGW(TAG2, "Correct time offset of: %lld us", offset);
+        correct_systime(offset);
     }else{
-        ESP_LOGE(TAG2, "No time exchanges took place");
+        ESP_LOGE(TAG2, "No timestamps received");
     }
     
     uint64_t delay_us = 0;
@@ -332,7 +371,9 @@ static esp_err_t example_espnow_init(void)
 {
     example_espnow_send_param_t *send_param;
 
+    s_time_send_placed_queue = xQueueCreate(1, sizeof(int64_t));
     s_example_espnow_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
+    
     if (s_example_espnow_queue == NULL) {
         ESP_LOGE(TAG1, "Create mutex fail");
         return ESP_FAIL;
@@ -447,6 +488,6 @@ void app_main(void)
     ESP_ERROR_CHECK( ret );
 
     setup_timer();
-    example_wifi_init();
+    example_wifi_init();        // should change to neighbor_detection_init()
     example_espnow_init();
 }

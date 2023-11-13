@@ -31,6 +31,7 @@ typedef enum {
 typedef struct {
     uint8_t mac_addr[ESP_NOW_ETH_ALEN];
     esp_now_send_status_t status;
+    int64_t send_offset;
 } example_espnow_event_send_cb_t;
 
 typedef struct {
@@ -49,7 +50,7 @@ typedef union {
 typedef struct {
     example_espnow_event_id_t id;
     example_espnow_event_info_t info;
-    int timestamp;
+    int64_t timestamp;
 } example_espnow_event_t;
 
 enum {
