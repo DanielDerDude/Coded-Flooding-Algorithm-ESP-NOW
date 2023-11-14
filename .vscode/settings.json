@@ -25,6 +25,7 @@
     "optional": "c",
     "condition_variable": "c",
     "ctime": "c",
-    "mutex": "c"
+    "mutex": "c",
+    "list.h": "c"
   }
 }
