@@ -1,30 +1,11 @@
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <assert.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/timers.h"
-//#include "freertos/task.h"
-#include "nvs_flash.h"
-#include "esp_random.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "esp_wifi.h"
-#include "esp_log.h"
-#include "esp_mac.h"
-#include "esp_now.h"
-#include "esp_crc.h"
-#include "esp_sleep.h"
-#include "esp_timer.h"
-//#include "timer_config.h"
-#include "timing_functions.h"
-#include "espnow_example.h"
+#ifndef _INCLUDES_H_
+#define _INCLUDES_H_
+#include "includes.h"
+#endif
 
 #define ESPNOW_MAXDELAY 512
 
 // log TAGs
-
 static const char *TAG1 = "neighbor detection task";
 static const char *TAG3 = "timer";
 
@@ -54,7 +35,6 @@ static void example_wifi_init(void)
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
-    //ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE));            // timestamps funktionieren sonst nicht
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
 
@@ -74,11 +54,10 @@ static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_
     // compute send offset here
     int64_t time_placed;
     if (xQueueReceive(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
-        ESP_LOGW(TAG1, "Send time_send_placed_queue queue fail");
+        ESP_LOGW(TAG1, "Receive time_send_placed_queue queue fail");
         send_cb->send_offset = 0;
     }else{
         send_cb->send_offset = time_now - time_placed;
-        ESP_LOGW(TAG1, "Computed send offset = %lld us", send_cb->send_offset);
     }
 
     if (mac_addr == NULL) {
@@ -96,11 +75,18 @@ static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_
 
 static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
+    int64_t time_now = get_systime_us();
+    
     example_espnow_event_t evt;
     example_espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
     recv_cb->sig_len = recv_info->rx_ctrl->sig_len;
-    //evt.timestamp = (int64_t)(recv_info->rx_ctrl->timestamp);
-    evt.timestamp = get_systime_us();
+    
+/*  // tried to compute the send offset, but the timestamp in the rx_ctrl field is not reliable
+    int64_t recv_offset = esp_timer_get_time() - (int64_t)(recv_info->rx_ctrl->timestamp);
+    evt.timestamp = get_systime_us() - recv_offset;
+ */
+
+    evt.timestamp = time_now;
 
     uint8_t * mac_addr = recv_info->src_addr;
 
@@ -366,6 +352,12 @@ static void neighbor_detection_task(void *pvParameter){
     ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer on next tenth of a second
     vTaskDelete(NULL);
 }
+
+/* 
+static void pulse_task(void *pvParameter){
+
+}
+*/
 
 static esp_err_t example_espnow_init(void)
 {
