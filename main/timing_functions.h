@@ -1,4 +1,7 @@
-#include <sys/time.h>
+#ifndef _INCLUDES_H_
+#define _INCLUDES_H_
+#include "includes.h"
+#endif
 
 static const char *TAG2 = "systime";
 
@@ -21,6 +24,7 @@ static IRAM_ATTR void reset_systime(void){
     assert(ret == 0);
 }
 
+/* 
 static IRAM_ATTR void correct_systime(int64_t offset_us){ // changes time according to offset instantly
     struct timeval new;
     int ret = gettimeofday(&new, NULL);
@@ -32,7 +36,7 @@ static IRAM_ATTR void correct_systime(int64_t offset_us){ // changes time accord
     assert(ret == 0);
 }
 
-/* static IRAM_ATTR void adjust_systime(int64_t offset_us){ // adjusts time gradually - adjustment does not survive in deepsleep
+static IRAM_ATTR void adjust_systime(int64_t offset_us){ // adjusts time gradually - adjustment does not survive in deepsleep
     struct timeval offset;
     offset.tv_sec = offset_us / 1000000;  // convert microseconds to seconds
     offset.tv_usec = offset_us % 1000000; // remainder in microseconds

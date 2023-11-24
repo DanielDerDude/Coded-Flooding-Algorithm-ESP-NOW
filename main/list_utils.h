@@ -1,83 +1,187 @@
-/* This header contains my own API for a doubly linked list. This will be used to store the peer lists, packet pools etc. */
+/* 
+This header provides a peer list for esier esp now peer management. When adding a peer to a list, the peer automatically is given to the esp now API.
+In the future, this header will also provide functions to store and a reload list from and to NVS/RTC memory. These lists can then be compared to other 
+peerlists and differences can be detected.
+*/
 
 #ifndef _INCLUDES_H_
 #define _INCLUDES_H_
 #include "includes.h"
 #endif
 
-static const char *LIST_TAG = "timer";
+// offset structure
+typedef struct {
+    int64_t avg_offset;                                 // average offset
+    int64_t offset_buffer[CONFIG_ESPNOW_SEND_COUNT];    // array for saving collected offests
+    uint8_t idx;                                        // index pointing to next free element of buffer
+} offset_data_t;
 
-// xNode structure
-typedef struct xNode {
-    void* xData;
-    int64_t xItemValue;
-    struct xNode* pxNext;
-    struct xNode* pxPrev;
-};
+// xPeerElem structure
+typedef struct xPeerElem {
+    uint8_t mac_add[ESP_NOW_ETH_ALEN];  	             // mac address of peer, list is sorted by mac address
+    offset_data_t* timing_data;                          // timing data
+    uint64_t item_value;
+    struct xPeerElem* pxNext;                            // pointer pointing to next list enrty
+    struct xPeerElem* pxPrev;                            // pointer pointing to previous list enrty
+} xPeerElem_t;
 
 // list structure
-typedef struct DoubleLinkedList_t {
-    uint8_t length;
-    xNode* pxHead;
-    xNode* pxTail;
-} DoubleLinkedList_t;
+typedef struct ListHandle {
+    int64_t max_offset;                         // max offset in list relative to current systime (send offset not accounted)
+    int64_t max_offset_addr[ESP_NOW_ETH_ALEN];  // mac addres of peer with highest offset
+    uint8_t peer_count;                         // number of peers in list, excluding the broadcast peer
+    xPeerElem_t* pxHead;                        // points to first peer Elem in list
+    xPeerElem_t* pxTail;                        // points to last peer Elem in list
+} PeerListHandle_t;
 
-/* Function to initialise the List */
-void vInitList(DoubleLinkedList_t* list) {    
-    list->pxHead = NULL;        // points to first element
-    list->pxTail = NULL;        // points to last element
+// computes item value
+uint64_t calcItemValue(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
+    uint64_t item_value = 0;
+    for (int i = 0; i < ESP_NOW_ETH_ALEN; i++) {
+        item_value = (item_value << 8) | mac_addr[i];
+    }
+    return item_value;
 }
 
-// insert a new element in sorted order based on xItemValue (High -> Low)
-void vInsertSorted(DoubleLinkedList_t* list, void* data, size_t dataSize, int64_t itemValue) {
-    xNode* newNode = (xNode*)malloc(sizeof(xNode));
-    if (newNode == NULL){
-        ESP_LOGE(LIST_TAG, "Memory allocation faild for new Node")
-    }
-    newNode->xData = malloc(dataSize);
-    newNode->xData = 
-    memcpy(newNode->xData, data, dataSize);
+// returns pointer to newly created Elem
+static xPeerElem_t* xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t first_offset){
+    // allocate memory for new Elem
+    xPeerElem_t* newElem = (xPeerElem_t*)malloc(sizeof(xPeerElem_t));
+    assert(newElem != NULL);
+    // copy mac addres
+    memcpy(newElem->mac_add, mac_addr, ESP_NOW_ETH_ALEN);
 
-    newNode->xItemValue = itemValue;
-    newNode->pxNext = NULL;
-    newNode->pxPrev = NULL;
+    // allocate memory for offset data
+    offset_data_t* timing_data = (offset_data_t*)malloc(sizeof(offset_data_t));
+    assert(timing_data != NULL);
 
-    xNode* current = list->pxHead;
-    while (current != NULL && current->xItemValue < itemValue) {
-        current = current->pxNext;
-    }
+    // set avg_offset to first offset and add first offset to buffer, also init buffer index
+    timing_data->avg_offset = first_offset;
+    timing_data->offset_buffer[0] = first_offset;
+    timing_data->idx = 1;
+    
+    newElem->timing_data = timing_data;
+    newElem->item_value = calcItemValue(mac_addr);
 
-    if (current == NULL) {      // new node at the end
-        newNode->pxPrev = list->pxTail;
-        list->pxTail->pxNext = newNode;
-        list->pxTail = newNode;
-    } else {
-        // Insert before current
-        newNode->pxPrev = current->pxPrev;
-        newNode->pxNext = current;
-        if (current->pxPrev != NULL) {
-            current->pxPrev->pxNext = newxNode;
-        } else {
-            list->pxHead = newxNode;
+    // init pointers
+    newElem->pxNext = NULL;
+    newElem->pxPrev = NULL;
+
+    return newElem;
+}
+
+/* Function to initialise the List, returns pointer to list Handle */
+PeerListHandle_t* xInitPeerList() {
+    PeerListHandle_t* newList = (PeerListHandle_t*) malloc(sizeof(PeerListHandle_t));
+    newList->max_offset = 0;
+    newList->peer_count = 0;
+    newList->pxHead = NULL;
+    newList->pxTail = NULL;
+    
+    return newList;
+}
+
+// adds a peer to the list, sorted by mac addr (high -> low)
+void vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset) {
+
+    assert(list != NULL);           //check if list exists
+
+    // create peer list entry
+    xPeerElem_t* newElem = xCreateElem(mac_addr, new_offset);
+
+    // insert element in list
+    if (list->pxHead == NULL){      // if list is empty
+        list->pxHead = newElem;
+        list->pxTail = newElem;
+    } else { 
+        // iterate list and find correct position for new element
+        xPeerElem_t* current = list->pxHead;
+        while (current != NULL && current->item_value < newElem->item_value) {    
+            current = current->pxNext;
         }
-        current->pxPrev = newxNode;
+
+        // insert elememn
+        if (current == NULL) {      // if position at the end of list
+            newElem->pxPrev = list->pxTail;
+            list->pxTail->pxNext = newElem;
+            list->pxTail = newElem;
+        } else {                    // inbetween the list
+            newElem->pxPrev = current->pxPrev;
+            newElem->pxNext = current;
+            current->pxPrev = newElem;
+        }
+    }
+
+    // give peer to esp now API
+    esp_now_peer_info_t *peer = (esp_now_peer_info_t*)malloc(sizeof(esp_now_peer_info_t));
+    assert(peer != NULL);
+
+    memset(peer, 0, sizeof(esp_now_peer_info_t));
+    peer->channel = CONFIG_ESPNOW_CHANNEL;
+    peer->ifidx = ESPNOW_WIFI_IF;
+    peer->encrypt = true;
+    memcpy(peer->lmk, CONFIG_ESPNOW_LMK, ESP_NOW_KEY_LEN);
+    memcpy(peer->peer_addr, mac_addr, ESP_NOW_ETH_ALEN);
+    ESP_ERROR_CHECK( esp_now_add_peer(peer) );
+    free(peer);
+
+    // increase peer count
+    list->peer_count++;
+
+    // check if new offset is highest offset
+    if ((list->pxHead == NULL) || (new_offset > list->max_offset)){  // if first element in list or offset is max offset
+        list->max_offset = new_offset;                      // set new max offset
+        for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){     // copy address
+            list->max_offset_addr[i] = mac_addr[i];
+        }
     }
 }
 
-// return data of a node, needs to be casted to the type of original data.
-void* xGetHeadData(DoubleLinkedList_t* list){
+void vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset){
+    assert(list != NULL);                                       // assert that list exists
+    assert((list->pxHead != NULL) && (list->pxTail != NULL));   // assert that at least one element exists
+    
+    // iterate through list and find item Value
+    uint64_t searchedValue = calcItemValue(mac_addr);
+    xPeerElem_t* ListElem = list->pxHead;
+    
+    while((ListElem->item_value != searchedValue) && (ListElem != NULL)){
+        ListElem = ListElem->pxNext;
+    }
+    assert(ListElem != NULL);
+    
+    // add new offset to buffer and increase buffer index
+    offset_data_t* timing_data = ListElem->timing_data;
+    timing_data->offset_buffer[timing_data->idx] = new_offset;
+    timing_data->idx++;
+    
+    // compute new average offset
+    int64_t temp = 0;
+    for (uint8_t i = 0; i < timing_data->idx; i++){
+        temp += timing_data->offset_buffer[i];
+    }
+    timing_data->avg_offset = temp / timing_data->idx;
 
+    // check if new computed offset of peer is max offset
+    if (timing_data->avg_offset > list->max_offset){
+        list->max_offset = timing_data->avg_offset;         // set new max offset
+        for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){     // copy address
+            list->max_offset_addr[i] = mac_addr[i];
+        }
+    }
 }
 
-// Display the elements in the list
-void displayList(DoubleLinkedList_t* list, void (*printFn)(void*)) {
-    xNode* current = list->pxHead;
+void vDeletePeerList(PeerListHandle_t* list){
+    assert(list != NULL);
+    xPeerElem_t* current = list->pxHead;
+    xPeerElem_t* next;
+
     while (current != NULL) {
-        printFn(current->xData);
-        current = current->pxNext;
+        next = current->pxNext;
+        free(current->timing_data);
+        free(current);
+        current = next;
     }
-}
 
-void vDeleteList(DoubleLinkedList_t* list){
-    // todo
+    free(list);
 }

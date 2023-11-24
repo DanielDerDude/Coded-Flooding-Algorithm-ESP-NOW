@@ -26,6 +26,9 @@
     "condition_variable": "c",
     "ctime": "c",
     "mutex": "c",
-    "list.h": "c"
+    "list.h": "c",
+    "timing_functions.h": "c",
+    "nvs_flash.h": "c",
+    "esp_event.h": "c"
   }
 }
