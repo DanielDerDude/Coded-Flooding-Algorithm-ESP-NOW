@@ -2,17 +2,16 @@
 #define _INCLUDES_H_
 #include "includes.h"
 #include "list_utils.h"
+#include "timing_functions.h"
+#include "GPIO_handle.h"
 #endif
 
 #define ESPNOW_MAXDELAY 512
 
 // log TAGs
+static const char *TAG0 = "main   ";
 static const char *TAG1 = "ND task";
-static const char *TAG3 = "timer  ";
-
-// mutexes
-StaticSemaphore_t mutexTimePlaced;
-SemaphoreHandle_t time_placed;
+static const char *TAG2 = "timer  ";
 
 // queue handles
 static QueueHandle_t s_example_espnow_queue;        // espnow event queue
@@ -81,11 +80,6 @@ static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const u
     example_espnow_event_t evt;
     example_espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
     recv_cb->sig_len = recv_info->rx_ctrl->sig_len;
-    
-/*  // tried to compute the send offset, but the timestamp in the rx_ctrl field is not reliable
-    int64_t recv_offset = esp_timer_get_time() - (int64_t)(recv_info->rx_ctrl->timestamp);
-    evt.timestamp = get_systime_us() - recv_offset;
- */
 
     evt.timestamp = time_now;
 
@@ -98,7 +92,7 @@ static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const u
 
     evt.id = EXAMPLE_ESPNOW_RECV_CB;
     memcpy(recv_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);
-    recv_cb->data = malloc(len);
+    recv_cb->data = (uint8_t*) malloc(len);
     if (recv_cb->data == NULL) {
         ESP_LOGE(TAG1, "Malloc receive data fail");
         return;
@@ -115,30 +109,32 @@ static void msg_exchange_timer_cb(void* arg){
     // delete timer that called this cb
     ESP_ERROR_CHECK(esp_timer_delete(msg_exchange_timer_handle));
     
-    esp_timer_start_once(shutdown_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000);
-    ESP_LOGI(TAG3, "Msg exchange timer triggered - beginning message exchange");
-
+    // assert debug pin, start timer for when to init shutdown and display status 
+    ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );
+    ESP_ERROR_CHECK( esp_timer_start_once(shutdown_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000) );
+    ESP_LOGI(TAG2, "Msg exchange timer triggered - beginning message exchange");
     // insert vTaskCreate() for message exchange with ONC here
 }
 
 static void shutdown_timer_cb(void* arg){
-    ESP_ERROR_CHECK(esp_timer_delete(shutdown_timer_handle));
-    
-    esp_timer_start_once(init_deepsleep_timer_handle, 100000);     // set init deepsleep timer
     // delete timer that called this cb
+    ESP_ERROR_CHECK(esp_timer_delete(shutdown_timer_handle));
 
-    ESP_LOGW(TAG3, "Shutdown timer triggered - finishing tasks");
-
+    // set timer when to go to sleep
     // maybe create a timekeeper task which supervises the cleanup
+    ESP_ERROR_CHECK( esp_timer_start_once(init_deepsleep_timer_handle, 100000) );     
+    
+    ESP_LOGW(TAG2, "Shutdown timer triggered - finishing tasks");
 }
 
 static void init_deepsleep_timer_cb(void* arg){
     // delete timer that called this cb
     ESP_ERROR_CHECK(esp_timer_delete(init_deepsleep_timer_handle));
     
-    ESP_LOGI(TAG3, "Going into deepsleep for %d", CONFIG_DEEPSLEEP_DURATION_MS);
-
-    // enter deepsleep
+    ESP_LOGI(TAG2, "Going into deepsleep for %d", CONFIG_DEEPSLEEP_DURATION_MS);
+    
+    // de-assert debug pin and enter deepsleep
+    ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );
     esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);
 }
 
@@ -236,7 +232,7 @@ static void neighbor_detection_task(void *pvParameter){
 
                     //ESP_LOGI(TAG1, "send data to "MACSTR"", MAC2STR(send_cb->mac_addr));
 
-                    memcpy(send_param->dest_mac, send_cb->mac_addr, ESP_NOW_ETH_ALEN);
+                    //memcpy(send_param->dest_mac, send_cb->mac_addr, ESP_NOW_ETH_ALEN);
                     example_espnow_data_prepare(send_param);
                     
                     // post timestamp of calling esp_now_send() to queue 
@@ -280,7 +276,7 @@ static void neighbor_detection_task(void *pvParameter){
                     if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
                         
                         vAddPeer(peer_list, recv_cb->mac_addr, delta);
-                    
+
                     }else{                                                          // known peer
                         
                         vAddOffset(peer_list, recv_cb->mac_addr, delta);
@@ -299,11 +295,11 @@ static void neighbor_detection_task(void *pvParameter){
     }
 
     // display peer counts and total number of received broadcasts
-    ESP_LOGW(TAG2, "Timestamps received from %d peers.", peer_list->peer_count);
+    ESP_LOGW(TAG1, "Timestamps received from %d peers.", peer_list->peer_count);
 
     // compute the experienced average send offset
     int64_t avg_send_offset = send_offset_sum / ( CONFIG_ESPNOW_SEND_COUNT-send_param->count ) ;
-    ESP_LOGW(TAG2, "avg_send_offset = %lld us", avg_send_offset);
+    ESP_LOGW(TAG1, "avg_send_offset = %lld us", avg_send_offset);
 
     // determine time master and coresponding address
     int64_t max_offset = 0;
@@ -316,7 +312,7 @@ static void neighbor_detection_task(void *pvParameter){
     if (peer_list->peer_count != 0){
         max_offset = peer_list->max_offset - avg_send_offset;        // extract max offset, take average send offset intop account
     }else{
-        ESP_LOGE(TAG2, "No peers detected");
+        ESP_LOGE(TAG1, "No peers detected");
     }
     
     // delete peer list
@@ -344,9 +340,9 @@ static void neighbor_detection_task(void *pvParameter){
     // find the delay to the next full 10th of a second
     uint64_t next_ten_milliseconds = ((master_time_us / 10000) + 1) * 10000;
     uint64_t delay_us = next_ten_milliseconds - master_time_us;
-    
+
     // start scheduled phases according to master time
-    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer on next tenth of a second
+    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
     vTaskDelete(NULL);
 }
 
@@ -380,7 +376,7 @@ static esp_err_t example_espnow_init(void)
     ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)CONFIG_ESPNOW_PMK) );
 
     /* Add broadcast peer information to peer list. */
-    esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
+    esp_now_peer_info_t *peer = (esp_now_peer_info_t*) malloc(sizeof(esp_now_peer_info_t));
     if (peer == NULL) {
         ESP_LOGE(TAG1, "Malloc peer information fail");
         vSemaphoreDelete(s_example_espnow_queue);
@@ -409,7 +405,7 @@ static esp_err_t example_espnow_init(void)
     send_param->count = CONFIG_ESPNOW_SEND_COUNT;
     send_param->delay = CONFIG_ESPNOW_SEND_DELAY;
     send_param->len = CONFIG_ESPNOW_SEND_LEN;
-    send_param->buffer = malloc(CONFIG_ESPNOW_SEND_LEN);
+    send_param->buffer = (uint8_t*)malloc(CONFIG_ESPNOW_SEND_LEN);
     if (send_param->buffer == NULL) {
         ESP_LOGE(TAG1, "Malloc send buffer fail");
         free(send_param);
@@ -420,7 +416,7 @@ static esp_err_t example_espnow_init(void)
     memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
     example_espnow_data_prepare(send_param);
 
-    xTaskCreate(neighbor_detection_task, "neighbor_detection_task", 4096, send_param, 4, NULL);
+    xTaskCreate(neighbor_detection_task, "neighbor_detection_task", 2048, send_param, 4, NULL);
 
     return ESP_OK;
 }
@@ -460,9 +456,14 @@ static void example_espnow_deinit(example_espnow_send_param_t *send_param)
 }
 
 void app_main(void)
-{
-    ESP_LOGW(TAG3, "Entering app_main() at %lld us", esp_timer_get_time());
-    
+{   
+    esp_log_level_set(TAG_LIST, ESP_LOG_INFO);
+    esp_log_level_set(TAG0, ESP_LOG_INFO);
+    esp_log_level_set(TAG1, ESP_LOG_INFO);
+    esp_log_level_set(TAG2, ESP_LOG_INFO);
+
+    ESP_LOGW(TAG0, "Entering app_main() at %lld us", esp_timer_get_time());
+
     // reset systime if reset did not get triggered by deepsleep
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
         ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
@@ -476,7 +477,8 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( ret );
 
+    setup_GPIO();
     setup_timer();
-    example_wifi_init();        // should change to neighbor_detection_init()
+    example_wifi_init();
     example_espnow_init();
 }

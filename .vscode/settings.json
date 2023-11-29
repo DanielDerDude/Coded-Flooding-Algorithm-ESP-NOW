@@ -29,6 +29,10 @@
     "list.h": "c",
     "timing_functions.h": "c",
     "nvs_flash.h": "c",
-    "esp_event.h": "c"
+    "esp_event.h": "c",
+    "esp_netif.h": "c",
+    "includes.h": "c",
+    "esp_timer.h": "c",
+    "gpio_handle.h": "c"
   }
 }

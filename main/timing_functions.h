@@ -3,8 +3,6 @@
 #include "includes.h"
 #endif
 
-static const char *TAG2 = "systime";
-
 static IRAM_ATTR int64_t get_systime_us(void){
     struct timeval tv;
     int ret = gettimeofday(&tv, NULL);
