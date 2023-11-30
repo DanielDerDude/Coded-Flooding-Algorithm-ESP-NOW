@@ -9,8 +9,6 @@ peerlists and differences can be detected.
 #include "includes.h"
 #endif
 
-static const char* TAG_LIST = "list";
-
 // offset structure
 typedef struct {
     int64_t avg_offset;                                 // average offset
@@ -120,7 +118,9 @@ void vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], 
         } else {                                // inbetween the list
             newElem->pxPrev = current->pxPrev;
             newElem->pxNext = current;
+            current->pxPrev->pxNext = newElem;
             current->pxPrev = newElem;
+            
         }
     }
 

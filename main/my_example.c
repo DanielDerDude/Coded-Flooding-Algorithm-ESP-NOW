@@ -43,7 +43,7 @@ static void example_wifi_init(void)
 #endif
 }
 
-static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+static void IRAM_ATTR example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
     int64_t time_now = get_systime_us();
 
@@ -73,7 +73,7 @@ static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_
     }
 }
 
-static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
+static void IRAM_ATTR example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
     int64_t time_now = get_systime_us();
     
@@ -122,7 +122,7 @@ static void shutdown_timer_cb(void* arg){
 
     // set timer when to go to sleep
     // maybe create a timekeeper task which supervises the cleanup
-    ESP_ERROR_CHECK( esp_timer_start_once(init_deepsleep_timer_handle, 100000) );     
+    ESP_ERROR_CHECK( esp_timer_start_once(init_deepsleep_timer_handle, 100) );     
     
     ESP_LOGW(TAG2, "Shutdown timer triggered - finishing tasks");
 }
@@ -141,7 +141,7 @@ static void init_deepsleep_timer_cb(void* arg){
 int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
 {
     example_espnow_data_t *buf = (example_espnow_data_t *)data;
-    uint16_t crc, crc_cal = 0;
+    //uint16_t crc, crc_cal = 0;
 
     if (data_len < sizeof(example_espnow_data_t)) {
         ESP_LOGE(TAG1, "Receive ESPNOW data too short, len:%d", data_len);
@@ -149,18 +149,18 @@ int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
     }
 
     *seq = buf->seq_num;
-    crc = buf->crc;
+    /*crc = buf->crc;
     buf->crc = 0;
     crc_cal = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, data_len);
 
     if (crc_cal == crc) {
         return buf->type;
     }
-
-    return -1;
+    */
+    return buf->type;
 }
 
-void example_espnow_data_prepare(example_espnow_send_param_t *send_param)
+void IRAM_ATTR example_espnow_data_prepare(example_espnow_send_param_t *send_param)
 {
     example_espnow_data_t *buf = (example_espnow_data_t *)send_param->buffer;
 
@@ -168,12 +168,11 @@ void example_espnow_data_prepare(example_espnow_send_param_t *send_param)
 
     buf->type = IS_BROADCAST_ADDR(send_param->dest_mac) ? EXAMPLE_ESPNOW_DATA_BROADCAST : EXAMPLE_ESPNOW_DATA_UNICAST;
     buf->seq_num = s_example_espnow_seq[buf->type]++;
-    buf->crc = 0;
-    buf->timestamp = get_systime_us();
+    //buf->crc = 0;
 
-    /* Fill all remaining bytes after the timestamp with random values */
     esp_fill_random(buf->payload, send_param->len - sizeof(example_espnow_data_t));
-    buf->crc = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, send_param->len);
+    buf->timestamp = get_systime_us();
+    /* buf->crc = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, send_param->len); */
 }
 
 static void neighbor_detection_task(void *pvParameter){
@@ -233,7 +232,7 @@ static void neighbor_detection_task(void *pvParameter){
                     //ESP_LOGI(TAG1, "send data to "MACSTR"", MAC2STR(send_cb->mac_addr));
 
                     //memcpy(send_param->dest_mac, send_cb->mac_addr, ESP_NOW_ETH_ALEN);
-                    example_espnow_data_prepare(send_param);
+                    
                     
                     // post timestamp of calling esp_now_send() to queue 
                     time_placed = get_systime_us();
@@ -242,7 +241,7 @@ static void neighbor_detection_task(void *pvParameter){
                         example_espnow_deinit(send_param);
                         vTaskDelete(NULL);
                     }
-
+                    example_espnow_data_prepare(send_param);
                     // send next broadcast
                     if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
                         ESP_LOGE(TAG1, "Send error");
@@ -294,6 +293,8 @@ static void neighbor_detection_task(void *pvParameter){
         }
     }
 
+    ESP_LOGW(TAG0, "finished broadcasting at %lld us", esp_timer_get_time());
+
     // display peer counts and total number of received broadcasts
     ESP_LOGW(TAG1, "Timestamps received from %d peers.", peer_list->peer_count);
 
@@ -303,9 +304,10 @@ static void neighbor_detection_task(void *pvParameter){
 
     // determine time master and coresponding address
     int64_t max_offset = 0;
-    uint8_t master_addr[ESP_NOW_ETH_ALEN];
+    uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
+    
     for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){         // copy mac address with highest offset from list
-        master_addr[i] = peer_list->max_offset_addr[i];
+        max_offset_addr[i] = peer_list->max_offset_addr[i];
     }
 
     // check if any peers have been detected
@@ -317,30 +319,25 @@ static void neighbor_detection_task(void *pvParameter){
     
     // delete peer list
     vDeletePeerList(peer_list); 
-
-    // compute delay to start msg exchange in sync with the master time (oldest node);
-    uint64_t master_time_us;
+    
     if (max_offset > 0) {                                       // device does not hold the master time 
-
-        ESP_LOGW(TAG1, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(master_addr));
-
-        master_time_us = (get_systime_us() + max_offset);       // compute master time with highest offset
-
+        ESP_LOGW(TAG1, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
     }else{                                                      // this device holds the master time
-        
-        esp_err_t err = esp_read_mac(master_addr, ESP_MAC_WIFI_SOFTAP);
+        esp_err_t err = esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP);
         if(err != ESP_OK){
             ESP_LOGE(TAG1, "Error reading my mac address.");    
         }else{
-            ESP_LOGW(TAG1, "I have the master time with "MACSTR"", MAC2STR(master_addr));
+            ESP_LOGW(TAG1, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
         }
-        master_time_us = get_systime_us();
     }
 
-    // find the delay to the next full 10th of a second
-    uint64_t next_ten_milliseconds = ((master_time_us / 10000) + 1) * 10000;
-    uint64_t delay_us = next_ten_milliseconds - master_time_us;
+    // compute delay to start msg exchange in sync with the master time (oldest node);
+    int64_t time_now = get_systime_us();
+    uint64_t master_time_us = (max_offset > 0) ? (time_now + max_offset) : time_now;
 
+    // find the delay to the next full 100th of a second (of master if not master)
+    uint64_t delay_us = (master_time_us / 100000 + 1) * 100000 - master_time_us;
+    
     // start scheduled phases according to master time
     ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
     vTaskDelete(NULL);
@@ -456,11 +453,7 @@ static void example_espnow_deinit(example_espnow_send_param_t *send_param)
 }
 
 void app_main(void)
-{   
-    esp_log_level_set(TAG_LIST, ESP_LOG_INFO);
-    esp_log_level_set(TAG0, ESP_LOG_INFO);
-    esp_log_level_set(TAG1, ESP_LOG_INFO);
-    esp_log_level_set(TAG2, ESP_LOG_INFO);
+{
 
     ESP_LOGW(TAG0, "Entering app_main() at %lld us", esp_timer_get_time());
 
