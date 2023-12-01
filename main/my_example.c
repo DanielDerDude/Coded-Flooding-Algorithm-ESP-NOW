@@ -8,13 +8,15 @@
 
 #define ESPNOW_MAXDELAY 512
 
+portMUX_TYPE mutex = portMUX_INITIALIZER_UNLOCKED;      // mutex for time critical code sections
+
 // log TAGs
 static const char *TAG0 = "main   ";
 static const char *TAG1 = "ND task";
 static const char *TAG2 = "timer  ";
 
 // queue handles
-static QueueHandle_t s_example_espnow_queue;        // espnow event queue
+static QueueHandle_t s_espnow_event_queue;        // espnow event queue
 static QueueHandle_t s_time_send_placed_queue;      // queue for timestamps when espnow_send was called
 
 //timer handles
@@ -22,12 +24,12 @@ esp_timer_handle_t msg_exchange_timer_handle;
 esp_timer_handle_t shutdown_timer_handle;
 esp_timer_handle_t init_deepsleep_timer_handle;
 
-static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-static uint16_t s_example_espnow_seq[EXAMPLE_ESPNOW_DATA_MAX] = { 0, 0 };
+static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint16_t s_espnow_seq[ESPNOW_DATA_MAX] = { 0, 0 };
 
-static void example_espnow_deinit(example_espnow_send_param_t *send_param);
+static void espnow_deinit(espnow_send_param_t *send_param);
 
-static void example_wifi_init(void)
+static void wifi_init(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -37,18 +39,14 @@ static void example_wifi_init(void)
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
-
-#if CONFIG_ESPNOW_ENABLE_LONG_RANGE
-    ESP_ERROR_CHECK( esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR) );
-#endif
 }
 
-static void IRAM_ATTR example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
     int64_t time_now = get_systime_us();
 
-    example_espnow_event_t evt;
-    example_espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+    espnow_event_t evt;
+    espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
     evt.timestamp = time_now;
 
     // compute send offset here
@@ -65,20 +63,20 @@ static void IRAM_ATTR example_espnow_send_cb(const uint8_t *mac_addr, esp_now_se
         return;
     }
 
-    evt.id = EXAMPLE_ESPNOW_SEND_CB;
+    evt.id = ESPNOW_SEND_CB;
     memcpy(send_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);
     send_cb->status = status;
-    if (xQueueSend(s_example_espnow_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
+    if (xQueueSend(s_espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
         ESP_LOGW(TAG1, "Send send queue fail");
     }
 }
 
-static void IRAM_ATTR example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
+static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
     int64_t time_now = get_systime_us();
     
-    example_espnow_event_t evt;
-    example_espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+    espnow_event_t evt;
+    espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
     recv_cb->sig_len = recv_info->rx_ctrl->sig_len;
 
     evt.timestamp = time_now;
@@ -90,7 +88,7 @@ static void IRAM_ATTR example_espnow_recv_cb(const esp_now_recv_info_t *recv_inf
         return;
     }
 
-    evt.id = EXAMPLE_ESPNOW_RECV_CB;
+    evt.id = ESPNOW_RECV_CB;
     memcpy(recv_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);
     recv_cb->data = (uint8_t*) malloc(len);
     if (recv_cb->data == NULL) {
@@ -99,7 +97,7 @@ static void IRAM_ATTR example_espnow_recv_cb(const esp_now_recv_info_t *recv_inf
     }
     memcpy(recv_cb->data, data, len);
     recv_cb->data_len = len;
-    if (xQueueSend(s_example_espnow_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
+    if (xQueueSend(s_espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
         ESP_LOGW(TAG1, "Send receive queue fail");
         free(recv_cb->data);
     }
@@ -138,12 +136,12 @@ static void init_deepsleep_timer_cb(void* arg){
     esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);
 }
 
-int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
+int espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
 {
-    example_espnow_data_t *buf = (example_espnow_data_t *)data;
+    espnow_data_t *buf = (espnow_data_t *)data;
     //uint16_t crc, crc_cal = 0;
 
-    if (data_len < sizeof(example_espnow_data_t)) {
+    if (data_len < sizeof(espnow_data_t)) {
         ESP_LOGE(TAG1, "Receive ESPNOW data too short, len:%d", data_len);
         return -1;
     }
@@ -160,24 +158,24 @@ int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
     return buf->type;
 }
 
-void IRAM_ATTR example_espnow_data_prepare(example_espnow_send_param_t *send_param)
+void IRAM_ATTR espnow_data_prepare(espnow_send_param_t *send_param)
 {
-    example_espnow_data_t *buf = (example_espnow_data_t *)send_param->buffer;
+    espnow_data_t *buf = (espnow_data_t *)send_param->buffer;
 
-    assert(send_param->len >= sizeof(example_espnow_data_t));
+    assert(send_param->len >= sizeof(espnow_data_t));
 
-    buf->type = IS_BROADCAST_ADDR(send_param->dest_mac) ? EXAMPLE_ESPNOW_DATA_BROADCAST : EXAMPLE_ESPNOW_DATA_UNICAST;
-    buf->seq_num = s_example_espnow_seq[buf->type]++;
+    buf->type = IS_BROADCAST_ADDR(send_param->dest_mac) ? ESPNOW_DATA_BROADCAST : ESPNOW_DATA_UNICAST;
+    buf->seq_num = s_espnow_seq[buf->type]++;
     //buf->crc = 0;
 
-    esp_fill_random(buf->payload, send_param->len - sizeof(example_espnow_data_t));
+    esp_fill_random(buf->payload, send_param->len - sizeof(espnow_data_t));
     buf->timestamp = get_systime_us();
     /* buf->crc = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, send_param->len); */
 }
 
 static void neighbor_detection_task(void *pvParameter){
 
-    example_espnow_event_t evt;
+    espnow_event_t evt;
     uint16_t recv_seq = 0;
     bool is_broadcast = false;
     int ret;
@@ -189,28 +187,28 @@ static void neighbor_detection_task(void *pvParameter){
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
 
     // init peer list
-    example_espnow_send_param_t *send_param = (example_espnow_send_param_t *)pvParameter;
+    espnow_send_param_t *send_param = (espnow_send_param_t *)pvParameter;
     
     // post timestamp of calling esp_now_send() to queue
     int64_t time_placed = get_systime_us(); 
     if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
         ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
-        example_espnow_deinit(send_param);
+        espnow_deinit(send_param);
         vTaskDelete(NULL);
     }
     // send first broadcast
     if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
         ESP_LOGE(TAG1, "Send error");
-        example_espnow_deinit(send_param);
+        espnow_deinit(send_param);
         vTaskDelete(NULL);
     }
 
     // start event handling
-    while (xQueueReceive(s_example_espnow_queue, &evt, wait_duration) == pdTRUE) {
+    while (xQueueReceive(s_espnow_event_queue, &evt, wait_duration) == pdTRUE) {
         switch (evt.id) {
-            case EXAMPLE_ESPNOW_SEND_CB:
+            case ESPNOW_SEND_CB:
             {
-                example_espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 is_broadcast = IS_BROADCAST_ADDR(send_cb->mac_addr);
 
                 //ESP_LOGD(TAG1, "Send broadcast to "MACSTR", status1: %d", MAC2STR(send_cb->mac_addr), send_cb->status);
@@ -238,14 +236,14 @@ static void neighbor_detection_task(void *pvParameter){
                     time_placed = get_systime_us();
                     if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
                         ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
-                        example_espnow_deinit(send_param);
+                        espnow_deinit(send_param);
                         vTaskDelete(NULL);
                     }
-                    example_espnow_data_prepare(send_param);
+                    espnow_data_prepare(send_param);
                     // send next broadcast
                     if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
                         ESP_LOGE(TAG1, "Send error");
-                        example_espnow_deinit(send_param);
+                        espnow_deinit(send_param);
                         vTaskDelete(NULL);
                     }
 
@@ -256,20 +254,20 @@ static void neighbor_detection_task(void *pvParameter){
 
                 break;
             }
-            case EXAMPLE_ESPNOW_RECV_CB:
+            case ESPNOW_RECV_CB:
             {
-                example_espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
                 
                 // compute transmission time and offset 
-                int64_t time_TX = ((example_espnow_data_t*)(recv_cb->data))->timestamp;
+                int64_t time_TX = ((espnow_data_t*)(recv_cb->data))->timestamp;
                 int64_t time_RX = evt.timestamp;
                 const int64_t time_tm = ( recv_cb->sig_len * 8 ); // rate * 10^6 = 1us [in us]
                 int64_t delta = time_TX - time_RX - time_tm;
 
-                ret = example_espnow_data_parse(recv_cb->data, recv_cb->data_len, &recv_seq);
+                ret = espnow_data_parse(recv_cb->data, recv_cb->data_len, &recv_seq);
                 free(recv_cb->data);
                 
-                if (ret == EXAMPLE_ESPNOW_DATA_BROADCAST) {
+                if (ret == ESPNOW_DATA_BROADCAST) {
                     //ESP_LOGI(TAG1, "Receive %dth broadcast data from: "MACSTR", len: %d", recv_seq, MAC2STR(recv_cb->mac_addr), recv_cb->data_len);
 
                     if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
@@ -279,10 +277,10 @@ static void neighbor_detection_task(void *pvParameter){
                     }else{                                                          // known peer
                         
                         vAddOffset(peer_list, recv_cb->mac_addr, delta);
-                    
+                        
                     }
                 }
-                else if (ret == EXAMPLE_ESPNOW_DATA_UNICAST) {
+                else if (ret == ESPNOW_DATA_UNICAST) {
                     ESP_LOGE(TAG1, "Received unicast data : "MACSTR"", MAC2STR(recv_cb->mac_addr));
                 }
                 else {
@@ -330,45 +328,38 @@ static void neighbor_detection_task(void *pvParameter){
             ESP_LOGW(TAG1, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
         }
     }
-
+    
+    portENTER_CRITICAL(&mutex);
     // compute delay to start msg exchange in sync with the master time (oldest node);
     int64_t time_now = get_systime_us();
     uint64_t master_time_us = (max_offset > 0) ? (time_now + max_offset) : time_now;
 
     // find the delay to the next full 100th of a second (of master if not master)
-    uint64_t delay_us = (master_time_us / 100000 + 1) * 100000 - master_time_us;
+    uint64_t delay_us = (master_time_us / 1000 + 1) * 1000 - master_time_us;
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
+    portEXIT_CRITICAL(&mutex);
+    
     vTaskDelete(NULL);
 }
 
-/* 
-static void pulse_task(void *pvParameter){
-
-}
-*/
-
-static esp_err_t example_espnow_init(void)
+static esp_err_t espnow_init(void)
 {
-    example_espnow_send_param_t *send_param;
+    espnow_send_param_t *send_param;
 
     s_time_send_placed_queue = xQueueCreate(1, sizeof(int64_t));
-    s_example_espnow_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
+    s_espnow_event_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(espnow_event_t));
     
-    if (s_example_espnow_queue == NULL) {
-        ESP_LOGE(TAG1, "Create mutex fail");
+    if (s_espnow_event_queue == NULL) {
+        ESP_LOGE(TAG1, "creating event queue fail");
         return ESP_FAIL;
     }
 
     /* Initialize ESPNOW and register sending and receiving callback function. */
     ESP_ERROR_CHECK( esp_now_init() );
-    ESP_ERROR_CHECK( esp_now_register_send_cb(example_espnow_send_cb) );
-    ESP_ERROR_CHECK( esp_now_register_recv_cb(example_espnow_recv_cb) );
-#if CONFIG_ESPNOW_ENABLE_POWER_SAVE
-    ESP_ERROR_CHECK( esp_now_set_wake_window(CONFIG_ESPNOW_WAKE_WINDOW) );
-    ESP_ERROR_CHECK( esp_wifi_connectionless_module_set_wake_interval(CONFIG_ESPNOW_WAKE_INTERVAL) );
-#endif
+    ESP_ERROR_CHECK( esp_now_register_send_cb(espnow_send_cb) );
+    ESP_ERROR_CHECK( esp_now_register_recv_cb(espnow_recv_cb) );
     /* Set primary master key. */
     ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)CONFIG_ESPNOW_PMK) );
 
@@ -376,7 +367,7 @@ static esp_err_t example_espnow_init(void)
     esp_now_peer_info_t *peer = (esp_now_peer_info_t*) malloc(sizeof(esp_now_peer_info_t));
     if (peer == NULL) {
         ESP_LOGE(TAG1, "Malloc peer information fail");
-        vSemaphoreDelete(s_example_espnow_queue);
+        vSemaphoreDelete(s_espnow_event_queue);
         esp_now_deinit();
         return ESP_FAIL;
     }
@@ -384,19 +375,19 @@ static esp_err_t example_espnow_init(void)
     peer->channel = CONFIG_ESPNOW_CHANNEL;
     peer->ifidx = ESPNOW_WIFI_IF;
     peer->encrypt = false;
-    memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
+    memcpy(peer->peer_addr, s_broadcast_mac, ESP_NOW_ETH_ALEN);
     ESP_ERROR_CHECK( esp_now_add_peer(peer) );
     free(peer);
 
     /* Initialize sending parameters. */
-    send_param = malloc(sizeof(example_espnow_send_param_t));
+    send_param = malloc(sizeof(espnow_send_param_t));
     if (send_param == NULL) {
         ESP_LOGE(TAG1, "Malloc send parameter fail");
-        vSemaphoreDelete(s_example_espnow_queue);
+        vSemaphoreDelete(s_espnow_event_queue);
         esp_now_deinit();
         return ESP_FAIL;
     }
-    memset(send_param, 0, sizeof(example_espnow_send_param_t));
+    memset(send_param, 0, sizeof(espnow_send_param_t));
     send_param->unicast = false;
     send_param->broadcast = true;
     send_param->count = CONFIG_ESPNOW_SEND_COUNT;
@@ -406,12 +397,12 @@ static esp_err_t example_espnow_init(void)
     if (send_param->buffer == NULL) {
         ESP_LOGE(TAG1, "Malloc send buffer fail");
         free(send_param);
-        vSemaphoreDelete(s_example_espnow_queue);
+        vSemaphoreDelete(s_espnow_event_queue);
         esp_now_deinit();
         return ESP_FAIL;
     }
-    memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
-    example_espnow_data_prepare(send_param);
+    memcpy(send_param->dest_mac, s_broadcast_mac, ESP_NOW_ETH_ALEN);
+    espnow_data_prepare(send_param);
 
     xTaskCreate(neighbor_detection_task, "neighbor_detection_task", 2048, send_param, 4, NULL);
 
@@ -442,11 +433,11 @@ static void setup_timer(){
     ESP_ERROR_CHECK(esp_timer_create(&init_deepsleep_timer_args, &init_deepsleep_timer_handle));
 }
 
-static void example_espnow_deinit(example_espnow_send_param_t *send_param)
+static void espnow_deinit(espnow_send_param_t *send_param)
 {
     free(send_param->buffer);
     free(send_param);
-    vSemaphoreDelete(s_example_espnow_queue);
+    vSemaphoreDelete(s_espnow_event_queue);
     esp_now_deinit();
     esp_wifi_stop();
     esp_wifi_deinit();
@@ -456,13 +447,13 @@ void app_main(void)
 {
 
     ESP_LOGW(TAG0, "Entering app_main() at %lld us", esp_timer_get_time());
-
+/* 
     // reset systime if reset did not get triggered by deepsleep
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
         ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
         reset_systime();
     }
-
+ */
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK( nvs_flash_erase() );
@@ -472,6 +463,6 @@ void app_main(void)
 
     setup_GPIO();
     setup_timer();
-    example_wifi_init();
-    example_espnow_init();
+    wifi_init();
+    espnow_init();
 }
