@@ -3,6 +3,8 @@
 #include "includes.h"
 #endif
 
+static  portMUX_TYPE mutex = portMUX_INITIALIZER_UNLOCKED;      // mutex for time critical code sections
+
 static IRAM_ATTR int64_t get_systime_us(void){
     struct timeval tv;
     int ret = gettimeofday(&tv, NULL);

@@ -1,9 +1,3 @@
-/* 
-This header provides a peer list for esier esp now peer management. When adding a peer to a list, the peer automatically is given to the esp now API.
-In the future, this header will also provide functions to store and a reload list from and to NVS/RTC memory. These lists can then be compared to other 
-peerlists and differences can be detected.
-*/
-
 #ifndef _INCLUDES_H_
 #define _INCLUDES_H_
 #include "includes.h"
@@ -120,7 +114,6 @@ void vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], 
             newElem->pxNext = current;
             current->pxPrev->pxNext = newElem;
             current->pxPrev = newElem;
-            
         }
     }
 

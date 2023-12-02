@@ -8,7 +8,7 @@
 
 #define ESPNOW_MAXDELAY 512
 
-portMUX_TYPE mutex = portMUX_INITIALIZER_UNLOCKED;      // mutex for time critical code sections
+static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
 
 // log TAGs
 static const char *TAG0 = "main   ";
@@ -43,7 +43,9 @@ static void wifi_init(void)
 
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
+    taskENTER_CRITICAL(&spinlock);
     int64_t time_now = get_systime_us();
+    taskEXIT_CRITICAL(&spinlock);
 
     espnow_event_t evt;
     espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
@@ -73,14 +75,17 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
 
 static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
+    taskENTER_CRITICAL(&spinlock);
     int64_t time_now = get_systime_us();
-    
+    int64_t recv_offset = esp_timer_get_time() - recv_info->rx_ctrl->timestamp;
+    taskEXIT_CRITICAL(&spinlock);
+
     espnow_event_t evt;
     espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
     recv_cb->sig_len = recv_info->rx_ctrl->sig_len;
 
-    evt.timestamp = time_now;
-
+    evt.timestamp = time_now - recv_offset;
+    
     uint8_t * mac_addr = recv_info->src_addr;
 
     if (mac_addr == NULL || data == NULL || len <= 0) {
@@ -101,6 +106,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
         ESP_LOGW(TAG1, "Send receive queue fail");
         free(recv_cb->data);
     }
+    
 }
 
 static void msg_exchange_timer_cb(void* arg){
@@ -173,6 +179,20 @@ void IRAM_ATTR espnow_data_prepare(espnow_send_param_t *send_param)
     /* buf->crc = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, send_param->len); */
 }
 
+void IRAM_ATTR init_msg_exchange(int64_t max_offset){
+    portENTER_CRITICAL(&mutex);
+    // compute delay to start msg exchange in sync with the master time (oldest node);
+    int64_t time_now = get_systime_us();
+    uint64_t master_time_us = (max_offset > 0) ? (time_now + max_offset) : time_now;
+
+    // find the delay to the next full 100th of a second (of master if not master)
+    uint64_t delay_us = 1000 - (master_time_us % 1000);
+    
+    // start scheduled phases according to master time
+    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
+    portEXIT_CRITICAL(&mutex);
+}
+
 static void neighbor_detection_task(void *pvParameter){
 
     espnow_event_t evt;
@@ -190,6 +210,8 @@ static void neighbor_detection_task(void *pvParameter){
     espnow_send_param_t *send_param = (espnow_send_param_t *)pvParameter;
     
     // post timestamp of calling esp_now_send() to queue
+    taskENTER_CRITICAL(&spinlock);
+    espnow_data_prepare(send_param);
     int64_t time_placed = get_systime_us(); 
     if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
         ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
@@ -202,6 +224,7 @@ static void neighbor_detection_task(void *pvParameter){
         espnow_deinit(send_param);
         vTaskDelete(NULL);
     }
+    taskEXIT_CRITICAL(&spinlock);
 
     // start event handling
     while (xQueueReceive(s_espnow_event_queue, &evt, wait_duration) == pdTRUE) {
@@ -226,13 +249,9 @@ static void neighbor_detection_task(void *pvParameter){
 
                 send_param->count--;
                 if (send_param->count > 0) {    	    // send next bc if still got some to send
-
-                    //ESP_LOGI(TAG1, "send data to "MACSTR"", MAC2STR(send_cb->mac_addr));
-
-                    //memcpy(send_param->dest_mac, send_cb->mac_addr, ESP_NOW_ETH_ALEN);
-                    
                     
                     // post timestamp of calling esp_now_send() to queue 
+                    taskENTER_CRITICAL(&spinlock);
                     time_placed = get_systime_us();
                     if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
                         ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
@@ -246,10 +265,10 @@ static void neighbor_detection_task(void *pvParameter){
                         espnow_deinit(send_param);
                         vTaskDelete(NULL);
                     }
-
+                    taskEXIT_CRITICAL(&spinlock);
                 }else {
                     ESP_LOGW(TAG1, "last broadcast sent");
-                    wait_duration = send_param->delay * 2;
+                    wait_duration = 0;//send_param->delay * 2;
                 }
 
                 break;
@@ -300,17 +319,16 @@ static void neighbor_detection_task(void *pvParameter){
     int64_t avg_send_offset = send_offset_sum / ( CONFIG_ESPNOW_SEND_COUNT-send_param->count ) ;
     ESP_LOGW(TAG1, "avg_send_offset = %lld us", avg_send_offset);
 
-    // determine time master and coresponding address
+    // determine max offset and coresponding address
     int64_t max_offset = 0;
     uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
     
-    for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){         // copy mac address with highest offset from list
+    for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){                 // copy mac address with highest offset from list
         max_offset_addr[i] = peer_list->max_offset_addr[i];
     }
 
-    // check if any peers have been detected
-    if (peer_list->peer_count != 0){
-        max_offset = peer_list->max_offset - avg_send_offset;        // extract max offset, take average send offset intop account
+    if (peer_list->peer_count != 0){                                // check if any peers have been detected
+        max_offset = peer_list->max_offset - avg_send_offset;       // extract max offset, take average send offset intop account
     }else{
         ESP_LOGE(TAG1, "No peers detected");
     }
@@ -328,18 +346,8 @@ static void neighbor_detection_task(void *pvParameter){
             ESP_LOGW(TAG1, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
         }
     }
-    
-    portENTER_CRITICAL(&mutex);
-    // compute delay to start msg exchange in sync with the master time (oldest node);
-    int64_t time_now = get_systime_us();
-    uint64_t master_time_us = (max_offset > 0) ? (time_now + max_offset) : time_now;
 
-    // find the delay to the next full 100th of a second (of master if not master)
-    uint64_t delay_us = (master_time_us / 1000 + 1) * 1000 - master_time_us;
-    
-    // start scheduled phases according to master time
-    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
-    portEXIT_CRITICAL(&mutex);
+    init_msg_exchange(max_offset);
     
     vTaskDelete(NULL);
 }
@@ -402,7 +410,6 @@ static esp_err_t espnow_init(void)
         return ESP_FAIL;
     }
     memcpy(send_param->dest_mac, s_broadcast_mac, ESP_NOW_ETH_ALEN);
-    espnow_data_prepare(send_param);
 
     xTaskCreate(neighbor_detection_task, "neighbor_detection_task", 2048, send_param, 4, NULL);
 
@@ -447,13 +454,13 @@ void app_main(void)
 {
 
     ESP_LOGW(TAG0, "Entering app_main() at %lld us", esp_timer_get_time());
-/* 
+
     // reset systime if reset did not get triggered by deepsleep
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
         ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
         reset_systime();
     }
- */
+
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK( nvs_flash_erase() );
