@@ -61,11 +61,9 @@ enum {
 
 /* User defined field of ESPNOW data in this example. */
 typedef struct {
-    uint8_t type;                         //Broadcast or unicast ESPNOW data.
-    uint16_t seq_num;                     //Sequence number of ESPNOW data.
-    //uint16_t crc;                         //CRC16 value of ESPNOW data.
-    int64_t timestamp;                    //Timestamp when data was created.
-    uint8_t payload[0];                   //Real payload of ESPNOW data.                   
+    uint8_t type;                         // Broadcast or unicast ESPNOW data.
+    uint16_t seq_num;                     // Sequence number of ESPNOW data.
+    int64_t timestamp;                    // Timestamp of current systime               
 } __attribute__((packed)) espnow_data_t;
 
 /* Parameters of sending ESPNOW data. */

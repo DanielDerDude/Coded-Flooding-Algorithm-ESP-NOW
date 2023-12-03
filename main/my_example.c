@@ -4,6 +4,7 @@
 #include "list_utils.h"
 #include "timing_functions.h"
 #include "GPIO_handle.h"
+#include "NVS_access.h"
 #endif
 
 #define ESPNOW_MAXDELAY 512
@@ -29,23 +30,11 @@ static uint16_t s_espnow_seq[ESPNOW_DATA_MAX] = { 0, 0 };
 
 static void espnow_deinit(espnow_send_param_t *send_param);
 
-static void wifi_init(void)
-{
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
-    ESP_ERROR_CHECK( esp_wifi_start());
-    ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
-}
-
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-    taskENTER_CRITICAL(&spinlock);
-    int64_t time_now = get_systime_us();
-    taskEXIT_CRITICAL(&spinlock);
+    //taskENTER_CRITICAL(&spinlock);
+    int64_t time_now = esp_timer_get_time();
+    //taskEXIT_CRITICAL(&spinlock);
 
     espnow_event_t evt;
     espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
@@ -75,10 +64,10 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
 
 static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
-    taskENTER_CRITICAL(&spinlock);
+    //taskENTER_CRITICAL(&spinlock);
     int64_t time_now = get_systime_us();
     int64_t recv_offset = esp_timer_get_time() - recv_info->rx_ctrl->timestamp;
-    taskEXIT_CRITICAL(&spinlock);
+    //taskEXIT_CRITICAL(&spinlock);
 
     espnow_event_t evt;
     espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
@@ -106,7 +95,6 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
         ESP_LOGW(TAG1, "Send receive queue fail");
         free(recv_cb->data);
     }
-    
 }
 
 static void msg_exchange_timer_cb(void* arg){
@@ -142,133 +130,85 @@ static void init_deepsleep_timer_cb(void* arg){
     esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);
 }
 
-int espnow_data_parse(uint8_t *data, uint16_t data_len, uint16_t *seq)
-{
-    espnow_data_t *buf = (espnow_data_t *)data;
-    //uint16_t crc, crc_cal = 0;
+void IRAM_ATTR espnow_broadcast_timestamp(espnow_send_param_t *send_param){
 
-    if (data_len < sizeof(espnow_data_t)) {
-        ESP_LOGE(TAG1, "Receive ESPNOW data too short, len:%d", data_len);
-        return -1;
-    }
-
-    *seq = buf->seq_num;
-    /*crc = buf->crc;
-    buf->crc = 0;
-    crc_cal = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, data_len);
-
-    if (crc_cal == crc) {
-        return buf->type;
-    }
-    */
-    return buf->type;
-}
-
-void IRAM_ATTR espnow_data_prepare(espnow_send_param_t *send_param)
-{
     espnow_data_t *buf = (espnow_data_t *)send_param->buffer;
-
     assert(send_param->len >= sizeof(espnow_data_t));
 
-    buf->type = IS_BROADCAST_ADDR(send_param->dest_mac) ? ESPNOW_DATA_BROADCAST : ESPNOW_DATA_UNICAST;
+    buf->type = ESPNOW_DATA_BROADCAST;
     buf->seq_num = s_espnow_seq[buf->type]++;
-    //buf->crc = 0;
-
-    esp_fill_random(buf->payload, send_param->len - sizeof(espnow_data_t));
-    buf->timestamp = get_systime_us();
-    /* buf->crc = esp_crc16_le(UINT16_MAX, (uint8_t const *)buf, send_param->len); */
-}
-
-void IRAM_ATTR init_msg_exchange(int64_t max_offset){
-    portENTER_CRITICAL(&mutex);
-    // compute delay to start msg exchange in sync with the master time (oldest node);
-    int64_t time_now = get_systime_us();
-    uint64_t master_time_us = (max_offset > 0) ? (time_now + max_offset) : time_now;
-
-    // find the delay to the next full 100th of a second (of master if not master)
-    uint64_t delay_us = 1000 - (master_time_us % 1000);
     
-    // start scheduled phases according to master time
-    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
-    portEXIT_CRITICAL(&mutex);
-}
-
-static void neighbor_detection_task(void *pvParameter){
-
-    espnow_event_t evt;
-    uint16_t recv_seq = 0;
-    bool is_broadcast = false;
-    int ret;
-    
-    TickType_t wait_duration = portMAX_DELAY;
-    int64_t send_offset_sum = 0;
-    PeerListHandle_t* peer_list = xInitPeerList();
-
-    ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
-
-    // init peer list
-    espnow_send_param_t *send_param = (espnow_send_param_t *)pvParameter;
-    
-    // post timestamp of calling esp_now_send() to queue
     taskENTER_CRITICAL(&spinlock);
-    espnow_data_prepare(send_param);
-    int64_t time_placed = get_systime_us(); 
-    if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
-        ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
-        espnow_deinit(send_param);
-        vTaskDelete(NULL);
-    }
-    // send first broadcast
-    if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
+    buf->timestamp = get_systime_us();
+    int64_t time_now = esp_timer_get_time();
+    if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {        // send timestamp
         ESP_LOGE(TAG1, "Send error");
         espnow_deinit(send_param);
         vTaskDelete(NULL);
     }
     taskEXIT_CRITICAL(&spinlock);
+    
+    if (xQueueSend(s_time_send_placed_queue, &time_now, 0) != pdTRUE){      // give timestamp to queue fior send offset calculation
+        ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
+        espnow_deinit(send_param);
+        vTaskDelete(NULL);
+    }
 
-    // start event handling
+    //ESP_LOGD(TAG1, "broadcasting timestamp");
+}
+
+void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
+    // load last offset from RTC and display
+    int64_t offset = (nvs_loadOffset() + max_offset)/2;
+    
+    // compute delay to start msg exchange in sync with the master time (oldest node);
+    portENTER_CRITICAL(&mutex);
+    int64_t time_now = get_systime_us();
+    uint64_t master_time_us = (offset > 0) ? (time_now + offset) : time_now;
+    
+    uint64_t delay_us = 1500 - (master_time_us % 1500);         // find the delay to the next full 100th of a second (of master if not master)
+    
+    // start scheduled phases according to master time
+    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
+    portEXIT_CRITICAL(&mutex);
+    
+    // store new offset to nvs
+    nvs_storeOffset(offset);
+}
+
+static void neighbor_detection_task(void *pvParameter){
+    
+    int64_t send_offset_sum = 0;
+    PeerListHandle_t* peer_list = xInitPeerList();
+    TickType_t wait_duration = portMAX_DELAY;
+    espnow_send_param_t *send_param = (espnow_send_param_t *)pvParameter;
+    
+    ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
+
+    // broadcast first timestamp
+    espnow_broadcast_timestamp(send_param);
+
+    // start event handle loop 
+    espnow_event_t evt;
     while (xQueueReceive(s_espnow_event_queue, &evt, wait_duration) == pdTRUE) {
         switch (evt.id) {
             case ESPNOW_SEND_CB:
             {
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-                is_broadcast = IS_BROADCAST_ADDR(send_cb->mac_addr);
-
-                //ESP_LOGD(TAG1, "Send broadcast to "MACSTR", status1: %d", MAC2STR(send_cb->mac_addr), send_cb->status);
-
-                if (is_broadcast && (send_param->broadcast == false)) {
-                    break;
-                }
-
-                // delay before sending next data
-                if (send_param->delay > 0) {
-                    vTaskDelay(send_param->delay/portTICK_PERIOD_MS);
-                }
 
                 send_offset_sum += send_cb->send_offset;
 
                 send_param->count--;
-                if (send_param->count > 0) {    	    // send next bc if still got some to send
+                if (send_param->count > 0 && wait_duration != 0) {    	    // send next broadcast if still got some to send
                     
-                    // post timestamp of calling esp_now_send() to queue 
-                    taskENTER_CRITICAL(&spinlock);
-                    time_placed = get_systime_us();
-                    if (xQueueSend(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){
-                        ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
-                        espnow_deinit(send_param);
-                        vTaskDelete(NULL);
+                    if (send_param->delay > 0) {                            // delay before sending next broadcast
+                        vTaskDelay(send_param->delay/portTICK_PERIOD_MS);
                     }
-                    espnow_data_prepare(send_param);
-                    // send next broadcast
-                    if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
-                        ESP_LOGE(TAG1, "Send error");
-                        espnow_deinit(send_param);
-                        vTaskDelete(NULL);
-                    }
-                    taskEXIT_CRITICAL(&spinlock);
+                    espnow_broadcast_timestamp(send_param); // broadcast another timestamp
+
                 }else {
                     ESP_LOGW(TAG1, "last broadcast sent");
-                    wait_duration = 0;//send_param->delay * 2;
+                    wait_duration = 0;
                 }
 
                 break;
@@ -276,17 +216,15 @@ static void neighbor_detection_task(void *pvParameter){
             case ESPNOW_RECV_CB:
             {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                
+                espnow_data_t *recv_data = (espnow_data_t *)(recv_cb->data);
+
                 // compute transmission time and offset 
-                int64_t time_TX = ((espnow_data_t*)(recv_cb->data))->timestamp;
+                int64_t time_TX = recv_data->timestamp;
                 int64_t time_RX = evt.timestamp;
                 const int64_t time_tm = ( recv_cb->sig_len * 8 ); // rate * 10^6 = 1us [in us]
                 int64_t delta = time_TX - time_RX - time_tm;
-
-                ret = espnow_data_parse(recv_cb->data, recv_cb->data_len, &recv_seq);
-                free(recv_cb->data);
                 
-                if (ret == ESPNOW_DATA_BROADCAST) {
+                if (recv_data->type == ESPNOW_DATA_BROADCAST) {
                     //ESP_LOGI(TAG1, "Receive %dth broadcast data from: "MACSTR", len: %d", recv_seq, MAC2STR(recv_cb->mac_addr), recv_cb->data_len);
 
                     if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
@@ -298,14 +236,21 @@ static void neighbor_detection_task(void *pvParameter){
                         vAddOffset(peer_list, recv_cb->mac_addr, delta);
                         
                     }
+                    
+                    if (recv_data->seq_num == CONFIG_ESPNOW_SEND_COUNT-1){
+                        wait_duration = 0;
+                    }
+                
                 }
-                else if (ret == ESPNOW_DATA_UNICAST) {
+                else if (recv_data->type == ESPNOW_DATA_UNICAST) {
                     ESP_LOGE(TAG1, "Received unicast data : "MACSTR"", MAC2STR(recv_cb->mac_addr));
                 }
                 else {
                     ESP_LOGE(TAG1, "Receive error data from: "MACSTR"", MAC2STR(recv_cb->mac_addr));
                 }
                 break;
+                
+                free(recv_cb->data);
             }
         }
     }
@@ -316,7 +261,7 @@ static void neighbor_detection_task(void *pvParameter){
     ESP_LOGW(TAG1, "Timestamps received from %d peers.", peer_list->peer_count);
 
     // compute the experienced average send offset
-    int64_t avg_send_offset = send_offset_sum / ( CONFIG_ESPNOW_SEND_COUNT-send_param->count ) ;
+    int64_t avg_send_offset = send_offset_sum / ( CONFIG_ESPNOW_SEND_COUNT - send_param->count ) ;
     ESP_LOGW(TAG1, "avg_send_offset = %lld us", avg_send_offset);
 
     // determine max offset and coresponding address
@@ -333,11 +278,13 @@ static void neighbor_detection_task(void *pvParameter){
         ESP_LOGE(TAG1, "No peers detected");
     }
     
-    // delete peer list
-    vDeletePeerList(peer_list); 
+    vDeletePeerList(peer_list);                                 // delete peer list 
     
     if (max_offset > 0) {                                       // device does not hold the master time 
         ESP_LOGW(TAG1, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
+        //ESP_LOGW(TAG1, "");
+        //ESP_LOGW(TAG1, "deviation to last offset = %lld us", last_offset-max_offset);
+        //ESP_LOGW(TAG1, "");
     }else{                                                      // this device holds the master time
         esp_err_t err = esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP);
         if(err != ESP_OK){
@@ -354,6 +301,17 @@ static void neighbor_detection_task(void *pvParameter){
 
 static esp_err_t espnow_init(void)
 {
+    // wifi init
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
+    ESP_ERROR_CHECK( esp_wifi_start());
+    ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
+
+    // esp now init
     espnow_send_param_t *send_param;
 
     s_time_send_placed_queue = xQueueCreate(1, sizeof(int64_t));
@@ -441,11 +399,14 @@ static void setup_timer(){
 }
 
 static void espnow_deinit(espnow_send_param_t *send_param)
-{
+{   
+    // esp now deinit
     free(send_param->buffer);
     free(send_param);
     vSemaphoreDelete(s_espnow_event_queue);
     esp_now_deinit();
+
+    // wifi deinit
     esp_wifi_stop();
     esp_wifi_deinit();
 }
@@ -455,14 +416,15 @@ void app_main(void)
 
     ESP_LOGW(TAG0, "Entering app_main() at %lld us", esp_timer_get_time());
 
-    // reset systime if reset did not get triggered by deepsleep
+/*     // reset systime if reset did not get triggered by deepsleep
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
         ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
         reset_systime();
-    }
+    } */
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_LOGE(TAG0, "Resetting flash!");
         ESP_ERROR_CHECK( nvs_flash_erase() );
         ret = nvs_flash_init();
     }
@@ -470,6 +432,5 @@ void app_main(void)
 
     setup_GPIO();
     setup_timer();
-    wifi_init();
     espnow_init();
 }
