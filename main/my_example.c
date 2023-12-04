@@ -4,12 +4,10 @@
 #include "list_utils.h"
 #include "timing_functions.h"
 #include "GPIO_handle.h"
-#include "NVS_access.h"
+//#include "NVS_access.h"
 #endif
 
 #define ESPNOW_MAXDELAY 512
-
-static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
 
 // log TAGs
 static const char *TAG0 = "main   ";
@@ -21,24 +19,28 @@ static QueueHandle_t s_espnow_event_queue;        // espnow event queue
 static QueueHandle_t s_time_send_placed_queue;      // queue for timestamps when espnow_send was called
 
 //timer handles
-esp_timer_handle_t msg_exchange_timer_handle;
-esp_timer_handle_t shutdown_timer_handle;
-esp_timer_handle_t init_deepsleep_timer_handle;
+esp_timer_handle_t cycle_timer_handle;
+
+// event group handle and bit
+/* EventGroupHandle_t nb_detect_status;
+EventBits_t uxBits; */
 
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 static uint16_t s_espnow_seq[ESPNOW_DATA_MAX] = { 0, 0 };
+
+static uint8_t cycle = MASTER_SELECTION;      // flag for which cycle the device is currently in, only used by cycle_timer_cb()
 
 static void espnow_deinit(espnow_send_param_t *send_param);
 
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
     taskENTER_CRITICAL(&spinlock);
-    int64_t time_now = esp_timer_get_time();
+    int64_t time_since_boot = esp_timer_get_time();
     taskEXIT_CRITICAL(&spinlock);
 
     espnow_event_t evt;
     espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-    evt.timestamp = time_now;
+    evt.timestamp = time_since_boot;
 
     // compute send offset here
     int64_t time_placed;
@@ -46,7 +48,7 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
         ESP_LOGW(TAG1, "Receive time_send_placed_queue queue fail");
         send_cb->send_offset = 0;
     }else{
-        send_cb->send_offset = time_now - time_placed;
+        send_cb->send_offset = time_since_boot - time_placed;
     }
 
     if (mac_addr == NULL) {
@@ -97,38 +99,42 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     }
 }
 
-static void IRAM_ATTR msg_exchange_timer_cb(void* arg){
-    portENTER_CRITICAL(&spinlock);
+static void IRAM_ATTR cycle_timer_cb(void* arg){
+    portENTER_CRITICAL_ISR(&spinlock);
+    switch(cycle){
+/*         case (NEIGHBOR_DETECTION):
+        {
+            // set event bit to exit espnow event loop
 
-    ESP_ERROR_CHECK(esp_timer_delete(msg_exchange_timer_handle));   // delete timer that called this cb
-    ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );           // assert debug pin
-    ESP_ERROR_CHECK( esp_timer_start_once(shutdown_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000) );   // start shutdown timer
-    
-    portEXIT_CRITICAL(&spinlock);
 
-    ESP_LOGI(TAG2, "Msg exchange timer triggered - beginning message exchange");
-    // insert vTaskCreate() for message exchange with ONC here
-}
-
-static void IRAM_ATTR shutdown_timer_cb(void* arg){
-    portENTER_CRITICAL(&spinlock);
-    
-    ESP_ERROR_CHECK(esp_timer_delete(shutdown_timer_handle));                   // delete timer that called this cb
-    ESP_ERROR_CHECK( esp_timer_start_once(init_deepsleep_timer_handle, 100) );  // start timer to init deepsleep
-    
-    portEXIT_CRITICAL(&spinlock);
-    
-    ESP_LOGW(TAG2, "Shutdown timer triggered - finishing tasks");
-}
-
-static void IRAM_ATTR init_deepsleep_timer_cb(void* arg){
-    portENTER_CRITICAL(&spinlock);
-    
-    ESP_ERROR_CHECK(esp_timer_delete(init_deepsleep_timer_handle));             // delete timer which called this function
-    ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );
-    esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);
-
-    portEXIT_CRITICAL(&spinlock);
+        } */
+        case (MASTER_SELECTION):
+        {
+            ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );                                           // assert debug pin
+            ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000) );    // start shutdown timer
+            break;
+        }
+        case (MESSAGE_EXCHANGE):
+        {
+            ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, 1000));  // start timer for shutdown cycle
+            break;
+        }
+        case (SHUTDOWN):
+        {
+            ESP_ERROR_CHECK( esp_timer_delete(cycle_timer_handle));            // delete timer
+            ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 0));       // deassert debug pin
+            
+            esp_deep_sleep(CONFIG_DEEPSLEEP_DURATION_MS*1000);          // go to sleep
+            break;
+        }
+        default:
+        {
+            ESP_LOGE(TAG2, "Timer callback error");
+            break;
+        }
+    }
+    cycle++;
+    portEXIT_CRITICAL_ISR(&spinlock);
 }
 
 void IRAM_ATTR espnow_broadcast_timestamp(espnow_send_param_t *send_param){
@@ -160,23 +166,21 @@ void IRAM_ATTR espnow_broadcast_timestamp(espnow_send_param_t *send_param){
 
 void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
     // load last offset from RTC and display
-    int64_t offset = (2*nvs_loadOffset() + max_offset)/3;
-    
-    ESP_LOGE(TAG1, "init_msg_exchange called at %lld", esp_timer_get_time());
+    int64_t offset = max_offset; //(4*nvs_loadOffset() + max_offset)/5;
+    portENTER_CRITICAL(&spinlock);
 
     // compute delay to start msg exchange in sync with the master time (oldest node);
-    portENTER_CRITICAL(&spinlock);
     int64_t time_now = get_systime_us();
     uint64_t master_time_us = (offset > 0) ? (time_now + offset) : time_now;
     
-    uint64_t delay_us = 1500 - (master_time_us % 1500);         // find the delay to the next full 100th of a second (of master if not master)
+    uint64_t delay_us = 15000 - (master_time_us % 15000);         // find the delay to the next full 100th of a second (of master if not master)
     
     // start scheduled phases according to master time
-    ESP_ERROR_CHECK(esp_timer_start_once(msg_exchange_timer_handle, delay_us)); // set timer for when to start masg exchange
+    ESP_ERROR_CHECK(esp_timer_start_once(cycle_timer_handle, delay_us)); // set timer for when to start masg exchange
     portEXIT_CRITICAL(&spinlock);
     
     // store new offset to nvs
-    nvs_storeOffset(offset);
+    //nvs_storeOffset(offset);
 }
 
 static void neighbor_detection_task(void *pvParameter){
@@ -225,7 +229,7 @@ static void neighbor_detection_task(void *pvParameter){
                 int64_t time_TX = recv_data->timestamp;
                 int64_t time_RX = evt.timestamp;
                 const int64_t time_proc = ( recv_cb->sig_len * 8 ); // processing time of the PHY interface | rate * 10^6 = 1us [in us] 
-                int64_t delta = time_TX - time_RX - time_proc;
+                int64_t delta = time_TX - time_RX - 2*time_proc;
                 
                 if (recv_data->type == ESPNOW_DATA_BROADCAST) {
                     //ESP_LOGI(TAG1, "Receive %dth broadcast data from: "MACSTR", len: %d", recv_seq, MAC2STR(recv_cb->mac_addr), recv_cb->data_len);
@@ -372,33 +376,20 @@ static esp_err_t espnow_init(void)
     }
     memcpy(send_param->dest_mac, s_broadcast_mac, ESP_NOW_ETH_ALEN);
 
-    xTaskCreate(neighbor_detection_task, "neighbor_detection_task", 2048, send_param, 4, NULL);
+    xTaskCreate(neighbor_detection_task, "neighbor_detection_task", 2048, send_param, 3, NULL);
 
     return ESP_OK;
 }
 
 static void setup_timer(){
-    
-    // oneshot timer to start message exchange phase
-    const esp_timer_create_args_t msg_exchange_timer_args = {
-            .callback = &msg_exchange_timer_cb,
-            .name = "msg_exchange_timer"
+ 
+    // oneshot timer to start cycles on time
+    const esp_timer_create_args_t cycle_timer_args = {
+            .callback = &cycle_timer_cb,
+            .dispatch_method = ESP_TIMER_ISR,
+            .name = "cycle_timer"
     };
-    ESP_ERROR_CHECK(esp_timer_create(&msg_exchange_timer_args, &msg_exchange_timer_handle));
-
-    // oneshot timer for deleting all tasks
-    const esp_timer_create_args_t shutdown_timer_args = {
-            .callback = &shutdown_timer_cb,
-            .name = "shutdown_timer"
-    };
-    ESP_ERROR_CHECK(esp_timer_create(&shutdown_timer_args, &shutdown_timer_handle));
-
-    // oneshot timer for initialising deepsleep
-    const esp_timer_create_args_t init_deepsleep_timer_args = {
-            .callback = &init_deepsleep_timer_cb,
-            .name = "init_deepsleep_timer"
-    };
-    ESP_ERROR_CHECK(esp_timer_create(&init_deepsleep_timer_args, &init_deepsleep_timer_handle));
+    ESP_ERROR_CHECK(esp_timer_create(&cycle_timer_args, &cycle_timer_handle));
 
 }
 
@@ -417,8 +408,7 @@ static void espnow_deinit(espnow_send_param_t *send_param)
 
 void app_main(void)
 {
-    ESP_LOGW(TAG0, "Entering app_main() at %lld us", esp_timer_get_time());
-
+    
 /*     // reset systime if reset did not get triggered by deepsleep
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
         ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
@@ -432,7 +422,10 @@ void app_main(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK( ret );
-
+/* 
+    nb_detect_status = xEventGroupCreate();     // create event group 
+    assert(nb_detect_status != NULL );
+ */
     setup_GPIO();
     setup_timer();
     espnow_init();

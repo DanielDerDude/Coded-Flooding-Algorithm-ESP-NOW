@@ -3,14 +3,27 @@
 #include "includes.h"
 #endif
 
+
+static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
+
+/* static int64_t time_on_boot = 0; */
+
 static IRAM_ATTR int64_t get_systime_us(void){
+    taskENTER_CRITICAL(&spinlock);
     struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
     int ret = gettimeofday(&tv, NULL);
     
     assert(ret == 0);
-
+    taskEXIT_CRITICAL(&spinlock);
     return (int64_t)tv.tv_sec * 1000000L + (int64_t)tv.tv_usec;
 }
+
+/* static IRAM_ATTR int64_t get_time_us(void){
+
+    return time_on_boot + esp_timer_get_time();
+} */
 
 static IRAM_ATTR void reset_systime(void){
     struct timeval tv;
