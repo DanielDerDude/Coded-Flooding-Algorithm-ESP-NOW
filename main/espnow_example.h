@@ -78,8 +78,7 @@ typedef struct {
 } espnow_send_param_t;
 
 enum {
-    //NEIGHBOR_DETECTION,
-    MASTER_SELECTION,
+    NEIGHBOR_DETECTION,
     MESSAGE_EXCHANGE,
     SHUTDOWN,
     DEEPSLEEP,

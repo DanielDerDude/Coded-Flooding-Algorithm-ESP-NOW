@@ -21,14 +21,10 @@ static QueueHandle_t s_time_send_placed_queue;      // queue for timestamps when
 //timer handles
 esp_timer_handle_t cycle_timer_handle;
 
-// event group handle and bit
-/* EventGroupHandle_t nb_detect_status;
-EventBits_t uxBits; */
-
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 static uint16_t s_espnow_seq[ESPNOW_DATA_MAX] = { 0, 0 };
 
-static uint8_t cycle = MASTER_SELECTION;      // flag for which cycle the device is currently in, only used by cycle_timer_cb()
+static uint8_t cycle = NEIGHBOR_DETECTION;      // flag for which cycle the device is currently in, only used by cycle_timer_cb()
 
 static void espnow_deinit(espnow_send_param_t *send_param);
 
@@ -68,7 +64,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
 {
     taskENTER_CRITICAL(&spinlock);
     int64_t time_now = get_systime_us();
-    int64_t recv_offset = esp_timer_get_time() - recv_info->rx_ctrl->timestamp;
+    int64_t recv_offset = (recv_info->rx_ctrl->timestamp == 0) ? 0 : esp_timer_get_time() - (int64_t)(recv_info->rx_ctrl->timestamp);
     taskEXIT_CRITICAL(&spinlock);
 
     espnow_event_t evt;
@@ -91,6 +87,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
         ESP_LOGE(TAG1, "Malloc receive data fail");
         return;
     }
+
     memcpy(recv_cb->data, data, len);
     recv_cb->data_len = len;
     if (xQueueSend(s_espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
@@ -102,13 +99,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
 static void IRAM_ATTR cycle_timer_cb(void* arg){
     portENTER_CRITICAL_ISR(&spinlock);
     switch(cycle){
-/*         case (NEIGHBOR_DETECTION):
-        {
-            // set event bit to exit espnow event loop
-
-
-        } */
-        case (MASTER_SELECTION):
+        case (NEIGHBOR_DETECTION):
         {
             ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );                                           // assert debug pin
             ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000) );    // start shutdown timer
@@ -173,7 +164,7 @@ void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
     int64_t time_now = get_systime_us();
     uint64_t master_time_us = (offset > 0) ? (time_now + offset) : time_now;
     
-    uint64_t delay_us = 15000 - (master_time_us % 15000);         // find the delay to the next full 100th of a second (of master if not master)
+    uint64_t delay_us = 5000 - (master_time_us % 5000);         // find the delay to the next full 100th of a second (of master if not master)
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK(esp_timer_start_once(cycle_timer_handle, delay_us)); // set timer for when to start masg exchange
@@ -195,7 +186,7 @@ static void neighbor_detection_task(void *pvParameter){
     // broadcast first timestamp
     espnow_broadcast_timestamp(send_param);
 
-    // start event handle loop 
+    // start event handle loop
     espnow_event_t evt;
     while (xQueueReceive(s_espnow_event_queue, &evt, wait_duration) == pdTRUE) {
         switch (evt.id) {
@@ -422,10 +413,7 @@ void app_main(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK( ret );
-/* 
-    nb_detect_status = xEventGroupCreate();     // create event group 
-    assert(nb_detect_status != NULL );
- */
+
     setup_GPIO();
     setup_timer();
     espnow_init();
