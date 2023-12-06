@@ -23,6 +23,8 @@
 
 #define IS_BROADCAST_ADDR(addr) (memcmp(addr, s_broadcast_mac, ESP_NOW_ETH_ALEN) == 0)
 
+#define PAYLOAD_LEN                 8
+
 typedef enum {
     ESPNOW_SEND_CB,
     ESPNOW_RECV_CB,
@@ -46,27 +48,47 @@ typedef union {
     espnow_event_recv_cb_t recv_cb;
 } espnow_event_info_t;
 
-/* When ESPNOW sending or receiving callback function is called, post event to ESPNOW task. */
 typedef struct {
     espnow_event_id_t id;
     espnow_event_info_t info;
     int64_t timestamp;
 } espnow_event_t;
 
+// espnow packet type
 enum {
     ESPNOW_DATA_BROADCAST,
     ESPNOW_DATA_UNICAST,
     ESPNOW_DATA_MAX,
 };
 
-/* User defined field of ESPNOW data in this example. */
+// data structure to broadcasts timestamps
 typedef struct {
     uint8_t type;                         // Broadcast or unicast ESPNOW data.
     uint16_t seq_num;                     // Sequence number of ESPNOW data.
     int64_t timestamp;                    // Timestamp of current systime               
-} __attribute__((packed)) espnow_data_t;
+} __attribute__((packed)) espnow_timing_data_t;
 
-/* Parameters of sending ESPNOW data. */
+// data structure for listing native packet ids which are used for encoding a packet
+typedef struct {
+    uint16_t* array;
+    uint8_t arr_len;
+} __attribute__((packed)) packet_id_array_t;
+
+// native data to be encoded
+typedef struct{
+    uint16_t payload[0];
+    uint16_t crc;
+} __attribute__((packed)) native_data_t;
+
+// esp now data type with encoded data
+typedef struct {
+    uint8_t type;                         // Broadcast or unicast ESPNOW data.
+    uint16_t seq_num;                     // Sequence number of ESPNOW data.
+    packet_id_array_t id_array;           // packet id array
+    native_data_t encoded_data;
+} __attribute__((packed)) espnow_encoded_data_t;
+
+// esp now sending parameters
 typedef struct {
     bool unicast;                         //Send unicast ESPNOW data.
     bool broadcast;                       //Send broadcast ESPNOW data.

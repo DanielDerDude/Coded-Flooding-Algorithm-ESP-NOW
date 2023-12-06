@@ -4,10 +4,12 @@
 #include "list_utils.h"
 #include "timing_functions.h"
 #include "GPIO_handle.h"
+#include "./components/bloomfilter/bloom.h"
 //#include "NVS_access.h"
 #endif
 
 #define ESPNOW_MAXDELAY 512
+#define CONFIG_ESPNOW_SEND_LEN 11
 
 // log TAGs
 static const char *TAG0 = "main   ";
@@ -22,11 +24,21 @@ static QueueHandle_t s_time_send_placed_queue;      // queue for timestamps when
 esp_timer_handle_t cycle_timer_handle;
 
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-static uint16_t s_espnow_seq[ESPNOW_DATA_MAX] = { 0, 0 };
+static uint16_t s_espnow_seq[ESPNOW_DATA_MAX] = { 0, 0 };       // first for broadcast sequence number, second for unicast sequence number
 
-static uint8_t cycle = NEIGHBOR_DETECTION;      // flag for which cycle the device is currently in, only used by cycle_timer_cb()
+// shared variable with correspnding semaphore
+SemaphoreHandle_t cycle_semaphore;              // semaphore for cycle variable
+static uint8_t cycle = NEIGHBOR_DETECTION;      // flag which cycle the device is currently in
 
 static void espnow_deinit(espnow_send_param_t *send_param);
+
+static uint8_t IRAM_ATTR get_cycle(){
+    uint8_t ret;
+    xSemaphoreTake(cycle_semaphore, portMAX_DELAY);
+    ret = cycle;
+    xSemaphoreGive(cycle_semaphore);
+    return ret;
+}
 
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
@@ -130,8 +142,8 @@ static void IRAM_ATTR cycle_timer_cb(void* arg){
 
 void IRAM_ATTR espnow_broadcast_timestamp(espnow_send_param_t *send_param){
 
-    espnow_data_t *buf = (espnow_data_t *)send_param->buffer;
-    assert(send_param->len >= sizeof(espnow_data_t));
+    espnow_timing_data_t *buf = (espnow_timing_data_t *)send_param->buffer;
+    assert(send_param->len >= sizeof(espnow_timing_data_t));
 
     buf->type = ESPNOW_DATA_BROADCAST;
     buf->seq_num = s_espnow_seq[buf->type]++;
@@ -154,6 +166,12 @@ void IRAM_ATTR espnow_broadcast_timestamp(espnow_send_param_t *send_param){
 
     //ESP_LOGD(TAG1, "broadcasting timestamp");
 }
+
+/* void IRAM_ATTR espnow_pseudo_broadcast(const uint8_t *mac_addr_list, encoded_data_t* enc_data){
+
+    // TO DO
+
+} */
 
 void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
     // load last offset from RTC and display
@@ -214,7 +232,7 @@ static void neighbor_detection_task(void *pvParameter){
             case ESPNOW_RECV_CB:
             {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                espnow_data_t *recv_data = (espnow_data_t *)(recv_cb->data);
+                espnow_timing_data_t *recv_data = (espnow_timing_data_t *)(recv_cb->data);
 
                 // compute transmission time and offset 
                 int64_t time_TX = recv_data->timestamp;
@@ -295,6 +313,14 @@ static void neighbor_detection_task(void *pvParameter){
     init_msg_exchange(max_offset);
     
     vTaskDelete(NULL);
+}
+
+static void msg_exchange_task(void *pvParameter){
+    ESP_LOGI(TAG1, "Testing bloom filter");
+
+
+
+
 }
 
 static esp_err_t espnow_init(void)

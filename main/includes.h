@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
