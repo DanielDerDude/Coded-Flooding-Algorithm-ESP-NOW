@@ -25,9 +25,31 @@
 
 #define PAYLOAD_LEN                 8
 
+// controller state
+enum {
+    NEIGHBOR_DETECTION,
+    MESSAGE_EXCHANGE,
+    SHUTDOWN,
+    CYCLE_UNDEF,
+};
+
+// espnow packet types
+enum {
+    TIMESTAMP,
+    RECEP_REPORT,
+    ONC_DATA,
+    DATA_UNDEF,
+};
+
+// esp now event type
 typedef enum {
-    ESPNOW_SEND_CB,
-    ESPNOW_RECV_CB,
+    RECV_TIMESTAMP,
+    SEND_TIMESTAMP,
+    RECV_REPORT,
+    SEND_REPORT,
+    RECV_ONC_DATA,
+    SEND_ONC_DATA,
+    EVENT_UNDEF,
 } espnow_event_id_t;
 
 typedef struct {
@@ -54,20 +76,6 @@ typedef struct {
     int64_t timestamp;
 } espnow_event_t;
 
-// espnow packet type
-enum {
-    ESPNOW_DATA_BROADCAST,
-    ESPNOW_DATA_UNICAST,
-    ESPNOW_DATA_MAX,
-};
-
-// data structure to broadcasts timestamps
-typedef struct {
-    uint8_t type;                         // Broadcast or unicast ESPNOW data.
-    uint16_t seq_num;                     // Sequence number of ESPNOW data.
-    int64_t timestamp;                    // Timestamp of current systime               
-} __attribute__((packed)) espnow_timing_data_t;
-
 // data structure for listing native packet ids which are used for encoding a packet
 typedef struct {
     uint16_t* array;
@@ -80,30 +88,36 @@ typedef struct{
     uint16_t crc;
 } __attribute__((packed)) native_data_t;
 
+// data structure to broadcasts timestamps
+typedef struct {
+    uint8_t type;                         // type for identification and error handeling
+    uint16_t seq_num;                     // sequence number of timing data
+    int64_t timestamp;                    // Timestamp of current systime               
+} __attribute__((packed)) timing_data_t;
+
+// espnow reception reports
+typedef struct {
+    uint8_t type;                         // type for identification and error handeling
+    uint16_t seq_num;                     // sequence number of reception report
+    uint8_t* bloom;                       // pointer to serialized bloomfilter
+} __attribute__((packed)) reception_report_t;
+
 // esp now data type with encoded data
 typedef struct {
-    uint8_t type;                         // Broadcast or unicast ESPNOW data.
-    uint16_t seq_num;                     // Sequence number of ESPNOW data.
+    uint8_t type;                         // type for identification and error handeling 
     packet_id_array_t id_array;           // packet id array
-    native_data_t encoded_data;
-} __attribute__((packed)) espnow_encoded_data_t;
+    uint8_t* encoded_data;                // pointer to encoded data
+} __attribute__((packed)) onc_data_t;
 
 // esp now sending parameters
 typedef struct {
-    bool unicast;                         //Send unicast ESPNOW data.
-    bool broadcast;                       //Send broadcast ESPNOW data.
-    uint16_t count;                       //count of frames to be sent.
-    uint16_t delay;                       //Delay between sending two ESPNOW data, unit: ms.
-    int len;                              //Length of ESPNOW data to be sent, unit: byte.
-    uint8_t *buffer;                      //Buffer pointing to ESPNOW data.
-    uint8_t dest_mac[ESP_NOW_ETH_ALEN];   //MAC address of destination device.
+    bool unicast;                         // Send unicast ESPNOW data.
+    bool broadcast;                       // Send broadcast ESPNOW data.
+    uint16_t count;                       // count of frames to be sent.
+    uint16_t delay;                       // Delay between sending two ESPNOW data, unit: ms.
+    int len;                              // Length of ESPNOW data to be sent, unit: byte.
+    uint8_t *buffer;                      // Buffer pointing to ESPNOW data.
+    uint8_t dest_mac[ESP_NOW_ETH_ALEN];   // MAC address of destination device.
 } espnow_send_param_t;
-
-enum {
-    NEIGHBOR_DETECTION,
-    MESSAGE_EXCHANGE,
-    SHUTDOWN,
-    DEEPSLEEP,
-};
 
 #endif

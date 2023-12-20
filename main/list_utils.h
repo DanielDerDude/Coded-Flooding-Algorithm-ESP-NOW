@@ -1,25 +1,32 @@
 #ifndef _INCLUDES_H_
 #define _INCLUDES_H_
 #include "includes.h"
+#include "./components/bloomfilter/bloom.c"
 #endif
 
-// offset structure
+#define BLOOM_MAX_ENTRIES     150     // estimated maximum entries the reception report can hold 
+#define BLOOM_ERROR_RATE      0.01    // estimated false positive rate of reception reports 
+
+static const char* LIST_TAG = "linked list";
+
+// offset type
 typedef struct {
     int64_t avg_offset;                                 // average offset
-    int64_t offset_buffer[CONFIG_ESPNOW_SEND_COUNT];    // array for saving collected offests
+    int64_t offset_buffer[CONFIG_TIMESTAMP_SEND_COUNT];    // array for saving collected offests
     uint8_t idx;                                        // index pointing to next free element of buffer
 } offset_data_t;
 
-// xPeerElem structure
+// xPeerElem type
 typedef struct xPeerElem {
     uint8_t mac_add[ESP_NOW_ETH_ALEN];  	             // mac address of peer, list is sorted by mac address
     offset_data_t* timing_data;                          // timing data
     uint64_t item_value;
-    struct xPeerElem* pxNext;                            // pointer pointing to next list enrty
-    struct xPeerElem* pxPrev;                            // pointer pointing to previous list enrty
+    struct xPeerElem* pxNext;                            // pointer pointing to next list entry
+    struct xPeerElem* pxPrev;                            // pointer pointing to previous list entry
+    bloom_t* recp_report;                                // pointer to reception report in form of a bloom filter 
 } xPeerElem_t;
 
-// list structure
+// list type
 typedef struct ListHandle {
     int64_t max_offset;                         // max offset in list relative to current systime (send offset not accounted)
     int64_t max_offset_addr[ESP_NOW_ETH_ALEN];  // mac addres of peer with highest offset
@@ -28,8 +35,9 @@ typedef struct ListHandle {
     xPeerElem_t* pxTail;                        // points to last peer Elem in list
 } PeerListHandle_t;
 
+
 // computes item value
-uint64_t calcItemValue(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
+static uint64_t IRAM_ATTR calcItemValue(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
     uint64_t item_value = 0;
     for (int i = 0; i < ESP_NOW_ETH_ALEN; i++) {
         item_value = (item_value << 8) | mac_addr[i];
@@ -38,7 +46,7 @@ uint64_t calcItemValue(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
 }
 
 // returns pointer to newly created Elem
-static xPeerElem_t* xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t first_offset){
+static xPeerElem_t* IRAM_ATTR xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t first_offset){
     // allocate memory for new Elem
     xPeerElem_t* newElem = (xPeerElem_t*)malloc(sizeof(xPeerElem_t));
     assert(newElem != NULL);
@@ -63,7 +71,29 @@ static xPeerElem_t* xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_
     newElem->pxNext = NULL;
     newElem->pxPrev = NULL;
 
+    // allocate memory and init reception report bloomfilter and check if successful
+    newElem->recp_report = (bloom_t*)malloc(sizeof(bloom_t));
+    uint8_t ret = bloom_init2(newElem->recp_report, BLOOM_MAX_ENTRIES, BLOOM_ERROR_RATE);
+    assert(ret == 0);
+
     return newElem;
+}
+
+// iterates through list and finds the list element of a mac address
+static xPeerElem_t* IRAM_ATTR xFindElem(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
+    // iterate through list and find item Value
+    uint64_t searchedValue = calcItemValue(mac_addr);
+
+    xPeerElem_t* ListElem = list->pxHead;
+    
+    while((ListElem != NULL) && (ListElem->item_value != searchedValue)){
+        ListElem = ListElem->pxNext;
+    }
+    
+    if (ListElem == NULL){
+        ESP_LOGE(LIST_TAG, "Could not find peer in linked list.");
+        return NULL;
+    }else return ListElem;
 }
 
 /* Function to initialise the List, returns pointer to list Handle */
@@ -81,7 +111,7 @@ PeerListHandle_t* xInitPeerList() {
 }
 
 // adds a peer to the list, sorted by mac addr (high -> low)
-void vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset) {
+void IRAM_ATTR vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset) {
 
     assert(list != NULL);           //check if list exists
     
@@ -142,20 +172,13 @@ void vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], 
     }
 }
 
-void vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset){
+// adds an offset to a peer
+void IRAM_ATTR vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset){
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
     
-    // iterate through list and find item Value
-    uint64_t searchedValue = calcItemValue(mac_addr);
-
-    xPeerElem_t* ListElem = list->pxHead;
-    
-    while((ListElem != NULL) && (ListElem->item_value != searchedValue)){
-        ListElem = ListElem->pxNext;
-    }
-    
-    assert(ListElem != NULL);
+    xPeerElem_t* ListElem = xFindElem(list, mac_addr);
+    if (ListElem == NULL) return;
 
     // add new offset to buffer and increase buffer index
     offset_data_t* timing_data = ListElem->timing_data;
@@ -178,6 +201,46 @@ void vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN]
     }
 }
 
+// adds a new packet id to the reception report of a peer in peer list
+void IRAM_ATTR vAddReception(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], uint32_t newPacketID){
+    assert(list != NULL);                                       // assert that list exists
+    assert((list->pxHead != NULL));                             // assert that at least one element exists
+    
+    xPeerElem_t* ListElem = xFindElem(list, mac_addr);
+    if (ListElem == NULL) return;
+
+    int8_t ret = bloom_add(ListElem->recp_report, &newPacketID, sizeof(uint32_t));
+    assert(ret != -1);
+}
+
+// replaces the old reception report of a peer with a new one
+// newReport argument does not need to be valid after function returns
+void IRAM_ATTR vReplaceReport(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* newReport){
+    assert(list != NULL);                                       // assert that list exists
+    assert((list->pxHead != NULL));                             // assert that at least one element exists
+    
+    xPeerElem_t* ListElem = xFindElem(list, mac_addr);          // find list element with corresponding mac address
+    if (ListElem == NULL) return;
+
+    int8_t ret = bloom_reset(ListElem->recp_report);            // reset old reception report
+    assert(ret == 0);
+    ret = bloom_merge(ListElem->recp_report, newReport);    // merge new reception report into old packet 
+    assert(ret == 0);
+}
+
+// replaces the old reception report of a list element with a new one
+// so newReport argument does not need to be valid after function returns
+void IRAM_ATTR vMergeReports(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* newReport){
+    assert(list != NULL);                                       // assert that list exists
+    assert((list->pxHead != NULL));                             // assert that at least one element exists
+    
+    xPeerElem_t* ListElem = xFindElem(list, mac_addr);          // find list element with corresponding mac address
+    if (ListElem == NULL) return;
+
+    int8_t ret = bloom_merge(ListElem->recp_report, newReport);
+    assert(ret == 0);
+}
+
 void vDeletePeerList(PeerListHandle_t* list){
     assert(list != NULL);
     xPeerElem_t* current = list->pxHead;
@@ -186,6 +249,8 @@ void vDeletePeerList(PeerListHandle_t* list){
     while (current != NULL) {
         next = current->pxNext;
         free(current->timing_data);
+        bloom_free(current->recp_report);
+        free(current->recp_report);
         free(current);
         current = next;
     }

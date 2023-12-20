@@ -4,15 +4,15 @@
 #include "./bloom.c"
 #endif
 
-#define ENTRIES             1000
-#define AMOUNT              ENTRIES/2
+#define MAX_ENTRIES             200
+#define AMOUNT                  MAX_ENTRIES
 
 static const char* TAG_MAIN = "main";
 
 void app_main(void)
 {   
     bloom_t filter;
-    int8_t ret = bloom_init2(&filter, ENTRIES, 0.01);
+    int8_t ret = bloom_init2(&filter, MAX_ENTRIES, 0.01);
     assert(ret == 0);
 
     uint32_t seq_array[AMOUNT] = {0};
@@ -33,12 +33,13 @@ void app_main(void)
     }
 
     // queue the same numbers
+    uint32_t count_fp = 0;
     uint32_t sequence;
-    bool found;
+    bool found = false;
     uint32_t j;
     for(uint32_t i = 0; i < AMOUNT; i++){
         
-        sequence = esp_random();                                       // generiere random sequenz nummer
+        sequence = esp_random();                                                // generiere random sequenz nummer
         ret = bloom_check(&filter, &sequence, (uint32_t)sizeof(uint32_t));      // abfrage im bloom filter
 
         // debug stuff
@@ -55,11 +56,17 @@ void app_main(void)
                     }
                 }
                 if(found) ESP_LOGW(TAG_MAIN, "present");
-                else      ESP_LOGW(TAG_MAIN, "false positive");
+                else{
+                    count_fp++;
+                    ESP_LOGW(TAG_MAIN, "false positive");
+                }      
                 break;
             }
         }
     }
+
+
+    ESP_LOGE(TAG_BLOOM, "Measured false positive rate: %lf", (double)count_fp/AMOUNT);
 
     bloom_print(&filter);
 

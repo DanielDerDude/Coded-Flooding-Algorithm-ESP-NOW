@@ -19,19 +19,11 @@
 
 #define TAG_BLOOM "bloom"
 
-#define BLOOM_VERSION_MAJOR 2
-#define BLOOM_VERSION_MINOR 0
-#define BLOOM_VERSION       2.0
-
-#define MAKESTRING(n) STRING(n)
-#define STRING(n) #n
-#define BLOOM_MAGIC "libbloom2"
-
-inline static int test_bit_set_bit(uint16_t * buf, uint64_t bit, int8_t set_bit)
+inline static int test_bit_set_bit(uint8_t * buf, uint64_t bit, int8_t set_bit)
 {
   uint64_t byte = bit >> 3;
-  uint16_t c = buf[byte];        // expensive memory access
-  uint16_t mask = 1 << (bit % 8ul);
+  uint8_t c = buf[byte];             // expensive memory access
+  uint8_t mask = 1 << (bit % 8ul);
 
   if (c & mask) {
     return 1;
@@ -43,7 +35,6 @@ inline static int test_bit_set_bit(uint16_t * buf, uint64_t bit, int8_t set_bit)
   }
 }
 
-
 static int8_t bloom_check_add(struct bloom * bloom, const void * buffer, uint32_t len, int8_t add)
 {
   if (bloom->ready == 0) {
@@ -51,7 +42,7 @@ static int8_t bloom_check_add(struct bloom * bloom, const void * buffer, uint32_
     return -1;
   }
 
-  uint16_t hits = 0;
+  uint8_t hits = 0;
   uint32_t a = murmurhash2(buffer, len, 0x9747b28c);
   uint32_t b = murmurhash2(buffer, len, a);
   uint64_t x;
@@ -85,7 +76,7 @@ int8_t bloom_init2(struct bloom * bloom, uint32_t entries, double error)
 
   memset(bloom, 0, sizeof(struct bloom));
 
-  if (entries < 1000 || error <= 0 || error >= 1) {
+  if (entries < 100 || error <= 0 || error >= 1) {
     return 1;
   }
 
@@ -106,18 +97,15 @@ int8_t bloom_init2(struct bloom * bloom, uint32_t entries, double error)
     bloom->bytes = bloom->bits / 8;
   }
 
-  bloom->hashes = (uint16_t)ceil(0.693147180559945 * bloom->bpe); // ln(2)
+  bloom->hashes = (uint8_t)ceil(0.693147180559945 * bloom->bpe); // ln(2)
 
-  bloom->bf = (uint16_t *)calloc(bloom->bytes, sizeof(uint16_t));
-  if (bloom->bf == NULL) {                                   // LCOV_EXCL_START
+  bloom->bf = (uint8_t *)calloc(bloom->bytes, sizeof(uint8_t));
+  if (bloom->bf == NULL) {                                   
     ESP_LOGE(TAG_BLOOM, "Calloc failed");
     return 1;
-  }                                                          // LCOV_EXCL_STOP
+  }                                                          
 
   bloom->ready = 1;
-
-  bloom->major = BLOOM_VERSION_MAJOR;
-  bloom->minor = BLOOM_VERSION_MINOR;
 
   return 0;
 }
@@ -134,12 +122,10 @@ int8_t bloom_add(struct bloom * bloom, const void * buffer, uint32_t len)
   return bloom_check_add(bloom, buffer, len, 1);
 }
 
-
 void bloom_print(struct bloom * bloom)
 {
   ESP_LOGW(TAG_BLOOM, "bloom at %p", (void *)bloom);
   if (!bloom->ready) { ESP_LOGW(TAG_BLOOM, " *** NOT READY ***"); }
-  ESP_LOGW(TAG_BLOOM, " ->version = %d.%d", bloom->major, bloom->minor);
   ESP_LOGW(TAG_BLOOM, " ->entries = %lu", bloom->entries);
   ESP_LOGW(TAG_BLOOM, " ->error = %lf", bloom->error);
   ESP_LOGW(TAG_BLOOM, " ->bits = %llu", bloom->bits);
@@ -151,6 +137,24 @@ void bloom_print(struct bloom * bloom)
   ESP_LOGW(TAG_BLOOM, " ->hash functions = %d", bloom->hashes);
 }
 
+uint8_t* bloom_serialize(struct bloom * bloom)
+{
+  if (bloom->ready == 0) {
+    ESP_LOGE(TAG_BLOOM, "bloom at %p not initialized!", (void *)bloom);
+    return NULL;
+  }
+  
+  uint8_t* block = (uint8_t*)calloc(sizeof(bloom_t) + bloom->bytes, 1);
+  if (block == NULL) {
+    ESP_LOGE(TAG_BLOOM, "malloc failed!");
+    return NULL;
+  }
+  
+  memcpy(block, bloom, sizeof(struct bloom));
+  memcpy(block + sizeof(bloom_t), bloom->bf, sizeof(uint8_t) * bloom->bytes);
+
+  return 0;
+}
 
 void bloom_free(struct bloom * bloom)
 {
@@ -209,10 +213,4 @@ int8_t bloom_merge(struct bloom * bloom_dest, struct bloom * bloom_src)
   }
 
   return 0;
-}
-
-
-const char * bloom_version()
-{
-  return MAKESTRING(BLOOM_VERSION);
 }

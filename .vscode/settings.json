@@ -33,6 +33,7 @@
     "esp_netif.h": "c",
     "includes.h": "c",
     "esp_timer.h": "c",
-    "gpio_handle.h": "c"
+    "gpio_handle.h": "c",
+    "bloom.h": "c"
   }
 }

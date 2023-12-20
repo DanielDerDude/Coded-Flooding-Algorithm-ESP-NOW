@@ -3,10 +3,8 @@
 #include "includes.h"
 #endif
 
-
-static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
-
-/* static int64_t time_on_boot = 0; */
+// spinlock for time critical code
+portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
 
 static IRAM_ATTR int64_t get_systime_us(void){
     taskENTER_CRITICAL(&spinlock);
@@ -25,7 +23,7 @@ static IRAM_ATTR int64_t get_systime_us(void){
     return time_on_boot + esp_timer_get_time();
 } */
 
-static IRAM_ATTR void reset_systime(void){
+/* static IRAM_ATTR void reset_systime(void){
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 0;
@@ -33,7 +31,7 @@ static IRAM_ATTR void reset_systime(void){
     int ret = settimeofday(&tv, NULL);
     
     assert(ret == 0);
-}
+} */
 
 /* 
 static IRAM_ATTR void correct_systime(int64_t offset_us){ // changes time according to offset instantly

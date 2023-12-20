@@ -8,17 +8,6 @@
 #ifndef _BLOOM_H
 #define _BLOOM_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define NULL_BLOOM_FILTER { 0, 0, 0, 0, 0.0, 0, 0, 0, 0.0, NULL }
-
-#define ENTRIES_T uint32_t
-#define BYTES_T uint64_t
-#define BITS_T uint64_t
-
-
 /** ***************************************************************************
  * Structure to keep track of one bloom filter.  Caller needs to
  * allocate this and pass it to the functions below. First call for
@@ -43,7 +32,7 @@ typedef struct bloom
   uint16_t major;
   uint16_t minor;
   double bpe;
-  uint16_t * bf;
+  uint8_t * bf;
 } __attribute__((packed)) bloom_t;
 
 
@@ -64,7 +53,7 @@ typedef struct bloom
  * -----------
  *     bloom   - Pointer to an allocated struct bloom (see above).
  *     entries - The expected number of entries which will be inserted.
- *               Must be at least 1000 (in practice, likely much larger).
+ *               Must be at least 200 (in practice, likely much larger).
  *     error   - Probability of collision (as long as entries are not
  *               exceeded).
  *
@@ -117,6 +106,24 @@ int8_t bloom_check(struct bloom * bloom, const void * buffer, uint32_t len);
  */
 int8_t bloom_add(struct bloom * bloom, const void * buffer, uint32_t len);
 
+/** ***************************************************************************
+ * 
+ * Serializes a bloom filter into one block of data.
+ * Returns pointer to block of serialized data.
+ *
+ * Parameters:
+ * -----------
+ *     bloom  - Pointer to an allocated struct bloom (see above).
+ *     block  - Pointer to serialized bloom filter after serialization.
+ *
+ * Return:
+ * -------
+ *  NULL - serialization of bloom filter failed
+ *       - else the address to the block of serialized data
+ *
+ * Author: Daniel Fronk
+ */
+uint8_t* bloom_serialize(struct bloom * bloom);
 
 /** ***************************************************************************
  * Print (to stdout) info about this bloom filter. Debugging aid.
@@ -181,18 +188,5 @@ int8_t bloom_reset(struct bloom * bloom);
  *
  */
 int8_t bloom_merge(struct bloom * bloom_dest, struct bloom * bloom_src);
-
-
-/** ***************************************************************************
- * Returns version string compiled into library.
- *
- * Return: version string
- *
- */
-const char * bloom_version();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

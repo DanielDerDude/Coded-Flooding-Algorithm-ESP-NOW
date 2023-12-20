@@ -20,4 +20,5 @@
 #include "esp_timer.h"
 #include "driver/gpio.h"
 #include "espnow_example.h"
+#include "esp_heap_caps.h"
 
