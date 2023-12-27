@@ -34,6 +34,7 @@
     "includes.h": "c",
     "esp_timer.h": "c",
     "gpio_handle.h": "c",
-    "bloom.h": "c"
+    "bloom.h": "c",
+    "wifi.h": "c"
   }
 }

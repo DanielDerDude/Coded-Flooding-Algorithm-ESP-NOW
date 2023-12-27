@@ -65,33 +65,36 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
         return;
     }
 
-    uint8_t current_cycle = get_cycle();                                    // get cycle currently in
-    switch (current_cycle){
+    if (status == ESP_NOW_SEND_SUCCESS){
+        uint8_t current_cycle = get_cycle();                                    // get cycle currently in
+        switch (current_cycle){
 
-        case NEIGHBOR_DETECTION:                                            // in neighbor detection phase
-        {                                                         
-            espnow_event_t evt;                                             // create event
-            espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-            evt.timestamp = time_now;                                       // set timestamp
-            evt.id = SEND_TIMESTAMP;                                        // set event id
-            
-            int64_t time_placed;                                                            
-            if (xQueueReceive(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){        // take time when packet was sent from queue
-                ESP_LOGE(TAG1, "Receive time_send_placed_queue queue fail");
-                send_cb->send_offset = 0;
-            }else{
-                send_cb->send_offset = time_since_boot - time_placed;                       // compute send offset
-            }
+            case NEIGHBOR_DETECTION:                                            // in neighbor detection phase
+            {                                                         
+                espnow_event_t evt;                                             // create event
+                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                evt.timestamp = time_now;                                       // set timestamp
+                evt.id = SEND_TIMESTAMP;                                        // set event id
+                
+                int64_t time_placed;                                                            
+                if (xQueueReceive(s_time_send_placed_queue, &time_placed, 0) != pdTRUE){        // take time when packet was sent from queue
+                    ESP_LOGE(TAG1, "Receive time_send_placed_queue queue fail");
+                    send_cb->send_offset = 0;
+                }else{
+                    int64_t time_tm = 432;
+                    send_cb->send_offset = (time_since_boot-time_placed)/2 -time_tm;                    // compute send offset
+                }
 
-            memcpy(send_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);                          // copy mac address
-            send_cb->status = status;                                                       // copy status
-            
-            if (xQueueSend(espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {       // place event into queue
-                ESP_LOGE(TAG1, "Send send queue fail");
+                memcpy(send_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);                          // copy mac address
+                send_cb->status = status;                                                       // copy status
+                
+                if (xQueueSend(espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {       // place event into queue
+                    ESP_LOGE(TAG1, "Send send queue fail");
+                }
+                break;
             }
-            break;
+            default: break;
         }
-        default: break;
     }
 }
 
@@ -184,11 +187,11 @@ void IRAM_ATTR broadcast_timestamp(){
     buf.seq_num = s_espnow_seq[TIMESTAMP]++;
     
     taskENTER_CRITICAL(&spinlock);
-    buf.timestamp = get_systime_us();
     int64_t time_now = esp_timer_get_time();
+    buf.timestamp = get_systime_us();
     esp_err_t err = esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t));        // send timestamp
-    assert(err ==  ESP_OK);
     taskEXIT_CRITICAL(&spinlock);
+    assert(err ==  ESP_OK);
     
     if (xQueueSend(s_time_send_placed_queue, &time_now, 0) != pdTRUE){      // give timestamp to queue fior send offset calculation
         ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
@@ -196,7 +199,7 @@ void IRAM_ATTR broadcast_timestamp(){
         vTaskDelete(NULL);
     }
 }
-
+/* 
 void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
     // create buffer
     uint64_t buf_size = sizeof(reception_report_t) + sizeof(bloom) + bloom->bytes; 
@@ -225,7 +228,7 @@ void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
     free(buf);
 }
 
-/* void IRAM_ATTR espnow_pseudo_broadcast(const uint8_t *mac_addr_list, encoded_data_t* enc_data){
+void IRAM_ATTR espnow_pseudo_broadcast(const uint8_t *mac_addr_list, encoded_data_t* enc_data){
 
     // TO DO
 
@@ -235,8 +238,13 @@ void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
         vTaskDelete(NULL);
     }
 
+<<<<<<< HEAD
 } */
 /* 
+=======
+}
+
+>>>>>>> 335aa651daf7909f13efc95c3cc6fb4037862e92
 static void msg_exchange_task(){    
     ESP_LOGW(TAG3, "Testing bloom filter");
 
@@ -327,14 +335,15 @@ static void msg_exchange_task(){
  */
 void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
 
+    ESP_LOGE(TAG1, "called init msg exchange at %lld", esp_timer_get_time());
     taskENTER_CRITICAL(&spinlock);
     int64_t offset = max_offset; //(4*nvs_loadOffset() + max_offset)/5;
 
     // compute delay to start msg exchange in sync with the master time (oldest node);
-    int64_t time_now = get_systime_us();
-    uint64_t master_time_us = (offset > 0) ? (time_now + offset) : time_now;
+    int64_t my_time = get_systime_us();
+    uint64_t master_time_us = (offset > 0) ? (my_time + offset) : my_time;
     
-    uint64_t delay_us = 10000 - (master_time_us % 10000);         // find the delay to the next time intervall start (of master if not master)
+    uint64_t delay_us = 500000 - (master_time_us % 500000);         // find the delay to the next time intervall start (of master if not master)
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK(esp_timer_start_once(cycle_timer_handle, delay_us)); // set timer for when to start masg exchange
@@ -366,8 +375,8 @@ static void neighbor_detection_task(){
             case SEND_TIMESTAMP:
             {
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-
                 send_offset_sum += send_cb->send_offset;
+                // PIPE OUT HERE
 
                 broadcasts_sent++;
                 if (broadcasts_sent < CONFIG_TIMESTAMP_SEND_COUNT && wait_duration != 0) {    	    // send next broadcast if still got some to send and there is still time
@@ -397,9 +406,9 @@ static void neighbor_detection_task(){
                 // compute transmission time and offset 
                 int64_t time_TX = recv_data->timestamp;
                 int64_t time_RX = evt.timestamp;
-                const int64_t time_proc = ( recv_cb->sig_len * 8 ); // processing time of the PHY interface | rate * 10^6 = 1us [in us] 
-                int64_t delta = time_TX - time_RX - 2*time_proc;
-                
+                const int64_t time_tm = ( recv_cb->sig_len * 8 ); // transmission delay | rate * 10^6 = 1us [in us] 
+                int64_t delta = time_TX - time_RX - time_tm;
+
                 if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
                     
                     vAddPeer(peer_list, recv_cb->mac_addr, delta);
@@ -485,6 +494,7 @@ static esp_err_t espnow_init(void)
     ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
+    //ESP_ERROR_CHECK( esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, 1, WIFI_PHY_RATE_MCS7_SGI) ); // not possible with esp now
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
 
@@ -548,8 +558,9 @@ static void espnow_deinit()
 
 void app_main(void)
 {
-    ESP_LOGW(TAG0, "boot time = %lld", esp_timer_get_time());
-    
+    printf("\n");
+    ESP_LOGW(TAG0, "boot time = %lld us", esp_timer_get_time());
+
     /*// reset systime if reset did not get triggered by deepsleep
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
         ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
