@@ -236,7 +236,7 @@ void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
     }
 
 } */
-
+/* 
 static void msg_exchange_task(){    
     ESP_LOGW(TAG3, "Testing bloom filter");
 
@@ -324,7 +324,7 @@ static void msg_exchange_task(){
         }   
     }
 }
-
+ */
 void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
 
     taskENTER_CRITICAL(&spinlock);
@@ -341,7 +341,7 @@ void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
     taskEXIT_CRITICAL(&spinlock);
     
     // create msg exchange task
-    xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
+    //xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
     
     // store new offset to nvs
     //nvs_storeOffset(offset);
