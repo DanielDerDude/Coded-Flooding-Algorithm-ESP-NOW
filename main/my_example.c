@@ -238,13 +238,8 @@ void IRAM_ATTR espnow_pseudo_broadcast(const uint8_t *mac_addr_list, encoded_dat
         vTaskDelete(NULL);
     }
 
-<<<<<<< HEAD
 } */
 /* 
-=======
-}
-
->>>>>>> 335aa651daf7909f13efc95c3cc6fb4037862e92
 static void msg_exchange_task(){    
     ESP_LOGW(TAG3, "Testing bloom filter");
 
