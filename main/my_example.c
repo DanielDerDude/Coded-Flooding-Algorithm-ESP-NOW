@@ -338,7 +338,7 @@ void IRAM_ATTR init_msg_exchange(const int64_t max_offset){
     int64_t my_time = get_systime_us();
     uint64_t master_time_us = (offset > 0) ? (my_time + offset) : my_time;
     
-    uint64_t delay_us = 500000 - (master_time_us % 500000);         // find the delay to the next time intervall start (of master if not master)
+    uint64_t delay_us = 10000 - (master_time_us % 10000);         // find the delay to the next time intervall start (of master if not master)
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK(esp_timer_start_once(cycle_timer_handle, delay_us)); // set timer for when to start masg exchange
