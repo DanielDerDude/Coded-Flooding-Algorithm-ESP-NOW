@@ -31,19 +31,19 @@ menu "Example Configuration"
         help
             The channel on which sending and receiving ESPNOW data.
 
-    config TIMESTAMP_SEND_COUNT
-        int "Send count"
+    config BROADCAST_DURATION
+        int "Broadcast duration"
         default 100
         range 1 65535
         help
-            Total count of unicast ESPNOW data to be sent.
+            Duration in which broadcast gets send around the WSN in ms.
 
     config TIMESTAMP_SEND_DELAY
-        int "Send delay"
+        int "Broadcast send interval"
         default 1000
         range 0 65535
         help
-            Delay between sending two ESPNOW data, unit: ms.
+            Delay between broadcasts in ms.
     
     config DEEPSLEEP_DURATION_MS
         int "Deepsleep duration, unit in ms"

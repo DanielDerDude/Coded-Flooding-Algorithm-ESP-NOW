@@ -28,6 +28,7 @@
 // controller state
 enum {
     NEIGHBOR_DETECTION,
+    INIT_MSG_EXCHANGE,
     MESSAGE_EXCHANGE,
     SHUTDOWN,
     CYCLE_UNDEF,
