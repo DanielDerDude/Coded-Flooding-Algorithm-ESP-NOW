@@ -213,7 +213,8 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
             break;
         }
     }
-    inc_cycle();                                                            // enter next cycle
+    //inc_cycle();                                                        // enter next cycle
+    cycle++;
 }
 
 void IRAM_ATTR broadcast_timestamp(){
@@ -227,7 +228,7 @@ void IRAM_ATTR broadcast_timestamp(){
     int64_t time_now = esp_timer_get_time();
     buf.timestamp = get_systime_us();
     esp_err_t err = esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t));        // send timestamp
-    taskEXIT_CRITICAL(&spinlock);
+    
     assert(err ==  ESP_OK);
     
     if (xQueueSend(s_time_send_placed_queue, &time_now, 0) != pdTRUE){      // give timestamp to queue fior send offset calculation
@@ -235,6 +236,7 @@ void IRAM_ATTR broadcast_timestamp(){
         espnow_deinit();
         vTaskDelete(NULL);
     }
+    taskEXIT_CRITICAL(&spinlock);
 }
 /* 
 void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
@@ -374,6 +376,7 @@ void IRAM_ATTR init_msg_exchange_task(){
         vTaskDelete(NULL);
     }
 
+    taskENTER_CRITICAL(&spinlock);
     // get current average send offset
     int64_t avg_send_offset;
     if (xQueuePeek(s_avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
@@ -381,14 +384,13 @@ void IRAM_ATTR init_msg_exchange_task(){
         avg_send_offset = 0;
     }
 
-    //taskENTER_CRITICAL(&spinlock);
     int64_t time_called = esp_timer_get_time();
     
     // determine peer_count, max offset and coresponding peer address
     int64_t max_offset = getMaxOffset(peer_list);
     uint8_t peer_count = getPeerCount(peer_list);
-    uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
-    getMaxOffsetAddr(peer_list, max_offset_addr);
+/*     uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
+    getMaxOffsetAddr(peer_list, max_offset_addr); */
 
     if (peer_count != 0){                                // check if any peers have been detected
         max_offset = max_offset - avg_send_offset;       // extract max offset, take average send offset in to account
@@ -401,7 +403,7 @@ void IRAM_ATTR init_msg_exchange_task(){
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );          // set timer for when to start masg exchange
-    //taskEXIT_CRITICAL(&spinlock);
+    taskEXIT_CRITICAL(&spinlock);
     
     // create msg exchange task
     //xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
@@ -410,9 +412,11 @@ void IRAM_ATTR init_msg_exchange_task(){
     ESP_LOGE(TAG3, "called init msg exchange at %lld", time_called);
     ESP_LOGW(TAG3, "avg_send_offset = %lld us", avg_send_offset);
     ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
+
+    vTaskDelete(NULL);
     
-    if (max_offset > 0) {                                       // device does not hold the master time 
-    ESP_LOGW(TAG3, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
+    /* if (max_offset > 0) {                                       // device does not hold the master time 
+        ESP_LOGW(TAG3, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
     }else{                                                      // this device holds the master time
         esp_err_t err = esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP);
         if(err != ESP_OK){
@@ -420,9 +424,9 @@ void IRAM_ATTR init_msg_exchange_task(){
         }else{
             ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
         }
-    }
+    } */
 
-    vDeletePeerList(peer_list);                                          // delete peer list 
+    //vDeletePeerList(peer_list);                                          // delete peer list 
 }
 
 static void neighbor_detection_task(){
@@ -450,7 +454,8 @@ static void neighbor_detection_task(){
                 int64_t avg_send_offset = send_offset_sum / broadcasts_sent;  
                 xQueueOverwrite(s_avg_send_offset_queue, &avg_send_offset);
                 // POTENTIAL PIPE OUT HERE
-                ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
+
+                ESP_LOGW(TAG1, "%u  avg_send_offset = %lld", broadcasts_sent, avg_send_offset);
 
                 if ((EventBits & INIT_MSG_EXCHANGE_EVT) != INIT_MSG_EXCHANGE_EVT) {    	    // send next broadcast if still time
                     
@@ -507,11 +512,12 @@ static void neighbor_detection_task(){
             default: break;
         }
 
-        if ((EventBits & INIT_MSG_EXCHANGE_EVT) == INIT_MSG_EXCHANGE_EVT){
+        if ((EventBits & INIT_MSG_EXCHANGE_EVT) == INIT_MSG_EXCHANGE_EVT){                          // delete task if event is set
             ESP_LOGW(TAG1, "neighbor detection task exited at %llu", esp_timer_get_time());
             break;
         }
     }
+    vTaskDelete(NULL);
 }
 
 static void init_neighbor_detection(void)
@@ -585,7 +591,6 @@ static void setup_timer(){
             .name = "cycle_timer"
     };
     ESP_ERROR_CHECK(esp_timer_create(&cycle_timer_args, &cycle_timer_handle));
-
 }
 
 static void espnow_deinit()

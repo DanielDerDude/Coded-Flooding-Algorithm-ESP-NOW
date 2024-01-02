@@ -14,7 +14,7 @@ SemaphoreHandle_t list_mutex;
 // offset type
 typedef struct {
     int64_t avg_offset;                                 // average offset
-    int64_t offset_buffer[BRADCAST_COUNT_ESTIMATE];    // array for saving collected offests
+    int64_t offset_buffer[BRADCAST_COUNT_ESTIMATE+10];    // array for saving collected offests
     uint8_t idx;                                        // index pointing to next free element of buffer
 } offset_data_t;
 
@@ -221,6 +221,10 @@ int64_t IRAM_ATTR getMaxOffset(PeerListHandle_t* list){
 // returns address of peer which holds the highest offset
 void IRAM_ATTR getMaxOffsetAddr(PeerListHandle_t* list, uint8_t* addr_buff){
     xSemaphoreTake(list_mutex, portMAX_DELAY);
+    if (list->peer_count == 0){
+        ESP_ERROR_CHECK( esp_read_mac(addr_buff, ESP_MAC_WIFI_SOFTAP) );
+        return;
+    }
     memcpy(addr_buff, list->max_offset_addr, ESP_NOW_ETH_ALEN);
     xSemaphoreGive(list_mutex);
 }
