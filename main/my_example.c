@@ -18,6 +18,10 @@ static const char *TAG2 = "timer  ";
 static const char *TAG3 = "init_msg_ex";
 static const char *TAG4 = "msg_ex ";
 
+// task handles
+TaskHandle_t neighbor_detection_task_handle = NULL;
+TaskHandle_t init_msg_exchange_task_handle = NULL;
+
 // queue handles
 static QueueHandle_t espnow_event_queue;          // espnow event queue
 static QueueHandle_t s_time_send_placed_queue;    // queue for timestamps when espnow_send was called
@@ -31,7 +35,6 @@ static PeerListHandle_t* peer_list;
 
 // event group handle
 static EventGroupHandle_t CycleEventGroup;
-#define INIT_MSG_EXCHANGE_EVT ( 1 << 0 )
 
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };  // broadcast mac address
 
@@ -40,42 +43,39 @@ static uint16_t s_espnow_seq[DATA_UNDEF] = { 0, 0, 0 };       // array with coun
 // second : counter for transmitted reception reports
 // third  : counter for transmitted onc packets  
 
-// shared variable with correspnding mutex
-SemaphoreHandle_t cycle_mutex;                  // mutex for cycle variable
-static uint8_t cycle = NEIGHBOR_DETECTION;      // flag which cycle the device is currently in, shared variable, start with neighbor detection
-
 static void espnow_deinit();
 
-static uint8_t IRAM_ATTR get_cycle(){                   // function for getting share variable cycle
-    uint8_t ret;
-    xSemaphoreTake(cycle_mutex, portMAX_DELAY);
-    ret = cycle;
-    xSemaphoreGive(cycle_mutex);
-    return ret;
+static EventBits_t IRAM_ATTR getCycle(){                        // function for getting cycle through event group    
+    EventBits_t evtBits = xEventGroupGetBits(CycleEventGroup);
+    return evtBits; 
 }
 
-static uint8_t IRAM_ATTR get_cycle_ISR(){               // function for getting share variable cycle from ISR
-    
-    BaseType_t HigherPriorityTaskWoken = pdFALSE;
-    BaseType_t ret;
-    
-    ret = xSemaphoreTakeFromISR(cycle_mutex, &HigherPriorityTaskWoken);
-    assert(ret == pdPASS);
-    if (HigherPriorityTaskWoken != pdFALSE) portYIELD_FROM_ISR(pdTRUE);
-
-    uint8_t ret_cycle = cycle;
-    
-    ret = xSemaphoreGiveFromISR(cycle_mutex, &HigherPriorityTaskWoken);
-    assert(ret == pdPASS);
-    if (HigherPriorityTaskWoken != pdFALSE) portYIELD_FROM_ISR(pdTRUE);
-    
-    return ret_cycle;
+static EventBits_t IRAM_ATTR getCycleFromISR(){                 // function for getting cycle through event group from interrupt
+    EventBits_t evtBits = xEventGroupGetBitsFromISR(CycleEventGroup);
+    return evtBits;
 }
 
-static void IRAM_ATTR inc_cycle(){                   // function for getting share variable cycle
-    xSemaphoreTake(cycle_mutex, portMAX_DELAY);
-    cycle++;
-    xSemaphoreGive(cycle_mutex);
+static void IRAM_ATTR startCycle(){              // function for entering next cycle  
+    xEventGroupClearBits(CycleEventGroup, SHUTDOWN);
+    xEventGroupSetBits(CycleEventGroup, NEIGHBOR_DETECTION);
+}
+
+static void IRAM_ATTR nextCycleFromISR(){                       // function for setting event bits for next cycle
+    BaseType_t HigherPriorityTaskWoken, ret;
+    EventBits_t currBits = xEventGroupGetBitsFromISR(CycleEventGroup);
+    EventBits_t nextBits = (currBits<<1)|(1<<0);
+    ret = xEventGroupSetBitsFromISR(CycleEventGroup, nextBits, &HigherPriorityTaskWoken);
+    if (ret == pdPASS) portYIELD_FROM_ISR(HigherPriorityTaskWoken);
+    assert(ret != pdFALSE);
+}
+
+static void IRAM_ATTR blockUntilCycle(EventBits_t cycle){
+    EventBits_t EventBits;
+    EventBits = xEventGroupWaitBits(CycleEventGroup, cycle, pdFALSE, pdTRUE, portMAX_DELAY);        // block until init msg exchange event is set
+    if (EventBits != cycle){
+        ESP_LOGE(TAG3, "INIT_MSG_EXCHANGE_EVT was never set");
+        vTaskDelete(NULL);
+    }
 }
 
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -91,8 +91,7 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
     }
 
     if (status == ESP_NOW_SEND_SUCCESS){
-        uint8_t current_cycle = get_cycle();                                    // get cycle currently in
-        switch (current_cycle){
+        switch (getCycle()){
 
             case NEIGHBOR_DETECTION:                                            // in neighbor detection phase
             {                                                         
@@ -173,16 +172,10 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
 
 static void IRAM_ATTR cycle_timer_isr(void* arg){
 
-    uint8_t current_cycle = get_cycle_ISR();                                                    // get cycle currently in
-    //EventBits_t EvenBits; // for checking which events have occured
-
-    switch(current_cycle){
+    switch(getCycleFromISR()){
 
         case NEIGHBOR_DETECTION:
         {
-            BaseType_t HigherPriorityTaskWoken, ret;
-            ret = xEventGroupSetBitsFromISR(CycleEventGroup, INIT_MSG_EXCHANGE_EVT, &HigherPriorityTaskWoken);
-            if (ret == pdPASS) portYIELD_FROM_ISR(HigherPriorityTaskWoken);
             break;
         }
 
@@ -209,12 +202,12 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
 
         default:
         {
-            ESP_LOGE(TAG2, "Timer callback error");
+            assert(1==0);
             break;
         }
     }
-    //inc_cycle();                                                        // enter next cycle
-    cycle++;
+    nextCycleFromISR();
+
 }
 
 void IRAM_ATTR broadcast_timestamp(){
@@ -228,15 +221,12 @@ void IRAM_ATTR broadcast_timestamp(){
     int64_t time_now = esp_timer_get_time();
     buf.timestamp = get_systime_us();
     esp_err_t err = esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t));        // send timestamp
-    
+    taskEXIT_CRITICAL(&spinlock);
     assert(err ==  ESP_OK);
     
     if (xQueueSend(s_time_send_placed_queue, &time_now, 0) != pdTRUE){      // give timestamp to queue fior send offset calculation
-        ESP_LOGE(TAG1, "Could not post to s_time_send_placed_queue");
-        espnow_deinit();
-        vTaskDelete(NULL);
+        assert(1 == 0);
     }
-    taskEXIT_CRITICAL(&spinlock);
 }
 /* 
 void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
@@ -367,16 +357,10 @@ static void msg_exchange_task(){
     }
 }
  */
-void IRAM_ATTR init_msg_exchange_task(){
-    
-    EventBits_t EventBits;
-    EventBits = xEventGroupWaitBits(CycleEventGroup, INIT_MSG_EXCHANGE_EVT, pdFALSE, pdTRUE, portMAX_DELAY);        // block until init msg exchange event is set
-    if ((EventBits & INIT_MSG_EXCHANGE_EVT) != INIT_MSG_EXCHANGE_EVT){
-        ESP_LOGE(TAG3, "INIT_MSG_EXCHANGE_EVT was never set");
-        vTaskDelete(NULL);
-    }
+static void IRAM_ATTR init_msg_exchange_task(){
 
-    taskENTER_CRITICAL(&spinlock);
+    blockUntilCycle(INIT_MSG_EXCHANGE);
+
     // get current average send offset
     int64_t avg_send_offset;
     if (xQueuePeek(s_avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
@@ -384,13 +368,14 @@ void IRAM_ATTR init_msg_exchange_task(){
         avg_send_offset = 0;
     }
 
+    taskENTER_CRITICAL(&spinlock);
     int64_t time_called = esp_timer_get_time();
     
     // determine peer_count, max offset and coresponding peer address
     int64_t max_offset = getMaxOffset(peer_list);
     uint8_t peer_count = getPeerCount(peer_list);
-/*     uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
-    getMaxOffsetAddr(peer_list, max_offset_addr); */
+    uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
+    getMaxOffsetAddr(peer_list, max_offset_addr);
 
     if (peer_count != 0){                                // check if any peers have been detected
         max_offset = max_offset - avg_send_offset;       // extract max offset, take average send offset in to account
@@ -404,7 +389,7 @@ void IRAM_ATTR init_msg_exchange_task(){
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );          // set timer for when to start masg exchange
     taskEXIT_CRITICAL(&spinlock);
-    
+
     // create msg exchange task
     //xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
     
@@ -412,11 +397,9 @@ void IRAM_ATTR init_msg_exchange_task(){
     ESP_LOGE(TAG3, "called init msg exchange at %lld", time_called);
     ESP_LOGW(TAG3, "avg_send_offset = %lld us", avg_send_offset);
     ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
-
-    vTaskDelete(NULL);
     
-    /* if (max_offset > 0) {                                       // device does not hold the master time 
-        ESP_LOGW(TAG3, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
+    if (max_offset > 0) {                                       // device does not hold the master time 
+    ESP_LOGW(TAG3, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
     }else{                                                      // this device holds the master time
         esp_err_t err = esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP);
         if(err != ESP_OK){
@@ -424,99 +407,89 @@ void IRAM_ATTR init_msg_exchange_task(){
         }else{
             ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
         }
-    } */
+    }
 
     //vDeletePeerList(peer_list);                                          // delete peer list 
+    vTaskDelete(NULL);
 }
 
-static void neighbor_detection_task(){
+static void IRAM_ATTR neighbor_detection_task(){
 
     int64_t send_offset_sum = 0;
     uint16_t broadcasts_sent = 0;
-    EventBits_t EventBits;
     
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
 
     // broadcast first timestamp
     broadcast_timestamp();
-
+    
     // start event handle loop
     espnow_event_t evt;
-    while (xQueueReceive(espnow_event_queue, &evt, portMAX_DELAY) == pdTRUE) {
-        EventBits = xEventGroupGetBits(CycleEventGroup);
-        switch (evt.id) {
-            case SEND_TIMESTAMP:
-            {
-                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-                send_offset_sum += send_cb->send_offset;
-                
-                broadcasts_sent++;
-                int64_t avg_send_offset = send_offset_sum / broadcasts_sent;  
-                xQueueOverwrite(s_avg_send_offset_queue, &avg_send_offset);
-                // POTENTIAL PIPE OUT HERE
-
-                ESP_LOGW(TAG1, "%u  avg_send_offset = %lld", broadcasts_sent, avg_send_offset);
-
-                if ((EventBits & INIT_MSG_EXCHANGE_EVT) != INIT_MSG_EXCHANGE_EVT) {    	    // send next broadcast if still time
+    while (getCycle() == NEIGHBOR_DETECTION) {
+        if (xQueueReceive(espnow_event_queue, &evt, 0) == pdTRUE){
+            switch (evt.id) {
+                case SEND_TIMESTAMP:
+                {
+                    espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                    send_offset_sum += send_cb->send_offset;
                     
-                    if (CONFIG_TIMESTAMP_SEND_DELAY > 0) {                                  // delay before sending next broadcast
-                        vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);
+                    broadcasts_sent++;
+                    int64_t avg_send_offset = send_offset_sum / broadcasts_sent;  
+                    xQueueOverwrite(s_avg_send_offset_queue, &avg_send_offset);             // post send offset to queue
+                    
+                    // POTENTIAL PIPE OUT HERE
+                    ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
+
+                    broadcast_timestamp();                                              // broadcast another timestamp
+
+                    break;
+                }
+                case RECV_TIMESTAMP:
+                {
+                    espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+                    timing_data_t *recv_data = (timing_data_t *)(recv_cb->data);
+
+                    if (recv_data->type != TIMESTAMP) {
+                        ESP_LOGE(TAG1, "Received timestamp event, but data is not a timestamp");
+                        break;
                     }
-                    broadcast_timestamp(); // broadcast another timestamp
 
-                }else {
-                    ESP_LOGW(TAG1, "last broadcast sent");
-                }
+                    // compute transmission time and offset 
+                    int64_t time_TX = recv_data->timestamp;
+                    int64_t time_RX = evt.timestamp;
+                    const int64_t time_tm = ( recv_cb->sig_len * 8 ); // transmission delay | rate * 10^6 = 1us [in us] 
+                    int64_t delta = time_TX - time_RX - time_tm;
 
-                break;
-            }
-            case RECV_TIMESTAMP:
-            {
-                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                timing_data_t *recv_data = (timing_data_t *)(recv_cb->data);
-
-                if (recv_data->type != TIMESTAMP) {
-                    ESP_LOGE(TAG1, "Received timestamp event, but data is not a timestamp");
+                    if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
+                        vAddPeer(peer_list, recv_cb->mac_addr, delta);
+                    }else{                                                          // known peer
+                        vAddOffset(peer_list, recv_cb->mac_addr, delta);
+                    }
+                    
                     break;
                 }
-
-                // compute transmission time and offset 
-                int64_t time_TX = recv_data->timestamp;
-                int64_t time_RX = evt.timestamp;
-                const int64_t time_tm = ( recv_cb->sig_len * 8 ); // transmission delay | rate * 10^6 = 1us [in us] 
-                int64_t delta = time_TX - time_RX - time_tm;
-
-                if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
-                    vAddPeer(peer_list, recv_cb->mac_addr, delta);
-                }else{                                                          // known peer
-                    vAddOffset(peer_list, recv_cb->mac_addr, delta);
-                }
-                
-                break;
-            }
-            case RECV_ONC_DATA:                                 
-            case RECV_REPORT:                                                   // delete data not related to timestamps
-            {
-                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;        
-                uint8_t recv_type = recv_cb->data[0];
-                if (( recv_type != RECV_ONC_DATA) || (recv_type != RECV_REPORT) ){
-                    ESP_LOGE(TAG1, "Call back error");
+                case RECV_ONC_DATA:                                 
+                case RECV_REPORT:                                                   // delete data not related to timestamps
+                {
+                    espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;        
+                    uint8_t recv_type = recv_cb->data[0];
+                    if (( recv_type != RECV_ONC_DATA) || (recv_type != RECV_REPORT) ){
+                        ESP_LOGE(TAG1, "Call back error");
+                        break;
+                    }
+                    
+                    free(recv_cb->data);
                     break;
                 }
-                
-                free(recv_cb->data);
-                break;
+                case SEND_ONC_DATA:
+                case SEND_REPORT:
+                default: break;
             }
-            case SEND_ONC_DATA:
-            case SEND_REPORT:
-            default: break;
-        }
-
-        if ((EventBits & INIT_MSG_EXCHANGE_EVT) == INIT_MSG_EXCHANGE_EVT){                          // delete task if event is set
-            ESP_LOGW(TAG1, "neighbor detection task exited at %llu", esp_timer_get_time());
-            break;
+        }else{
+            vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);
         }
     }
+    ESP_LOGE(TAG1, "neighbor detection task exited at %llu", esp_timer_get_time());
     vTaskDelete(NULL);
 }
 
@@ -533,8 +506,8 @@ static void init_neighbor_detection(void)
 
     // start timer and tasks
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000) );
-    xTaskCreatePinnedToCore(neighbor_detection_task, "neighbor_detection_task", 2048, NULL, 3, NULL, 1);
-    xTaskCreatePinnedToCore(init_msg_exchange_task,  "init_msg_exchange_task" , 1024, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(neighbor_detection_task, "neighbor_detection_task", 2048, NULL, 3, &neighbor_detection_task_handle, 1);
+    xTaskCreatePinnedToCore(init_msg_exchange_task,  "init_msg_exchange_task" , 2048, NULL, 0, &init_msg_exchange_task_handle, 1);
 }
 
 static void deinit_neighbor_detection(void){
@@ -591,6 +564,7 @@ static void setup_timer(){
             .name = "cycle_timer"
     };
     ESP_ERROR_CHECK(esp_timer_create(&cycle_timer_args, &cycle_timer_handle));
+
 }
 
 static void espnow_deinit()
@@ -622,10 +596,9 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( ret );
     
-    cycle_mutex = xSemaphoreCreateMutex();      // initialise mutex
-    
     CycleEventGroup = xEventGroupCreate();      // create event group
     assert(CycleEventGroup != NULL);
+    startCycle(NEIGHBOR_DETECTION);               // begin with neighbor detection
 
     setup_GPIO();
     setup_timer();

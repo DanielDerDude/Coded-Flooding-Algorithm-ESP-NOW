@@ -19,7 +19,7 @@
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_AP
 #endif
 
-#define ESPNOW_QUEUE_SIZE           6
+#define ESPNOW_QUEUE_SIZE           20
 
 #define IS_BROADCAST_ADDR(addr) (memcmp(addr, s_broadcast_mac, ESP_NOW_ETH_ALEN) == 0)
 
@@ -27,11 +27,10 @@
 
 // controller state
 enum {
-    NEIGHBOR_DETECTION,
-    INIT_MSG_EXCHANGE,
-    MESSAGE_EXCHANGE,
-    SHUTDOWN,
-    CYCLE_UNDEF,
+    NEIGHBOR_DETECTION = (1 << 0),
+    INIT_MSG_EXCHANGE  = (1 << 0) | (1 << 1),
+    MESSAGE_EXCHANGE   = (1 << 0) | (1 << 1) | (1 << 2),
+    SHUTDOWN           = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
 };
 
 // espnow packet types

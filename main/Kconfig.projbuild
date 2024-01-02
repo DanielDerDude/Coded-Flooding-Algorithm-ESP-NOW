@@ -33,14 +33,14 @@ menu "Example Configuration"
 
     config BROADCAST_DURATION
         int "Broadcast duration"
-        default 100
+        default 1000
         range 1 65535
         help
             Duration in which broadcast gets send around the WSN in ms.
 
     config TIMESTAMP_SEND_DELAY
         int "Broadcast send interval"
-        default 1000
+        default 100
         range 0 65535
         help
             Delay between broadcasts in ms.
