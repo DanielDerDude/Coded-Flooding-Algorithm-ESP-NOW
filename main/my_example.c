@@ -207,7 +207,6 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
         }
     }
     nextCycleFromISR();
-
 }
 
 void IRAM_ATTR broadcast_timestamp(){
@@ -361,14 +360,13 @@ static void IRAM_ATTR init_msg_exchange_task(){
 
     blockUntilCycle(INIT_MSG_EXCHANGE);
 
-    // get current average send offset
-    int64_t avg_send_offset;
+    taskENTER_CRITICAL(&spinlock);
+    // get current average send offset from neighbor detection task
+    int64_t avg_send_offset = 0;
     if (xQueuePeek(s_avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
         ESP_LOGE(TAG3, "No send offset available!");
-        avg_send_offset = 0;
     }
 
-    taskENTER_CRITICAL(&spinlock);
     int64_t time_called = esp_timer_get_time();
     
     // determine peer_count, max offset and coresponding peer address
@@ -384,7 +382,7 @@ static void IRAM_ATTR init_msg_exchange_task(){
     // compute delay to start msg exchange in sync with the master time (oldest node);
     int64_t my_time = get_systime_us();
     uint64_t master_time_us = (max_offset > 0) ? (my_time + max_offset) : my_time;
-    uint64_t delay_us = 10000 - (master_time_us % 10000);                           // find the delay to the next time intervall start (of master if not master)
+    uint64_t delay_us = 50000L - (master_time_us % 5000L);                           // find the delay to the next time intervall start (of master if not master)
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );          // set timer for when to start masg exchange
@@ -399,14 +397,10 @@ static void IRAM_ATTR init_msg_exchange_task(){
     ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
     
     if (max_offset > 0) {                                       // device does not hold the master time 
-    ESP_LOGW(TAG3, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
+        ESP_LOGW(TAG3, "Master offset of %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
     }else{                                                      // this device holds the master time
-        esp_err_t err = esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP);
-        if(err != ESP_OK){
-            ESP_LOGE(TAG3, "Error reading my mac address.");    
-        }else{
-            ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
-        }
+        ESP_ERROR_CHECK( esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP) );
+        ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
     }
 
     //vDeletePeerList(peer_list);                                          // delete peer list 
@@ -438,7 +432,7 @@ static void IRAM_ATTR neighbor_detection_task(){
                     xQueueOverwrite(s_avg_send_offset_queue, &avg_send_offset);             // post send offset to queue
                     
                     // POTENTIAL PIPE OUT HERE
-                    ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
+                    //ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
 
                     broadcast_timestamp();                                              // broadcast another timestamp
 
@@ -582,11 +576,14 @@ void app_main(void)
     printf("\n");
     ESP_LOGW(TAG0, "boot time = %lld us", esp_timer_get_time());
 
-    /*// reset systime if reset did not get triggered by deepsleep
+    // if reset did not get triggered by deepsleep set systime so esps will be futher apart
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
-        ESP_LOGE(TAG1, "Resetting systime - not booting from deepsleep");
-        reset_systime();
-    } */
+        uint8_t mac_addr[ESP_NOW_ETH_ALEN]; 
+        ESP_ERROR_CHECK( esp_read_mac(&mac_addr, ESP_MAC_WIFI_SOFTAP) );
+        uint64_t some_val = calcItemValue(mac_addr); // compute time through mac address
+        ESP_LOGE(TAG1, "Setting systime to %llu - not booting from deepsleep", some_val);
+        reset_systime(some_val*1000);
+    }
 
     esp_err_t ret = nvs_flash_init();                                                   // init flash
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {     // erase if error occured

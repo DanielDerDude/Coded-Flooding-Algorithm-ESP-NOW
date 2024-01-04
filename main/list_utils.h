@@ -22,7 +22,7 @@ typedef struct xPeerElem {
     offset_data_t* timing_data;                          // timing data
     uint64_t item_value;
     struct xPeerElem* pxNext;                            // pointer pointing to next list entry
-    struct xPeerElem* pxPrev;                            // pointer pointing to previous list entry
+    //struct xPeerElem* pxPrev;                            // pointer pointing to previous list entry
     bloom_t* recp_report;                                // pointer to reception report in form of a bloom filter 
 } xPeerElem_t;
 
@@ -71,7 +71,7 @@ static xPeerElem_t* IRAM_ATTR xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALE
 
     // init pointers
     newElem->pxNext = NULL;
-    newElem->pxPrev = NULL;
+    //newElem->pxPrev = NULL;
 
     // allocate memory and init reception report bloomfilter and check if successful
     newElem->recp_report = (bloom_t*)malloc(sizeof(bloom_t));
@@ -117,7 +117,7 @@ void IRAM_ATTR vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_E
     
     // create peer list entry
     xPeerElem_t* newElem = xCreateElem(mac_addr, new_offset);
-    //ESP_LOGW(TAG_LIST, "vAddPeer for "MACSTR" with itemValue %llu", MAC2STR(mac_addr), newElem->item_value);
+    //ESP_LOGW("LIST", "vAddPeer for "MACSTR" with itemValue %llu", MAC2STR(mac_addr), newElem->item_value);
     
     // insert element in list
     if (list->pxHead == NULL && list->pxTail == NULL ){      // if list is empty
@@ -132,18 +132,18 @@ void IRAM_ATTR vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_E
 
         // insert element
         if (current == NULL) {                  // position at the end of list
-            newElem->pxPrev = list->pxTail;
+            //newElem->pxPrev = list->pxTail;
             list->pxTail->pxNext = newElem;
             list->pxTail = newElem;
         } else if (current == list->pxHead) {   // position at the beginning of the list
             newElem->pxNext = list->pxHead;
-            list->pxHead->pxPrev = newElem;  
+            //list->pxHead->pxPrev = newElem;  
             list->pxHead = newElem;
         } else {                                // inbetween the list
-            newElem->pxPrev = current->pxPrev;
+            //newElem->pxPrev = current->pxPrev;
             newElem->pxNext = current;
-            current->pxPrev->pxNext = newElem;
-            current->pxPrev = newElem;
+            //current->pxPrev->pxNext = newElem;
+            //current->pxPrev = newElem;
         }
     }
 
@@ -165,10 +165,8 @@ void IRAM_ATTR vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_E
 
     // check if new offset is highest offset
     if ((new_offset > list->max_offset)){                   // if first element in list or offset is max offset
-        list->max_offset = new_offset;                      // set new max offset
-        for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){     // copy address
-            list->max_offset_addr[i] = mac_addr[i];
-        }
+        list->max_offset = new_offset;                              // set new max offset
+        memcpy(list->max_offset_addr, mac_addr, ESP_NOW_ETH_ALEN);  // copy mac address
     }
     //xSemaphoreGive(list->sem);
 }
@@ -198,9 +196,7 @@ void IRAM_ATTR vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW
     // check if new computed offset of peer is max offset
     if (timing_data->avg_offset > list->max_offset){
         list->max_offset = timing_data->avg_offset;         // set new max offset
-        for (uint8_t i = 0; i < ESP_NOW_ETH_ALEN; i++){     // copy address
-            list->max_offset_addr[i] = mac_addr[i];
-        }
+        memcpy(list->max_offset_addr, mac_addr, ESP_NOW_ETH_ALEN);  // copy mac address
     }
     //xSemaphoreGive(list->sem);
 }
