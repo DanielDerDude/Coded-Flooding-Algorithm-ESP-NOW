@@ -25,12 +25,13 @@
 
 #define PAYLOAD_LEN                 8
 
-// controller state
+// controller state is resembled in event bit combination
 enum {
     NEIGHBOR_DETECTION = (1 << 0),
     INIT_MSG_EXCHANGE  = (1 << 0) | (1 << 1),
     MESSAGE_EXCHANGE   = (1 << 0) | (1 << 1) | (1 << 2),
     SHUTDOWN           = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
+    NETWORK_RESET      = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
 };
 
 // espnow packet types
@@ -38,7 +39,7 @@ enum {
     TIMESTAMP,
     RECEP_REPORT,
     ONC_DATA,
-    DATA_UNDEF,
+    RESET,
 };
 
 // esp now event type
@@ -61,6 +62,7 @@ typedef struct {
 typedef struct {
     uint8_t mac_addr[ESP_NOW_ETH_ALEN];
     uint8_t *data;
+    int64_t recv_offset;
     int data_len;
     int sig_len;
 } espnow_event_recv_cb_t;
