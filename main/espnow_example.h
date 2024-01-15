@@ -27,11 +27,13 @@
 
 // controller state is resembled in event bit combination
 enum {
-    NEIGHBOR_DETECTION = (1 << 0),
-    INIT_MSG_EXCHANGE  = (1 << 0) | (1 << 1),
-    MESSAGE_EXCHANGE   = (1 << 0) | (1 << 1) | (1 << 2),
-    SHUTDOWN           = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
-    NETWORK_RESET      = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+    HOLD               = 0,
+    INIT_DETECTION     = (1 << 0),
+    NEIGHBOR_DETECTION = (1 << 0) | (1 << 1),
+    INIT_MSG_EXCHANGE  = (1 << 0) | (1 << 1) | (1 << 2),
+    MESSAGE_EXCHANGE   = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
+    SHUTDOWN           = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+    NETWORK_RESET      = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5),
 };
 
 // espnow packet types

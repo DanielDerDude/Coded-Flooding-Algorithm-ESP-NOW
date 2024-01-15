@@ -53,7 +53,6 @@ static void espnow_deinit();
 
 static EventBits_t IRAM_ATTR getCycle(){                        // function for getting cycle through event group    
     EventBits_t evtBits = xEventGroupGetBits(CycleEventGroup);
-    taskYIELD();
     return evtBits;
 }
 
@@ -63,8 +62,12 @@ static EventBits_t IRAM_ATTR getCycleFromISR(){                 // function for 
 }
 
 static void IRAM_ATTR startCycle(){                             // function for starting cycle
-    xEventGroupClearBits(CycleEventGroup, NETWORK_RESET);
+    //xEventGroupClearBits(CycleEventGroup, NETWORK_RESET);
     xEventGroupSetBits(CycleEventGroup, NEIGHBOR_DETECTION);
+    /* if (!esp_timer_is_active(cycle_timer_handle)){
+        ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000) );
+    } */
+    ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000) );
 }
 
 static void IRAM_ATTR nextCycleFromISR(){                       // function for setting event bits for next cycle
@@ -98,9 +101,8 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
 
     if (status == ESP_NOW_SEND_SUCCESS){
         switch (getCycle()){
-
             case NEIGHBOR_DETECTION:                                            // in neighbor detection phase
-            {                                                         
+            {                                                     
                 espnow_event_t evt;                                             // create event
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 evt.timestamp = time_now;                                       // set timestamp
@@ -143,6 +145,14 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     taskEXIT_CRITICAL(&spinlock);
 
     int64_t recv_offset = (recv_info->rx_ctrl->timestamp == 0) ? 0 : time_since_boot - (int64_t)(recv_info->rx_ctrl->timestamp);        // compute receive offset - time between actually receiving packet and time of callback
+    
+    uint8_t data_type = data[0];                                                                                 // type of packet 
+    if (getCycle() == HOLD){ 
+        if ((data_type == TIMESTAMP) && ((timing_data_t*)data)->seq_num == 0){               // if on hold and found the first timestamp of a peer
+            xEventGroupSetBits(CycleEventGroup, INIT_DETECTION);                                                     // start sync cycle
+        }
+        return;
+    }
 
     espnow_event_t evt;                                 // create event
     evt.timestamp = time_now; //- recv_offset;          // with timestamp ATTENTION timestamp from wifi_pkt_rx_ctrl_t is super unreliable
@@ -164,7 +174,6 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
         return;
     }
 
-    uint8_t data_type = data[0];                                // select event id
     switch(data_type) {
         case TIMESTAMP:     evt.id = RECV_TIMESTAMP;    break;
         case RECEP_REPORT:  evt.id = RECV_REPORT;       break;
@@ -189,6 +198,8 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
 static void IRAM_ATTR cycle_timer_isr(void* arg){
 
     switch(getCycleFromISR()){
+
+        //case INIT_DETECTION: return;
 
         case NEIGHBOR_DETECTION:
         {
@@ -218,18 +229,19 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
 
         default:
         {
-            //assert(1==0);
+            assert(1==0);
             return;
         }
     }
     nextCycleFromISR();
 }
 
-static void IRAM_ATTR start_isr(void* arg){    
-    BaseType_t HigherPriorityTaskWoken, ret;
-    ret = xEventGroupSetBitsFromISR(CycleEventGroup, NEIGHBOR_DETECTION, &HigherPriorityTaskWoken);
-    if (ret == pdPASS) portYIELD_FROM_ISR(HigherPriorityTaskWoken);
-    assert(ret != pdFALSE);
+static void IRAM_ATTR start_manually_isr(void* arg){            // TODO BEREITET PROBLEME
+    if (getCycleFromISR() == HOLD){
+        BaseType_t HigherPriorityTaskWoken, ret;
+        ret = xEventGroupSetBitsFromISR(CycleEventGroup, NEIGHBOR_DETECTION, &HigherPriorityTaskWoken);
+        if (ret == pdPASS) portYIELD_FROM_ISR(HigherPriorityTaskWoken);
+    }
 }
 
 void IRAM_ATTR broadcast_timestamp(){
@@ -242,13 +254,14 @@ void IRAM_ATTR broadcast_timestamp(){
     taskENTER_CRITICAL(&spinlock);
     int64_t time_now = esp_timer_get_time();
     buf.timestamp = get_systime_us();
-    esp_err_t err = esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t));        // send timestamp
+    ESP_ERROR_CHECK( esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t)) );        // send timestamp
     taskEXIT_CRITICAL(&spinlock);
-    assert(err == ESP_OK);
     
     if (xQueueSend(time_send_placed_queue, &time_now, 0) != pdTRUE){      // give timestamp to queue fior send offset calculation
         assert(1 == 0);
     }
+
+    //ESP_LOGW(TAG1, "send broadcast");
 }
 /* 
 void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
@@ -380,7 +393,7 @@ static void msg_exchange_task(){
 }
  */
 static void IRAM_ATTR network_sync_task(void* arg){
-
+    uint64_t start = esp_timer_get_time();
     blockUntilCycle(INIT_MSG_EXCHANGE);
 
     taskENTER_CRITICAL(&spinlock);
@@ -413,13 +426,14 @@ static void IRAM_ATTR network_sync_task(void* arg){
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
+    uint64_t finished = esp_timer_get_time();
     taskEXIT_CRITICAL(&spinlock);
 
     // create msg exchange task
     //xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
     
     // print stats
-    ESP_LOGE(TAG3, "called init msg exchange at %lld", time_called);
+    ESP_LOGE(TAG3, "sync task duration %llu", finished - start);
     ESP_LOGW(TAG3, "avg_send_offset = %lld us", avg_send_offset);
     ESP_LOGW(TAG3, "avg_recv_offset = %lld us", avg_recv_offset);
     ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
@@ -430,28 +444,28 @@ static void IRAM_ATTR network_sync_task(void* arg){
         ESP_ERROR_CHECK( esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP) );
         ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
     }
-    ESP_LOGE(TAG3, "Current systime %lld us", get_systime_us());
+    ESP_LOGE(TAG3, "computed delay %lld us", delay_us);
 
     //vDeletePeerList(peer_list);                                          // delete peer list 
     vTaskDelete(NULL);
 }
 
 static void IRAM_ATTR neighbor_detection_task(void* arg){
-
+    uint64_t start = esp_timer_get_time();
     int64_t send_offset_sum = 0;
     int64_t recv_offset_sum = 0;
     uint16_t broadcasts_sent = 0;
     uint16_t broadcasts_recv = 0;
     
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
-
+    
     // broadcast first timestamp
     broadcast_timestamp();
 
     // start event handle loop
     espnow_event_t evt;
     while (getCycle() == NEIGHBOR_DETECTION) {
-        if (xQueueReceive(espnow_event_queue, &evt, 0) == pdTRUE){
+        if (xQueueReceive(espnow_event_queue, &evt, portMAX_DELAY) == pdTRUE){
             switch (evt.id) {
                 case SEND_TIMESTAMP:
                 {
@@ -462,7 +476,6 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                     int64_t avg_send_offset = send_offset_sum / broadcasts_sent / 2;  
                     xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);         // post current average send offset to queue
                     
-
                     if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval 
                     broadcast_timestamp();                                                                              // broadcast another timestamp
 
@@ -520,8 +533,9 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
             }
         }
     }
+    uint64_t finished = esp_timer_get_time();
     ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
-    ESP_LOGE(TAG1, "neighbor detection task exited at %llu", esp_timer_get_time());
+    ESP_LOGE(TAG1, "neighbor detection duration %llu", finished - start);
     vTaskDelete(NULL);
 }
 
@@ -573,8 +587,6 @@ static void espnow_init(void)
     /* Set primary master key. */
     ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)CONFIG_ESPNOW_PMK) );
 
-    ESP_LOGE("after wifi init","time = %lld", esp_timer_get_time() );
-
     /* add broadcast peer information to peer list. */
     esp_now_peer_info_t *peer = (esp_now_peer_info_t*) malloc(sizeof(esp_now_peer_info_t));
     assert(peer != NULL);
@@ -597,7 +609,6 @@ static void setup_timer(void){
             .name = "cycle_timer"
     };
     ESP_ERROR_CHECK(esp_timer_create(&cycle_timer_args, &cycle_timer_handle));
-
 }
 
 static void setup_GPIO(void){
@@ -620,9 +631,9 @@ static void setup_GPIO(void){
     ;                         // disable pull-up mode
     ESP_ERROR_CHECK( gpio_config(&io_conf) );       // configure the GPIO with the given settings
     ESP_ERROR_CHECK( gpio_install_isr_service(0) );                                 // install gpio isr service
-    ESP_ERROR_CHECK( gpio_isr_handler_add(GPIO_START_PIN, start_isr, NULL) ); // hook isr handler for GPIO0
+    ESP_ERROR_CHECK( gpio_isr_handler_add(GPIO_START_PIN, start_manually_isr, NULL) ); // hook isr handler for GPIO0
 
-    ESP_ERROR_CHECK( esp_sleep_enable_ext0_wakeup(GPIO_START_PIN, 0) );
+    //ESP_ERROR_CHECK( esp_sleep_enable_ext0_wakeup(GPIO_START_PIN, 0) );
 }
 
 static void espnow_deinit()
@@ -641,24 +652,6 @@ void app_main(void)
 
     CycleEventGroup = xEventGroupCreate();      // create event group
     assert(CycleEventGroup != NULL);
-
-    // if reset did not get triggered by deepsleep set systime so esps will be futher apart
-    if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
-        uint8_t mac_addr[ESP_NOW_ETH_ALEN];                                                 // derive systime from mac address
-        ESP_ERROR_CHECK( esp_read_mac(mac_addr, ESP_MAC_WIFI_SOFTAP) );
-        uint64_t some_val = (calcItemValue(mac_addr) % 100000L)*100000L; 
-        ESP_LOGE(TAG1, "Setting systime to %llu - not booting from deepsleep", some_val);
-        reset_systime(some_val);
-        printf("\n");
-        ESP_LOGW(TAG0, "Waiting for start interrupt...");
-        printf("\n");
-
-        blockUntilCycle(NEIGHBOR_DETECTION);
-    }else{
-        printf("\n");
-        ESP_LOGW(TAG0, "boot time = %lld us", esp_timer_get_time());
-        startCycle();
-    }
 
     esp_err_t ret = nvs_flash_init();                                                   // init flash
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {     // erase if error occured
@@ -682,11 +675,24 @@ void app_main(void)
     avg_recv_offset_queue  = xQueueCreate(1, sizeof(int64_t));
     assert(avg_recv_offset_queue != NULL);
 
-    blockUntilCycle(NEIGHBOR_DETECTION);
+    // if reset did not get triggered by deepsleep set systime so esps will be futher apart
+    if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
+        uint8_t mac_addr[ESP_NOW_ETH_ALEN];                                                 // derive systime from mac address
+        ESP_ERROR_CHECK( esp_read_mac(mac_addr, ESP_MAC_WIFI_SOFTAP) );
+        uint64_t some_val = (calcItemValue(mac_addr) % 100000L)*100000L; 
+        ESP_LOGE(TAG1, "Setting systime to %llu - not booting from deepsleep", some_val);
+        reset_systime(some_val);
+        printf("\n");
+        ESP_LOGW(TAG0, "Waiting for start interrupt...");
+        printf("\n");
+        blockUntilCycle(INIT_DETECTION);
+        startCycle();
+    }else{
+        printf("\n");
+        startCycle();
+    }
 
-    // start timer and tasks
-    ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000L) );
-    xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 0, &network_reset_task_handle     , 1);
-    xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 2048, NULL, 0, &network_sync_task_handle      , 1);
+    //xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 0, &network_reset_task_handle   , 1);
     xTaskCreatePinnedToCore( neighbor_detection_task, "neighbor_detection_task" , 2048, NULL, 3, &neighbor_detection_task_handle, 1);
+    xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 2048, NULL, 2, &network_sync_task_handle      , 1);
 }
