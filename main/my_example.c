@@ -393,11 +393,10 @@ static void msg_exchange_task(){
 }
  */
 static void IRAM_ATTR network_sync_task(void* arg){
-    uint64_t start = esp_timer_get_time();
     blockUntilCycle(INIT_MSG_EXCHANGE);
 
     taskENTER_CRITICAL(&spinlock);
-    int64_t time_called = esp_timer_get_time();
+    //int64_t time_called = esp_timer_get_time();
     // get current average send offset from neighbor detection task
     int64_t avg_send_offset = 0;
     if (xQueuePeek(avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
@@ -426,14 +425,13 @@ static void IRAM_ATTR network_sync_task(void* arg){
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
-    uint64_t finished = esp_timer_get_time();
     taskEXIT_CRITICAL(&spinlock);
 
     // create msg exchange task
     //xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
     
     // print stats
-    ESP_LOGE(TAG3, "sync task duration %llu", finished - start);
+    ESP_LOGW(TAG3, "Systime at %lld us", my_time);
     ESP_LOGW(TAG3, "avg_send_offset = %lld us", avg_send_offset);
     ESP_LOGW(TAG3, "avg_recv_offset = %lld us", avg_recv_offset);
     ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
@@ -451,7 +449,6 @@ static void IRAM_ATTR network_sync_task(void* arg){
 }
 
 static void IRAM_ATTR neighbor_detection_task(void* arg){
-    uint64_t start = esp_timer_get_time();
     int64_t send_offset_sum = 0;
     int64_t recv_offset_sum = 0;
     uint16_t broadcasts_sent = 0;
@@ -533,9 +530,7 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
             }
         }
     }
-    uint64_t finished = esp_timer_get_time();
     ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
-    ESP_LOGE(TAG1, "neighbor detection duration %llu", finished - start);
     vTaskDelete(NULL);
 }
 
@@ -690,6 +685,7 @@ void app_main(void)
     }else{
         printf("\n");
         startCycle();
+        ESP_LOGW("MAIN","CONFIG: bc_duration_%d-TS_senddelay_%d-DS_duration_%d-ME_duration_%d ", CONFIG_BROADCAST_DURATION, CONFIG_TIMESTAMP_SEND_DELAY, CONFIG_DEEPSLEEP_DURATION_MS, CONFIG_MSG_EXCHANGE_DURATION_MS);
     }
 
     //xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 0, &network_reset_task_handle   , 1);
