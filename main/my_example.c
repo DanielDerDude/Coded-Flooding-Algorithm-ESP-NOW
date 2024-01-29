@@ -11,7 +11,7 @@
 #define CONFIG_ESPNOW_SEND_LEN 11
 
 #define GPIO_DEBUG_PIN          18
-#define GPIO_START_PIN          34
+#define GPIO_START_PIN          0
 #define GPIO_DEBUG_PIN_SEL      (1ULL<<GPIO_DEBUG_PIN)
 #define GPIO_START_PIN_SEL      (1ULL<<GPIO_START_PIN)
 
@@ -49,6 +49,9 @@ static uint16_t s_espnow_seq[RESET] = { 0, 0, 0 };       // array with counter o
 // second : counter for transmitted reception reports
 // third  : counter for transmitted onc packets  
 
+// time when wifi counter start - for receive offset correction
+int64_t time_wifi_start = 0;
+
 static void espnow_deinit();
 
 static EventBits_t IRAM_ATTR getCycle(){                        // function for getting cycle through event group    
@@ -64,10 +67,10 @@ static EventBits_t IRAM_ATTR getCycleFromISR(){                 // function for 
 static void IRAM_ATTR startCycle(){                             // function for starting cycle
     //xEventGroupClearBits(CycleEventGroup, NETWORK_RESET);
     xEventGroupSetBits(CycleEventGroup, NEIGHBOR_DETECTION);
-    /* if (!esp_timer_is_active(cycle_timer_handle)){
+    if (!esp_timer_is_active(cycle_timer_handle)){
         ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000) );
-    } */
-    ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000) );
+    }
+    //ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_BROADCAST_DURATION*1000) );
 }
 
 static void IRAM_ATTR nextCycleFromISR(){                       // function for setting event bits for next cycle
@@ -79,12 +82,10 @@ static void IRAM_ATTR nextCycleFromISR(){                       // function for 
     assert(ret != pdFALSE);
 }
 
-static void IRAM_ATTR blockUntilCycle(EventBits_t cycle){
+static bool IRAM_ATTR blockUntilCycle(EventBits_t cycle){
     EventBits_t EventBits;
     EventBits = xEventGroupWaitBits(CycleEventGroup, cycle, pdFALSE, pdTRUE, portMAX_DELAY);        // block until init msg exchange event is set
-    if ((EventBits & cycle) != cycle){
-        ESP_LOGE(TAG3, "cylce was never set");
-    }
+    return (EventBits | cycle) == cycle;
 }
 
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -144,7 +145,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     int64_t time_now = get_systime_us();
     taskEXIT_CRITICAL(&spinlock);
 
-    int64_t recv_offset = (recv_info->rx_ctrl->timestamp == 0) ? 0 : time_since_boot - (int64_t)(recv_info->rx_ctrl->timestamp);        // compute receive offset - time between actually receiving packet and time of callback
+    int64_t recv_offset = (recv_info->rx_ctrl->timestamp == 0) ? 0 : time_since_boot - (int64_t)(recv_info->rx_ctrl->timestamp) - time_wifi_start;        // compute receive offset - time between actually receiving packet and time of callback
     
     uint8_t data_type = data[0];                                                                                 // type of packet 
     if (getCycle() == HOLD){ 
@@ -155,7 +156,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     }
 
     espnow_event_t evt;                                 // create event
-    evt.timestamp = time_now; //- recv_offset;          // with timestamp ATTENTION timestamp from wifi_pkt_rx_ctrl_t is super unreliable
+    evt.timestamp = time_now;                           // with timestamp ATTENTION timestamp from wifi_pkt_rx_ctrl_t is super unreliable
 
     uint8_t * mac_addr = recv_info->src_addr;           // get source mac address
     if (mac_addr == NULL || data == NULL || len <= 0) {
@@ -180,6 +181,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
         case ONC_DATA:      evt.id = RECV_ONC_DATA;     break;
         case RESET:{
             free(recv_cb->data);
+            xEventGroupSetBits(CycleEventGroup, NETWORK_RESET);
             esp_restart();
             break;
         }
@@ -236,10 +238,14 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
     nextCycleFromISR();
 }
 
-static void IRAM_ATTR start_manually_isr(void* arg){            // TODO BEREITET PROBLEME
+static void IRAM_ATTR start_manually_isr(void* arg){
     if (getCycleFromISR() == HOLD){
         BaseType_t HigherPriorityTaskWoken, ret;
         ret = xEventGroupSetBitsFromISR(CycleEventGroup, NEIGHBOR_DETECTION, &HigherPriorityTaskWoken);
+        if (ret == pdPASS) portYIELD_FROM_ISR(HigherPriorityTaskWoken);
+    }else{
+        BaseType_t HigherPriorityTaskWoken, ret;
+        ret = xEventGroupSetBitsFromISR(CycleEventGroup, NETWORK_RESET, &HigherPriorityTaskWoken);
         if (ret == pdPASS) portYIELD_FROM_ISR(HigherPriorityTaskWoken);
     }
 }
@@ -393,7 +399,7 @@ static void msg_exchange_task(){
 }
  */
 static void IRAM_ATTR network_sync_task(void* arg){
-    blockUntilCycle(INIT_MSG_EXCHANGE);
+    if (blockUntilCycle(INIT_MSG_EXCHANGE) == false) vTaskDelete(NULL);     // delete if unblocking because of higher Cycle 
 
     taskENTER_CRITICAL(&spinlock);
     //int64_t time_called = esp_timer_get_time();
@@ -415,13 +421,13 @@ static void IRAM_ATTR network_sync_task(void* arg){
     getMaxOffsetAddr(peer_list, max_offset_addr);
 
     if (peer_count != 0){                                                     // check if any peers have been detected
-        max_offset = max_offset - avg_send_offset; //- avg_recv_offset;       // extract max offset, take average send offset in to account
+        max_offset = max_offset - avg_send_offset;                            // extract max offset, take average send offset in to account
     }
     
     // compute delay to start msg exchange in sync with the master time (oldest node);
     int64_t my_time = get_systime_us();
     uint64_t master_time_us = (max_offset > 0) ? (my_time + max_offset) : my_time;
-    uint64_t delay_us = 100000L - (master_time_us % 100000L);                             // compute transit time for msg exchange
+    uint64_t delay_us = 10000L - (master_time_us % 10000L);                             // compute transit time for msg exchange
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
@@ -451,8 +457,9 @@ static void IRAM_ATTR network_sync_task(void* arg){
 static void IRAM_ATTR neighbor_detection_task(void* arg){
     int64_t send_offset_sum = 0;
     int64_t recv_offset_sum = 0;
+    uint16_t sent_offset_cnt = 0;
+    uint16_t recv_offset_cnt = 0;
     uint16_t broadcasts_sent = 0;
-    uint16_t broadcasts_recv = 0;
     
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
     
@@ -467,12 +474,15 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                 case SEND_TIMESTAMP:
                 {
                     espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-                    send_offset_sum += send_cb->send_offset;
                     
                     broadcasts_sent++;
-                    int64_t avg_send_offset = send_offset_sum / broadcasts_sent / 2;  
-                    xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);         // post current average send offset to queue
-                    
+
+                    if (send_cb->send_offset != 0){                                             // post current average send offset to queue
+                        send_offset_sum += send_cb->send_offset;
+                        int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;  
+                        xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
+                    }
+
                     if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval 
                     broadcast_timestamp();                                                                              // broadcast another timestamp
 
@@ -490,8 +500,7 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
 
                     if (recv_cb->recv_offset != 0){
                         recv_offset_sum += recv_cb->recv_offset;
-                        broadcasts_recv++;
-                        int64_t avg_recv_offset = recv_offset_sum / broadcasts_recv;
+                        int64_t avg_recv_offset = recv_offset_sum / ++recv_offset_cnt;
                         xQueueOverwrite(avg_recv_offset_queue, &avg_recv_offset);         // post current average receive offset to queue
                     }else{
                         ESP_LOGE(TAG1, "Receive offset missing!");
@@ -536,17 +545,19 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
 
 static void IRAM_ATTR network_reset_task(void* arg){
     
-    blockUntilCycle(NETWORK_RESET);
-
+    if (blockUntilCycle(NETWORK_RESET) == false) vTaskDelete(NULL);
+    
+    printf("\n");
     ESP_LOGE("network reset", "RESETTING NETWORK");
-
+    printf("\n");
+    
     uint8_t buf;
     buf = RESET;
-    ESP_ERROR_CHECK( esp_now_send(s_broadcast_mac, &buf, sizeof(uint8_t)) );        
 
-    /* vTaskDelete(neighbor_detection_task_handle);
-    vTaskDelete(network_sync_task_handle); */
-    vTaskDelay(10/portTICK_PERIOD_MS);
+    for (uint8_t i = 0; i < 10; i++){
+        ESP_ERROR_CHECK( esp_now_send(s_broadcast_mac, &buf, sizeof(uint8_t)) );
+        vTaskDelay(10/portTICK_PERIOD_MS);
+    }
     esp_restart();
 }
 
@@ -568,6 +579,7 @@ static void espnow_init(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
     //ESP_ERROR_CHECK( esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, 1, WIFI_PHY_RATE_MCS7_SGI) ); // not possible with esp now
+    time_wifi_start = esp_timer_get_time();
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
 
@@ -672,23 +684,24 @@ void app_main(void)
 
     // if reset did not get triggered by deepsleep set systime so esps will be futher apart
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
-        uint8_t mac_addr[ESP_NOW_ETH_ALEN];                                                 // derive systime from mac address
+        /* uint8_t mac_addr[ESP_NOW_ETH_ALEN];                                                 // derive systime from mac address
         ESP_ERROR_CHECK( esp_read_mac(mac_addr, ESP_MAC_WIFI_SOFTAP) );
         uint64_t some_val = (calcItemValue(mac_addr) % 100000L)*100000L; 
         ESP_LOGE(TAG1, "Setting systime to %llu - not booting from deepsleep", some_val);
-        reset_systime(some_val);
+        reset_systime(some_val); */
         printf("\n");
         ESP_LOGW(TAG0, "Waiting for start interrupt...");
         printf("\n");
         blockUntilCycle(INIT_DETECTION);
         startCycle();
+        ESP_LOGW("MAIN","CONFIG: bc_duration_%d-TS_senddelay_%d-DS_duration_%d-ME_duration_%d ", CONFIG_BROADCAST_DURATION, CONFIG_TIMESTAMP_SEND_DELAY, CONFIG_DEEPSLEEP_DURATION_MS, CONFIG_MSG_EXCHANGE_DURATION_MS);
+        printf("\n");
     }else{
         printf("\n");
         startCycle();
-        ESP_LOGW("MAIN","CONFIG: bc_duration_%d-TS_senddelay_%d-DS_duration_%d-ME_duration_%d ", CONFIG_BROADCAST_DURATION, CONFIG_TIMESTAMP_SEND_DELAY, CONFIG_DEEPSLEEP_DURATION_MS, CONFIG_MSG_EXCHANGE_DURATION_MS);
     }
 
-    //xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 0, &network_reset_task_handle   , 1);
-    xTaskCreatePinnedToCore( neighbor_detection_task, "neighbor_detection_task" , 2048, NULL, 3, &neighbor_detection_task_handle, 1);
+    xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 1, &network_reset_task_handle   , 1);
     xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 2048, NULL, 2, &network_sync_task_handle      , 1);
+    xTaskCreatePinnedToCore( neighbor_detection_task, "neighbor_detection_task" , 2048, NULL, 3, &neighbor_detection_task_handle, 1);
 }
