@@ -2,6 +2,7 @@
 #define _INCLUDES_H_
 #include "includes.h"
 #include "./components/bloomfilter/bloom.c"
+//#include "./components/linreg/linreg.h"
 #include "list_utils.h"
 #include "timing_functions.h"
 //#include "NVS_access.h"
@@ -165,7 +166,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     }
     
     espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;    // get recv cb info 
-    recv_cb->sig_len = recv_info->rx_ctrl->sig_len;         // set signal length
+        recv_cb->sig_len = recv_info->rx_ctrl->sig_len;         // set signal length
     memcpy(recv_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);  // set mac address
     recv_cb->recv_offset = recv_offset;                     // save receive offset
 
@@ -250,7 +251,7 @@ static void IRAM_ATTR start_manually_isr(void* arg){
     }
 }
 
-void IRAM_ATTR broadcast_timestamp(){
+static void IRAM_ATTR broadcast_timestamp(){
 
     timing_data_t buf;
 
@@ -421,7 +422,7 @@ static void IRAM_ATTR network_sync_task(void* arg){
     getMaxOffsetAddr(peer_list, max_offset_addr);
 
     if (peer_count != 0){                                                     // check if any peers have been detected
-        max_offset = max_offset - avg_send_offset;                            // extract max offset, take average send offset in to account
+        max_offset = max_offset - (avg_send_offset/2 -8);                            // extract max offset, take average send offset in to account
     }
     
     // compute delay to start msg exchange in sync with the master time (oldest node);
@@ -479,7 +480,7 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
 
                     if (send_cb->send_offset != 0){                                             // post current average send offset to queue
                         send_offset_sum += send_cb->send_offset;
-                        int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;  
+                        int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;
                         xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
                     }
 
@@ -509,10 +510,9 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                     // compute transmission time and systime offset to peer 
                     int64_t time_TX = recv_data->timestamp;
                     int64_t time_RX = evt.timestamp;
-                    const int64_t time_tm = ( recv_cb->sig_len * 8 ); // transmission delay | rate * 10^6 = 1us [in us] 
-                    //ESP_LOGE(TAG1, "%lld", time_tm);
+                    const int64_t time_tm = (recv_cb->sig_len) * 8 / 54;                      // transmission delay [us] = framesize / bandwidth = ( 54 * 8 ) / ( 54 * 1e6) *1e6 = 8 us 
 
-                    int64_t delta = time_TX - time_RX - time_tm;
+                    int64_t delta = time_TX - time_RX;
 
                     if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
                         vAddPeer(peer_list, recv_cb->mac_addr, delta);
@@ -578,11 +578,10 @@ static void espnow_init(void)
     ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
-    //ESP_ERROR_CHECK( esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, 1, WIFI_PHY_RATE_MCS7_SGI) ); // not possible with esp now
-    time_wifi_start = esp_timer_get_time();
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
-
+    ESP_ERROR_CHECK( esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, true, WIFI_PHY_RATE_54M) );        // crank the rate up the wazooooooooo!!!!!
+    time_wifi_start = esp_timer_get_time();
     // init espnow event queue    
     espnow_event_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(espnow_event_t));
     assert(espnow_event_queue != NULL);
@@ -634,8 +633,7 @@ static void setup_GPIO(void){
     io_conf.mode = GPIO_MODE_INPUT;                 // set as input mode
     io_conf.pin_bit_mask = GPIO_START_PIN_SEL;      // bit mask of the pin
     io_conf.pull_down_en = 0;                       // disable pull-up mode (GPIO0 has a hardware pull up)
-    io_conf.pull_up_en = 1
-    ;                         // disable pull-up mode
+    io_conf.pull_up_en = 1;                         // disable pull-up mode
     ESP_ERROR_CHECK( gpio_config(&io_conf) );       // configure the GPIO with the given settings
     ESP_ERROR_CHECK( gpio_install_isr_service(0) );                                 // install gpio isr service
     ESP_ERROR_CHECK( gpio_isr_handler_add(GPIO_START_PIN, start_manually_isr, NULL) ); // hook isr handler for GPIO0
@@ -702,6 +700,6 @@ void app_main(void)
     }
 
     xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 1, &network_reset_task_handle   , 1);
-    xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 2048, NULL, 2, &network_sync_task_handle      , 1);
+    xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 2048, NULL, 1, &network_sync_task_handle      , 1);
     xTaskCreatePinnedToCore( neighbor_detection_task, "neighbor_detection_task" , 2048, NULL, 3, &neighbor_detection_task_handle, 1);
 }
