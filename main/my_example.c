@@ -52,6 +52,7 @@ static uint16_t s_espnow_seq[RESET] = { 0, 0, 0 };       // array with counter o
 
 // time when wifi counter start - for receive offset correction
 int64_t time_wifi_start = 0;
+int64_t time_debug = 0;
 
 static void espnow_deinit();
 
@@ -211,7 +212,6 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
 
         case INIT_MSG_EXCHANGE:
         {
-            ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );                                                   // assert debug pin
             ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, CONFIG_MSG_EXCHANGE_DURATION_MS*1000) );      // start shutdown timer
             break;
         }
@@ -256,8 +256,8 @@ static void IRAM_ATTR broadcast_timestamp(){
     timing_data_t buf;
 
     buf.type = TIMESTAMP;
-    buf.seq_num = s_espnow_seq[TIMESTAMP]++;
-    
+    buf.seq_num = s_espnow_seq[TIMESTAMP]++;        
+
     taskENTER_CRITICAL(&spinlock);
     int64_t time_now = esp_timer_get_time();
     buf.timestamp = get_systime_us();
@@ -267,7 +267,7 @@ static void IRAM_ATTR broadcast_timestamp(){
     if (xQueueSend(time_send_placed_queue, &time_now, 0) != pdTRUE){      // give timestamp to queue fior send offset calculation
         assert(1 == 0);
     }
-
+        
     //ESP_LOGW(TAG1, "send broadcast");
 }
 /* 
@@ -310,9 +310,14 @@ void IRAM_ATTR espnow_pseudo_broadcast(const uint8_t *mac_addr_list, encoded_dat
     }
 
 } */
-/* 
-static void msg_exchange_task(){    
-    ESP_LOGW(TAG4, "Testing bloom filter");
+
+static void msg_exchange_task(){
+    if (blockUntilCycle(MESSAGE_EXCHANGE) == false) vTaskDelete(NULL);
+
+    ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );                                                   // assert debug pin
+    
+    vTaskDelete(NULL);
+    /* ESP_LOGW(TAG4, "Testing bloom filter");
 
     int64_t max_heap_block = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
     ESP_LOGW(TAG4, "max heap block = %lld", max_heap_block);
@@ -396,14 +401,18 @@ static void msg_exchange_task(){
             case SEND_ONC_DATA:
             default: break;
         }   
-    }
+    } */
 }
- */
+
 static void IRAM_ATTR network_sync_task(void* arg){
     if (blockUntilCycle(INIT_MSG_EXCHANGE) == false) vTaskDelete(NULL);     // delete if unblocking because of higher Cycle 
 
+    // create msg exchange task
+    xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
+
     taskENTER_CRITICAL(&spinlock);
     //int64_t time_called = esp_timer_get_time();
+    //ESP_LOGW(TAG3, "Called Init at %lld us", time_called);
     // get current average send offset from neighbor detection task
     int64_t avg_send_offset = 0;
     if (xQueuePeek(avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
@@ -416,10 +425,10 @@ static void IRAM_ATTR network_sync_task(void* arg){
     }
     
     // determine peer_count, max offset and coresponding peer address
-    int64_t max_offset = getMaxOffset(peer_list);
-    uint8_t peer_count = getPeerCount(peer_list);
+    int64_t max_offset = getMaxOffset();
+    uint8_t peer_count = getPeerCount();
     uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
-    getMaxOffsetAddr(peer_list, max_offset_addr);
+    getMaxOffsetAddr(max_offset_addr);
 
     if (peer_count != 0){                                                     // check if any peers have been detected
         max_offset = max_offset - (avg_send_offset/2 -8);                            // extract max offset, take average send offset in to account
@@ -428,14 +437,11 @@ static void IRAM_ATTR network_sync_task(void* arg){
     // compute delay to start msg exchange in sync with the master time (oldest node);
     int64_t my_time = get_systime_us();
     uint64_t master_time_us = (max_offset > 0) ? (my_time + max_offset) : my_time;
-    uint64_t delay_us = 10000L - (master_time_us % 10000L);                             // compute transit time for msg exchange
+    uint64_t delay_us = 50000L - (master_time_us % 50000L);                             // compute transit time for msg exchange
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
     taskEXIT_CRITICAL(&spinlock);
-
-    // create msg exchange task
-    //xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
     
     // print stats
     ESP_LOGW(TAG3, "Systime at %lld us", my_time);
@@ -463,80 +469,80 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
     uint16_t broadcasts_sent = 0;
     
     ESP_LOGI(TAG1, "Starting broadcast discovery of peers");
-    
+
     // broadcast first timestamp
     broadcast_timestamp();
 
     // start event handle loop
     espnow_event_t evt;
-    while (getCycle() == NEIGHBOR_DETECTION) {
-        if (xQueueReceive(espnow_event_queue, &evt, portMAX_DELAY) == pdTRUE){
-            switch (evt.id) {
-                case SEND_TIMESTAMP:
-                {
-                    espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-                    
-                    broadcasts_sent++;
+    while (xQueueReceive(espnow_event_queue, &evt, portMAX_DELAY) == pdTRUE) {
+        if (getCycle() != NEIGHBOR_DETECTION) break; 
+        
+        switch (evt.id) {
+            case SEND_TIMESTAMP:
+            {
+                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                
+                broadcasts_sent++;
 
-                    if (send_cb->send_offset != 0){                                             // post current average send offset to queue
-                        send_offset_sum += send_cb->send_offset;
-                        int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;
-                        xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
-                    }
-
-                    if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval 
-                    broadcast_timestamp();                                                                              // broadcast another timestamp
-
-                    break;
+                if (send_cb->send_offset != 0){                                             // post current average send offset to queue
+                    send_offset_sum += send_cb->send_offset;
+                    int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;
+                    xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
                 }
-                case RECV_TIMESTAMP:
-                {
-                    espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                    timing_data_t *recv_data = (timing_data_t *)(recv_cb->data);
 
-                    if (recv_data->type != TIMESTAMP) {
-                        ESP_LOGE(TAG1, "Received timestamp event, but data is not a timestamp");
-                        break;
-                    }
+                if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval 
+                broadcast_timestamp();                                                                              // broadcast another timestamp
 
-                    if (recv_cb->recv_offset != 0){
-                        recv_offset_sum += recv_cb->recv_offset;
-                        int64_t avg_recv_offset = recv_offset_sum / ++recv_offset_cnt;
-                        xQueueOverwrite(avg_recv_offset_queue, &avg_recv_offset);         // post current average receive offset to queue
-                    }else{
-                        ESP_LOGE(TAG1, "Receive offset missing!");
-                    }
-                    
-                    // compute transmission time and systime offset to peer 
-                    int64_t time_TX = recv_data->timestamp;
-                    int64_t time_RX = evt.timestamp;
-                    const int64_t time_tm = (recv_cb->sig_len) * 8 / 54;                      // transmission delay [us] = framesize / bandwidth = ( 54 * 8 ) / ( 54 * 1e6) *1e6 = 8 us 
-
-                    int64_t delta = time_TX - time_RX;
-
-                    if (esp_now_is_peer_exist(recv_cb->mac_addr) == false) {        // unknown peer
-                        vAddPeer(peer_list, recv_cb->mac_addr, delta);
-                    }else{                                                          // known peer
-                        vAddOffset(peer_list, recv_cb->mac_addr, delta);
-                    }
-                    
-                    break;
-                }
-                case RECV_ONC_DATA:                                 
-                case RECV_REPORT:                                                   // delete data not related to timestamps
-                {
-                    espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;            
-                    uint8_t recv_type = recv_cb->data[0];
-                    if (( recv_type != RECV_ONC_DATA) || (recv_type != RECV_REPORT) ){
-                        ESP_LOGE(TAG1, "Call back error");
-                        break;
-                    }
-                    
-                    free(recv_cb->data);
-                    break;
-                }
-                default: break;
+                break;
             }
+            case RECV_TIMESTAMP:
+            {
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+                timing_data_t *recv_data = (timing_data_t *)(recv_cb->data);
+
+                if (recv_data->type != TIMESTAMP) {
+                    ESP_LOGE(TAG1, "Received timestamp event, but data is not a timestamp");
+                    break;
+                }
+
+                if (recv_cb->recv_offset != 0){
+                    recv_offset_sum += recv_cb->recv_offset;
+                    int64_t avg_recv_offset = recv_offset_sum / ++recv_offset_cnt;
+                    xQueueOverwrite(avg_recv_offset_queue, &avg_recv_offset);         // post current average receive offset to queue
+                }else{
+                    ESP_LOGE(TAG1, "Receive offset missing!");
+                }
+                
+                // compute transmission time and systime offset to peer 
+                int64_t time_TX = recv_data->timestamp;
+                int64_t time_RX = evt.timestamp;
+                const int64_t time_tm = (recv_cb->sig_len) * 8 / 54;                      // transmission delay [us] = framesize / bandwidth = ( 54 * 8 ) / ( 54 * 1e6) *1e6 = 8 us 
+
+                int64_t delta = time_TX - time_RX;
+
+                if (boPeerExists(recv_cb->mac_addr) == false) {        // unknown peer
+                    vAddPeer(recv_cb->mac_addr, delta);
+                }else{                                                          // known peer
+                    vAddOffset(recv_cb->mac_addr, delta);
+                }
+                
+                break;
+            }
+            case RECV_ONC_DATA:                                 
+            case RECV_REPORT:                                                   // delete data not related to timestamps
+            {
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;            
+                uint8_t recv_type = recv_cb->data[0];
+                if (( recv_type != RECV_ONC_DATA) || (recv_type != RECV_REPORT) ){
+                    ESP_LOGE(TAG1, "Call back error");
+                    break;
+                }
+                
+                free(recv_cb->data);
+                break;
+            }
+            default: break;
         }
     }
     ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);
@@ -576,12 +582,13 @@ static void espnow_init(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_FLASH) );        // LEAVE THIS TO FLASH!!! if RAM is configured here, everything becomes super slow 
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
     ESP_ERROR_CHECK( esp_wifi_start());
-    ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
-    ESP_ERROR_CHECK( esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, true, WIFI_PHY_RATE_54M) );        // crank the rate up the wazooooooooo!!!!!
     time_wifi_start = esp_timer_get_time();
+    ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
+    //ESP_ERROR_CHECK( esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, true, WIFI_PHY_RATE_54M) );        // crank the rate up the wazooooooooo!!!!!
+    
     // init espnow event queue    
     espnow_event_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(espnow_event_t));
     assert(espnow_event_queue != NULL);
@@ -670,7 +677,7 @@ void app_main(void)
     espnow_init();
 
     // initialise peer list 
-    peer_list = xInitPeerList();      
+    vInitPeerList();      
 
     // init needed queues
     time_send_placed_queue = xQueueCreate(1, sizeof(int64_t));
@@ -699,7 +706,7 @@ void app_main(void)
         startCycle();
     }
 
-    xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 1, &network_reset_task_handle   , 1);
-    xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 2048, NULL, 1, &network_sync_task_handle      , 1);
+    xTaskCreatePinnedToCore( network_reset_task     , "network_reset_task"      , 2048, NULL, 1, &network_reset_task_handle     , 1);
+    xTaskCreatePinnedToCore( network_sync_task      , "network_sync_task"       , 4096, NULL, 1, &network_sync_task_handle      , 1);
     xTaskCreatePinnedToCore( neighbor_detection_task, "neighbor_detection_task" , 2048, NULL, 3, &neighbor_detection_task_handle, 1);
 }

@@ -23,7 +23,7 @@ static IRAM_ATTR int64_t get_systime_us(void){
     return time_on_boot + esp_timer_get_time();
 } */
 
-static IRAM_ATTR void reset_systime(uint64_t time_us){
+/* static IRAM_ATTR void reset_systime(uint64_t time_us){
     struct timeval tv;
     tv.tv_sec = time_us / 1000000L;
     tv.tv_usec = time_us % 1000000L;
@@ -31,7 +31,7 @@ static IRAM_ATTR void reset_systime(uint64_t time_us){
     int ret = settimeofday(&tv, NULL);
     
     assert(ret == 0);
-}
+} */
 
 /* 
 static IRAM_ATTR void correct_systime(int64_t offset_us){ // changes time according to offset instantly

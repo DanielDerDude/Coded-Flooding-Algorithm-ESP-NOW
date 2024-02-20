@@ -29,16 +29,16 @@ typedef struct xPeerElem {
 // list type
 typedef struct ListHandle {
     // PRIVATE: DO NOT MESS WITH THOSE, use get-functions instead  ( )
-    //SemaphoreHandle_t sem;
-    int64_t max_offset;                         // max offset in list relative to current systime (send offset not accounted)
-    int64_t max_offset_addr[ESP_NOW_ETH_ALEN];  // mac addres of peer with highest offset
-    uint8_t peer_count;                         // number of peers in list, excluding the broadcast peer
-    xPeerElem_t* pxHead;                        // points to first peer Elem in list
-    xPeerElem_t* pxTail;                        // points to last peer Elem in list
+    int64_t max_offset;                             // max offset in list relative to current systime (send offset not accounted)
+    int64_t max_offset_addr[ESP_NOW_ETH_ALEN];    // mac addres of peer with highest offset
+    uint8_t peer_count;                             // number of peers in list, excluding the broadcast peer
+    xPeerElem_t* pxHead;                         // points to first peer Elem in list
+    xPeerElem_t* pxTail;                         // points to last peer Elem in list
 } PeerListHandle_t;
 
+static PeerListHandle_t* list;
 
-// computes item value
+// PRIVATE: computes item value
 static uint64_t IRAM_ATTR calcItemValue(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
     uint64_t item_value = 0;
     for (int i = 0; i < ESP_NOW_ETH_ALEN; i++) {
@@ -47,7 +47,7 @@ static uint64_t IRAM_ATTR calcItemValue(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]
     return item_value;
 }
 
-// returns pointer to newly created Elem
+// PRIVATE: returns pointer to newly created Elem
 static xPeerElem_t* IRAM_ATTR xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t first_offset){
     // allocate memory for new Elem
     xPeerElem_t* newElem = (xPeerElem_t*)malloc(sizeof(xPeerElem_t));
@@ -81,8 +81,8 @@ static xPeerElem_t* IRAM_ATTR xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALE
     return newElem;
 }
 
-// iterates through list and finds the list element of a mac address
-static xPeerElem_t* IRAM_ATTR xFindElem(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
+// PRIVATE: iterates through list and finds the list element of a mac address
+static xPeerElem_t* IRAM_ATTR xFindElem(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
     // iterate through list and find item Value
     uint64_t searchedValue = calcItemValue(mac_addr);
 
@@ -91,27 +91,27 @@ static xPeerElem_t* IRAM_ATTR xFindElem(PeerListHandle_t* list, const uint8_t ma
     while((ListElem != NULL) && (ListElem->item_value != searchedValue)){
         ListElem = ListElem->pxNext;
     }
-    assert(ListElem != NULL);
     return ListElem;
 }
 
 /* Function to initialise the List, returns pointer to list Handle */
-PeerListHandle_t* xInitPeerList() {
-    PeerListHandle_t* newList = (PeerListHandle_t*) malloc(sizeof(PeerListHandle_t));
-    assert(newList != NULL);
-    memset(newList, 0, sizeof(PeerListHandle_t));
+void vInitPeerList() {
+    assert(list == NULL);                                            // this triggers if init function called twice
+    list = (PeerListHandle_t*) malloc(sizeof(PeerListHandle_t));
+    assert(list != NULL);
+    memset(list, 0, sizeof(PeerListHandle_t));
 
     //newList->sem = //xSemaphoreCreateMutex();
-    newList->max_offset = 0;
-    newList->peer_count = 0;
-    newList->pxHead = NULL;
-    newList->pxTail = NULL;
+    list->max_offset = 0;
+    list->peer_count = 0;
+    list->pxHead = NULL;
+    list->pxTail = NULL;
     
-    return newList;
+    return;
 }
 
 // adds a peer to the list, sorted by mac addr (high -> low)
-void IRAM_ATTR vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset) {
+void IRAM_ATTR vAddPeer(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset) {
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     assert(list != NULL);           //check if list exists
     
@@ -172,14 +172,14 @@ void IRAM_ATTR vAddPeer(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_E
 }
 
 // adds an offset to a peer
-void IRAM_ATTR vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset){
+void IRAM_ATTR vAddOffset(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], int64_t new_offset){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
     
-    xPeerElem_t* ListElem = xFindElem(list, mac_addr);
-    if (ListElem == NULL) return;
+    xPeerElem_t* ListElem = xFindElem(mac_addr);
+    assert(ListElem != NULL);
 
     // add new offset to buffer and increase buffer index
     offset_data_t* timing_data = ListElem->timing_data;
@@ -202,7 +202,7 @@ void IRAM_ATTR vAddOffset(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW
 }
 
 // returns max offset of peer_list
-int64_t IRAM_ATTR getMaxOffset(PeerListHandle_t* list){
+int64_t IRAM_ATTR getMaxOffset(){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     uint64_t ret = list->max_offset;
     //xSemaphoreGive(list->sem);
@@ -210,7 +210,7 @@ int64_t IRAM_ATTR getMaxOffset(PeerListHandle_t* list){
 }
 
 // returns address of peer which holds the highest offset
-void IRAM_ATTR getMaxOffsetAddr(PeerListHandle_t* list, uint8_t* addr_buff){
+void IRAM_ATTR getMaxOffsetAddr(uint8_t* addr_buff){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     if (list->peer_count == 0){
         ESP_ERROR_CHECK( esp_read_mac(addr_buff, ESP_MAC_WIFI_SOFTAP) );
@@ -221,21 +221,28 @@ void IRAM_ATTR getMaxOffsetAddr(PeerListHandle_t* list, uint8_t* addr_buff){
 }
 
 // retunrs number of peers in peerlist
-uint8_t IRAM_ATTR getPeerCount(PeerListHandle_t* list){
+uint8_t IRAM_ATTR getPeerCount(){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     uint8_t ret = list->peer_count;
     //xSemaphoreGive(list->sem);
     return ret;
 }
 
+bool boPeerExists(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
+    xPeerElem_t* ListElem = xFindElem(mac_addr);
+    bool list_found = (ListElem != NULL);
+    bool api_found = esp_now_is_peer_exist(mac_addr);
+    return (api_found && list_found);
+}
+
 // adds a new packet id to the reception report of a peer in peer list
-void IRAM_ATTR vAddReception(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], uint32_t newPacketID){
+void IRAM_ATTR vAddReception(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], uint32_t newPacketID){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
     
-    xPeerElem_t* ListElem = xFindElem(list, mac_addr);
+    xPeerElem_t* ListElem = xFindElem(mac_addr);
 
     int8_t ret = bloom_add(ListElem->recp_report, &newPacketID, sizeof(uint32_t));
     assert(ret != -1);
@@ -245,12 +252,12 @@ void IRAM_ATTR vAddReception(PeerListHandle_t* list, const uint8_t mac_addr[ESP_
 
 // replaces the old reception report of a peer with a new one
 // newReport argument does not need to be valid after function returns
-void IRAM_ATTR vReplaceReport(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* newReport){
+void IRAM_ATTR vReplaceReport(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* newReport){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
     
-    xPeerElem_t* ListElem = xFindElem(list, mac_addr);          // find list element with corresponding mac address
+    xPeerElem_t* ListElem = xFindElem(mac_addr);          // find list element with corresponding mac address
 
     int8_t ret = bloom_reset(ListElem->recp_report);            // reset old reception report
     assert(ret == 0);
@@ -261,19 +268,19 @@ void IRAM_ATTR vReplaceReport(PeerListHandle_t* list, const uint8_t mac_addr[ESP
 
 // replaces the old reception report of a list element with a new one
 // so newReport argument does not need to be valid after function returns
-void IRAM_ATTR vMergeReports(PeerListHandle_t* list, const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* newReport){
+void IRAM_ATTR vMergeReports(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* newReport){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
     
-    xPeerElem_t* ListElem = xFindElem(list, mac_addr);          // find list element with corresponding mac address
+    xPeerElem_t* ListElem = xFindElem(mac_addr);          // find list element with corresponding mac address
 
     int8_t ret = bloom_merge(ListElem->recp_report, newReport);
     assert(ret == 0);
     //xSemaphoreGive(list->sem);
 }
 
-void vDeletePeerList(PeerListHandle_t* list){
+void vDeletePeerList(){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     assert(list != NULL);
     xPeerElem_t* current = list->pxHead;
@@ -290,5 +297,6 @@ void vDeletePeerList(PeerListHandle_t* list){
 
     //xSemaphoreGive(list->sem);
     //vSemaphoreDelete(list->sem);
-    free(list);
+    memset(&list, 0, sizeof(list));
+    //free(list);
 }
