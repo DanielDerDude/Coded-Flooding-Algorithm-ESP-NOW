@@ -31,7 +31,7 @@ typedef struct bloom
   uint16_t ready;
   uint16_t major;
   uint16_t minor;
-  double bpe;
+  double bpe;       // bits per element
   uint8_t * bf;
 } __attribute__((packed)) bloom_t;
 
