@@ -339,7 +339,7 @@ void vRefreshVirtualQueues(const native_data_t* newPacket){
     bool hit = false;
 
     while((ListElem != NULL)){                                                      // go through each virtual queue of a peer
-        if (!boPaketInReport(ListElem->mac_add, newPacket->seq_num)){                // if a peer does not have this packet
+        if (!boPaketInReport(ListElem->mac_add, newPacket->seq_num)){               // if a peer does not have this packet
             BaseType_t ret = xQueueSend(ListElem->virtual_queue, &newPacket, 0);    // add it to the virtual queue and exit loop
             assert(ret == pdTRUE);
             hit = true;                                                             // flag that at least one peer does not 
@@ -384,7 +384,7 @@ onc_data_t xGenerateCodedPaket(){
     return enc_pckt;
 }
 
-// returns true if decoding was successfull and writes decoded packet into decPckt
+// returns true if decoding was successfull and writes decoded packet into delPckt
 bool boDecodePacket(native_data_t* decPckt, onc_data_t* encPckt){
     assert(encPckt->type == ONC_DATA);
 
