@@ -5,9 +5,11 @@
 #if CONFIG_ESPNOW_WIFI_MODE_STATION
 #define ESPNOW_WIFI_MODE WIFI_MODE_STA
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_STA 
+#define ESP_MAC_TYPE     ESP_MAC_WIFI_STA
 #else
 #define ESPNOW_WIFI_MODE WIFI_MODE_AP
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_AP
+#define ESP_MAC_TYPE     ESP_MAC_WIFI_SOFTAP
 #endif
 
 #define ESPNOW_QUEUE_SIZE           20
@@ -29,7 +31,6 @@ enum {
 // espnow packet types
 enum {
     TIMESTAMP,
-    RECEP_REPORT,
     ONC_DATA,
     NATIVE_DATA,
     RESET,
@@ -40,8 +41,8 @@ enum {
 typedef enum {
     RECV_TIMESTAMP,
     SEND_TIMESTAMP,
-    RECV_REPORT,
-    SEND_REPORT,
+    RECV_NATIVE,
+    SEND_NATIVE,
     RECV_ONC_DATA,
     SEND_ONC_DATA,
     SEND_RESET,

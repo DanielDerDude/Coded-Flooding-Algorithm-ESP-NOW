@@ -79,8 +79,8 @@ static xPeerElem_t* IRAM_ATTR xCreateElem(const uint8_t mac_addr[ESP_NOW_ETH_ALE
     newElem->pxNext = NULL;
 
     // init virtual queue of peer
-    newElem->virtual_queue = xQueueCreate(CODING_QUEUES_SIZE, sizeof(native_data_t));
-    assert(newElem->virtual_queue != NULL);   
+    newElem->virtual_queue = xQueueCreate(CODING_QUEUES_SIZE, sizeof(PoolElem_t*));
+    assert(newElem->virtual_queue != NULL);
 
     // allocate memory and init reception report bloomfilter and check if successful
     newElem->recp_report = (bloom_t*)malloc(sizeof(bloom_t));
@@ -242,10 +242,10 @@ int64_t IRAM_ATTR getMaxOffset(){
 void IRAM_ATTR getMaxOffsetAddr(uint8_t* addr_buff){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     if (list->peer_count == 0){
-        ESP_ERROR_CHECK( esp_read_mac(addr_buff, ESP_MAC_WIFI_SOFTAP) );
+        ESP_ERROR_CHECK( esp_read_mac(addr_buff, ESP_MAC_TYPE) );
         return;
     }
-    memcpy(addr_buff, list->max_offset_addr, ESP_NOW_ETH_ALEN);
+    memcpy(addr_buff, &list->max_offset_addr, ESP_NOW_ETH_ALEN);
     //xSemaphoreGive(list->sem);
 }
 
@@ -269,28 +269,30 @@ bool boPeerExists(const uint8_t mac_addr[ESP_NOW_ETH_ALEN]){
 //////////////////// RECEPTION REPORT FUNCTIONS ////////////////////
 
 // adds a new packet id to the reception report of a peer in peer list
-void IRAM_ATTR vAddReception(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], uint32_t newPacketID){
+void IRAM_ATTR vAddReception(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], uint16_t paket_seq_num){
     //xSemaphoreTake(list->sem, portMAX_DELAY);
     
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
     
     xPeerElem_t* ListElem = xFindElem(mac_addr);
+    assert(ListElem != NULL);
 
-    int8_t ret = bloom_add(ListElem->recp_report, &newPacketID, sizeof(uint32_t));
+    uint32_t seq_num32 = (uint32_t) paket_seq_num;              // internally used murmur hash needs buffer of at least 32 bit - wont work otherwise
+    int8_t ret = bloom_add(ListElem->recp_report, &seq_num32, sizeof(uint32_t));
     assert(ret != -1);
-    
+
     //xSemaphoreGive(list->sem);
 }
 
-// returns true if a paket with the sequence number is in the reception report 
-bool boPaketInReport(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], const uint16_t paket_seq_num){
+// returns true if a paket with the sequence number is in the reception report of the list element
+bool boPaketInReport(xPeerElem_t* ListElem, uint16_t paket_seq_num){
     assert(list != NULL);                                       // assert that list exists
     assert((list->pxHead != NULL));                             // assert that at least one element exists
-    xPeerElem_t* ListElem = xFindElem(mac_addr);
     assert(ListElem != NULL);
 
-    int8_t ret = bloom_check(ListElem->recp_report, (uint8_t*)&paket_seq_num, sizeof(uint16_t)); // check if paket in reception report
+    uint32_t seq_num32 = (uint32_t) paket_seq_num;              //internally used murmur hash needs buffer of at least 32 bit - wont work otherwise
+    int8_t ret = bloom_check(ListElem->recp_report, &seq_num32, sizeof(uint32_t)); // check if paket in reception report
     assert(ret != -1);
 
     return ret == 1;
@@ -329,57 +331,80 @@ void IRAM_ATTR vMergeReports(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* 
 
 //////////////////// CODING FUNCTIONS ////////////////////
 
-// packet handler for native paket 
-void vRefreshVirtualQueues(const native_data_t* newPacket){
-    // add packet to packet pool if in already
-    vPacketPoolAdd(newPacket);
+const char* TAG_CODING = "coding";
 
-    // refresh virtual queues  
+// packet handler for new native paket 
+void vRegisterNativeReception(native_data_t* newPacket, const uint8_t src_addr[ESP_NOW_ETH_ALEN]){
+    PoolElem_t* PoolElement = xPacketPoolAdd(newPacket);                    // add the packet to the packet pool
+    assert(PoolElement != NULL);
+
+    vAddReception(src_addr, newPacket->seq_num);                            // update reception report
+
+    // refresh virtual queues
     xPeerElem_t* ListElem = list->pxHead;
-    bool hit = false;
-
-    while((ListElem != NULL)){                                                      // go through each virtual queue of a peer
-        if (!boPaketInReport(ListElem->mac_add, newPacket->seq_num)){               // if a peer does not have this packet
-            BaseType_t ret = xQueueSend(ListElem->virtual_queue, &newPacket, 0);    // add it to the virtual queue and exit loop
+    assert(ListElem != NULL);
+    while(ListElem != NULL){                                                        // go through each virtual queue of a peer
+        if (!boPaketInReport(ListElem, newPacket->seq_num)){                        // if a peer does not have this packet
+            BaseType_t ret = xQueueSend(ListElem->virtual_queue, &PoolElement, 0);  // add reference to the virtual queue and exit loop
             assert(ret == pdTRUE);
-            hit = true;                                                             // flag that at least one peer does not 
             break;
         }
         ListElem = ListElem->pxNext;
     }
+}
 
-    if(!hit) xPacketPoolRemove(newPacket->seq_num);                                  // if every peer has that packet, remove it from packet pool
+// returns the number of current packets that can be coded together
+uint8_t xGetCodingCnt(){
+    xPeerElem_t* ListElem = list->pxHead;
+
+    uint8_t coding_cnt = 0;
+    while((ListElem != NULL)){
+        if (uxQueueMessagesWaiting(ListElem->virtual_queue) > 0){                   // if queue is not empty
+            coding_cnt++;
+        }
+        ListElem = ListElem->pxNext;
+    }
+    return coding_cnt;
 }
 
 // goes through all virtual queues and encodes packets if their not the same - !!! allocated memory for packet id array needs to be freed
 onc_data_t xGenerateCodedPaket(){
-    onc_data_t enc_pckt;
+    onc_data_t enc_pckt = {0};
     enc_pckt.type = ONC_DATA;
 
     xPeerElem_t* ListElem = list->pxHead;
 
-    uint16_t id_buff[getPeerCount()];  
+    uint16_t id_buff[getPeerCount()];
     uint8_t pckt_cnt = 0;
+    char str_buff[6*getPeerCount() + 1];
+    str_buff[0] = '\0';
 
     while((ListElem != NULL)){
-        if (uxQueueMessagesWaiting(ListElem->virtual_queue) > 0){                   // if queue is not empty
-            native_data_t pckt_buff;
-            assert(pckt_buff.type == NATIVE_DATA);                                  // if this is not true something is terribly wrong 
-            if (xQueueReceive(ListElem->virtual_queue, &pckt_buff, 0) == pdTRUE){   // get packet from virtual queue
-                id_buff[pckt_cnt] = pckt_buff.seq_num;                              // add sequence number of native packet to packet id list of onc packet 
-                pckt_cnt++;                                                         // increase packet count of used encoded packet
+        if (uxQueueMessagesWaiting(ListElem->virtual_queue) > 0){                          // if queue is not empty
+            PoolElem_t* PoolElement; 
+            if (xQueueReceive(ListElem->virtual_queue, &PoolElement, 0) == pdTRUE){        // get packet from virtual queue
+                id_buff[pckt_cnt] = PoolElement->pckt->seq_num;                            // add sequence number of native packet to packet id list of onc packet 
+                pckt_cnt++;                                                                // increase packet count used for encoding
 
-                uint8_t* bytes = (uint8_t*)&pckt_buff;                              // XOR packet bitwise from virtual queue into onc data field
+                uint8_t* bytes = (uint8_t*)(PoolElement->pckt);                            // XOR packet bitwise from virtual queue into onc data field
                 for(uint8_t i = 0; i < sizeof(native_data_t); i++){
                     enc_pckt.encoded_data[i] ^= bytes[i];
                 }
-            }
+                
+                char temp[7];
+                sprintf(temp, "%5d ", PoolElement->pckt->seq_num);         // save string of packet id in string list for later logging
+                strcat(str_buff, temp);
+            }else assert(1 == 0);
         }
         ListElem = ListElem->pxNext;
     }
-    
+
+    // fill struct
     enc_pckt.pckt_cnt = pckt_cnt;
     enc_pckt.pckt_id_array = (uint16_t*)calloc(pckt_cnt, sizeof(uint16_t));
+    memcpy(enc_pckt.pckt_id_array, id_buff, pckt_cnt*sizeof(uint16_t));
+
+    ESP_LOGW(TAG_CODING, "Encoded packets [ %s]", str_buff);
 
     return enc_pckt;
 }
@@ -387,24 +412,57 @@ onc_data_t xGenerateCodedPaket(){
 // returns true if decoding was successfull and writes decoded packet into delPckt
 bool boDecodePacket(native_data_t* decPckt, onc_data_t* encPckt){
     assert(encPckt->type == ONC_DATA);
+    assert(decPckt != NULL);
+    assert(encPckt != NULL);
 
-    memcpy(decPckt, encPckt->encoded_data, sizeof(native_data_t));      // copy encoded packet
+    char str_buff[6*getPeerCount() + 1];
+    str_buff[0] = '\0';
+
+    for(uint8_t i = 0; i < encPckt->pckt_cnt; i++){         // read sequence enumbers from packet and as save string
+        char temp[7];
+        sprintf(temp, "%5d ", encPckt->pckt_id_array[i]);         
+        strcat(str_buff, temp);
+    }
+    ESP_LOGW(TAG_CODING, "Trying to decode packet from [ %s]", str_buff);
+
+    memcpy(decPckt, &encPckt->encoded_data, sizeof(native_data_t));      // copy encoded data
     uint8_t* decPckt_bytes = (uint8_t*) decPckt;
 
-    for (uint8_t i = 0; i < encPckt->pckt_cnt; i++){                                    // find every packet used for encoding in packet pool and XOR it with encoded packet 
-        native_data_t temp;
-        if(boPacketPoolGet(&temp, encPckt->pckt_id_array[i]) == false) return false;    // decode failed if packet not in packet pool
-        
-        uint8_t* temp_bytes = (uint8_t*)&temp;                                          // XOR packet bitwise from virtual queue with encoded onc data field
-        for(uint8_t j = 0; j < sizeof(native_data_t); j++){
-            decPckt_bytes[j] ^= temp_bytes[j];
+    uint8_t missing_cnt = 0;
+    char str_missing[6*getPeerCount()+1];       // string buffer for missing packets
+    str_missing[0] = '\0';
+
+    for (uint8_t i = 0; i < encPckt->pckt_cnt; i++){                                    // find every packet used for encoding in packet pool and XOR it with encoded packet
+        native_data_t* pckt = xPacketPoolGetPacket(encPckt->pckt_id_array[i]);          // get packet from packet pool
+        if(pckt != NULL){                                                               // if packet lookup successfull
+            uint8_t* temp_bytes = (uint8_t*)pckt;                                       // XOR packet bitwise from virtual queue with encoded onc data field
+            for(uint8_t j = 0; j < sizeof(native_data_t); j++){
+                decPckt_bytes[j] ^= temp_bytes[j];
+            }
+        }else{
+            missing_cnt++;                                              // increase missing packet count
+            char temp[7];
+            sprintf(temp, "%5d ", encPckt->pckt_id_array[i]);           // save string of missing packet id in string buffer
+            strcat(str_missing, temp);
         }
     }
 
-    if (decPckt->type != NATIVE_DATA) return false;                                                     // decode failed if type not correct
+    if (missing_cnt > 1){                                                               // decode failed - more than one packet is missing
+        ESP_LOGW(TAG_CODING, "Decoding failed - missing packets [ %s]", str_missing);
+        return false;
+    }
+
+    if (decPckt->type != NATIVE_DATA){                                                  // decode failed if type not correct
+        ESP_LOGW(TAG_CODING, "Decoding failed - undefined type %d", decPckt->type);
+        return false;
+    }
 
     uint16_t crc16_calc = esp_crc16_le(UINT16_MAX, decPckt->payload, PAYLOAD_LEN*sizeof(uint8_t));      // calculate crc16 of decoded packet
-    if (decPckt->crc16 != crc16_calc) return false;                                                     // and compare with crc in crc field
+    if (decPckt->crc16 != crc16_calc){
+        ESP_LOGW(TAG_CODING, "Decoding failed - invalid checksum");
+        return false;                                                                                   // and compare with crc in crc field
+    }
 
+    ESP_LOGW(TAG_CODING, "Decoding successful - decoded packet %d from [ %s]", decPckt->seq_num, str_buff);
     return true;
 }

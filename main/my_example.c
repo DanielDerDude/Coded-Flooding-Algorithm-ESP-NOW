@@ -32,8 +32,7 @@ static TaskHandle_t neighbor_detection_task_handle = NULL;
 static QueueHandle_t espnow_event_queue;        // espnow event queue
 static QueueHandle_t avg_send_offset_queue;     // queue for current average send offset
 static QueueHandle_t avg_recv_offset_queue;     // queue for current average recv offset
-static QueueHandle_t last_commission_queue;     // queue for keeping track of last commission
-static QueueHandle_t output_queue;              //               
+static QueueHandle_t last_commission_queue;     // queue for keeping track of last commission            
 
 //timer handles
 static esp_timer_handle_t cycle_timer_handle;
@@ -42,15 +41,15 @@ static esp_timer_handle_t cycle_timer_handle;
 static EventGroupHandle_t CycleEventGroup;
 
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };  // broadcast mac address
-
-// first  : counter for transmitted timing broadcasts
-// second : counter for transmitted reception reports
-// third  : counter for transmitted onc packets  
+static uint8_t s_relay_address[ESP_NOW_ETH_ALEN];                                           // address of relay node
 
 // time when wifi counter start - for receive offset correction
 int64_t time_wifi_start = 0;
 
+bool master_flag = false;
+
 static void espnow_deinit();
+static void parse_serialized_onc_data(onc_data_t* parsed, uint8_t* data);
 
 static EventBits_t IRAM_ATTR getCycle(){                        // function for getting cycle through event group    
     EventBits_t evtBits = xEventGroupGetBits(CycleEventGroup);
@@ -93,14 +92,16 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
     int64_t time_now = get_systime_us();
     taskEXIT_CRITICAL(&spinlock);
 
+    assert(status == ESP_NOW_SEND_SUCCESS);
+
     if (mac_addr == NULL) {
-        ESP_LOGE(TAG1, "Send cb arg error");
+        ESP_LOGE("send_cb", "Send cb arg error");
         return;
     }
 
     last_commission_t last_commission = {0};
     if (xQueueReceive(last_commission_queue, &last_commission, 0) != pdTRUE){    // get last commission feedback
-        ESP_LOGE(TAG1, "Receive last_commission_queue fail");
+        ESP_LOGE("send_cb", "Receive last_commission_queue fail");
         return;
     }
 
@@ -110,10 +111,10 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
 
     switch(last_commission.packet_type){                            // set event id
         case TIMESTAMP:     evt.id = SEND_TIMESTAMP; break;
-        case ONC_DATA:      evt.id = SEND_TIMESTAMP; break;
-        case RECEP_REPORT:  evt.id = SEND_ONC_DATA;  break;
+        case ONC_DATA:      evt.id = SEND_ONC_DATA;  break;
+        case NATIVE_DATA:   evt.id = SEND_NATIVE;    break;
         case RESET:         evt.id = SEND_RESET;     break;
-        default: break;
+        default:            evt.id = EVENT_UNDEF;    break;
     }
 
     send_cb->send_offset = (last_commission.time_placed == 0) ? 0 : (time_since_boot-last_commission.time_placed);  // compute send offset
@@ -121,8 +122,8 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
     memcpy(send_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);  // copy mac address
     send_cb->status = status;                               // copy status
 
-    if (xQueueSend(espnow_event_queue, &evt, 5/portTICK_PERIOD_MS) != pdTRUE) {       // place event into queue
-        ESP_LOGE(TAG1, "Send send queue fail");
+    if (xQueueSend(espnow_event_queue, &evt, 0) != pdTRUE) {       // place event into queue
+        ESP_LOGE("send_cb", "Send send queue fail");
     }
 }
 
@@ -148,7 +149,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
 
     uint8_t * mac_addr = recv_info->src_addr;           // get source mac address
     if (mac_addr == NULL || data == NULL || len <= 0) {
-        ESP_LOGE(TAG1, "Receive cb arg error");
+        ESP_LOGE("recv_cb", "Receive cb arg error");
         return;
     }
     
@@ -159,14 +160,30 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
 
     recv_cb->data = (uint8_t*) malloc(len);         // allocate memory for buffering data
     if (recv_cb->data == NULL) {
-        ESP_LOGE(TAG1, "Malloc receive data fail");
+        ESP_LOGE("recv_cb", "Malloc receive data fail");
         return;
     }
 
     switch(data_type) {
-        case TIMESTAMP:     evt.id = RECV_TIMESTAMP;    break;
-        case RECEP_REPORT:  evt.id = RECV_REPORT;       break;
-        case ONC_DATA:      evt.id = RECV_ONC_DATA;     break;
+        case TIMESTAMP:{
+            evt.id = RECV_TIMESTAMP;    
+            if (len != sizeof(timing_data_t)){
+                free(recv_cb->data);
+                ESP_LOGE("recv_cb", "Received wrong legnth of timing data!");
+                return;
+            }
+            break;
+        }
+        case ONC_DATA:          evt.id = RECV_ONC_DATA; break;
+        case NATIVE_DATA:{
+            evt.id = RECV_NATIVE;
+            if (len != sizeof(native_data_t)){
+                free(recv_cb->data);
+                ESP_LOGE("recv_cb", "Received wrong legnth for native packet!");
+                return;
+            }
+            break;
+        }
         case RESET:
         {
             free(recv_cb->data);
@@ -176,8 +193,8 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
         }
         default:            
         {
-            ESP_LOGE("recv_cb","Received undefinded packet!");
-            return; 
+            ESP_LOGE("recv_cb", "Received undefinded packet! %d", data_type);
+            return;
         }
     }
 
@@ -185,7 +202,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     recv_cb->data_len = len;
 
     if (xQueueSend(espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {    // place event into queue
-        ESP_LOGW(TAG1, "Send receive queue fail");
+        ESP_LOGW("recv_cb", "Send receive queue fail");
         free(recv_cb->data);
     }
 }
@@ -247,18 +264,12 @@ static void IRAM_ATTR start_manually_isr(void* arg){
 static void IRAM_ATTR broadcast_reset(){
     uint8_t buf = RESET;
 
-    // broadcast reset
-    taskENTER_CRITICAL(&spinlock);
-    int64_t time_now = esp_timer_get_time();
-    ESP_ERROR_CHECK( esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t)) );
-    taskEXIT_CRITICAL(&spinlock);
-
     // log commission
     last_commission_t new_comm;
-    new_comm.packet_type = RESET;
-    new_comm.time_placed = time_now;
-    if (xQueueSend(last_commission_queue, &new_comm, 5/portTICK_PERIOD_MS) != pdTRUE){       // set next commissioned transmission type to timestamp
-        assert(1 == 0);
+    new_comm.packet_type = RESET;   
+    new_comm.time_placed = 0;                                                         // timing doesnt matter here
+    if (xQueueSend(last_commission_queue, &new_comm, portMAX_DELAY) == pdTRUE){       // set next commissioned transmission type to timestamp
+        ESP_ERROR_CHECK( esp_now_send(s_broadcast_mac, (uint8_t*)&buf, sizeof(timing_data_t)) );
     }
 }
 
@@ -280,55 +291,74 @@ static void IRAM_ATTR broadcast_timestamp(uint16_t seq_num){
     last_commission_t new_comm;
     new_comm.packet_type = TIMESTAMP;
     new_comm.time_placed = time_now;
-    if (xQueueSend(last_commission_queue, &new_comm, 5/portTICK_PERIOD_MS) != pdTRUE){       // set next commissioned transmission type to timestamp
+    if (xQueueSend(last_commission_queue, &new_comm, 0) != pdTRUE){       // set next commissioned transmission type to timestamp
         assert(1 == 0);
     }
 }
  
 static void IRAM_ATTR send_native_packet(const uint8_t *mac_addr){
-    native_data_t buff;
-
-    buff.type = NATIVE_DATA;
-    esp_fill_random(buff.seq_num, sizeof(uint16_t));                                                     // random sequence number
-    esp_fill_random(&buff.payload, PAYLOAD_LEN);                                                         // fill with random data
-    buff.crc16 = esp_crc16_le(UINT16_MAX, (uint8_t const *)buff.payload, PAYLOAD_LEN*sizeof(uint8_t));    // compute crc over payload
-
-    ESP_ERROR_CHECK( esp_now_send(mac_addr, (uint8_t*)&buff, sizeof(native_data_t)));
-
     // log the new commission
     last_commission_t new_comm;
     new_comm.packet_type = NATIVE_DATA;
     new_comm.time_placed = esp_timer_get_time();
-    if (xQueueSend(last_commission_queue, &new_comm, 0) != pdTRUE){       // set next commissioned transmission
-        assert(1 == 0);
+    if (xQueueSend(last_commission_queue, &new_comm, portMAX_DELAY) == pdTRUE){                                 // set next commissioned transmission and block if last transmisssion is finished
+        native_data_t* buff = (native_data_t*) calloc(1, sizeof(native_data_t));
+    
+        buff->type = NATIVE_DATA;
+        esp_fill_random(&buff->seq_num, sizeof(buff->seq_num));                                     // random sequence number
+        memset(&buff->payload, 0xFFFFFFFF, PAYLOAD_LEN);
+        //esp_fill_random(&buff->payload, PAYLOAD_LEN);                                             // fill with random data
+        buff->crc16 = esp_crc16_le(UINT16_MAX, (uint8_t const *)&buff->payload, PAYLOAD_LEN);       // compute crc over payload
+
+        xPacketPoolAdd(buff);
+
+        ESP_ERROR_CHECK( esp_now_send(mac_addr, (const uint8_t*)buff, sizeof(native_data_t)));
+
+        ESP_LOGW(TAG4, "Send native packet %d", buff->seq_num);
     }
 }
 
-static void IRAM_ATTR send_onc_packet(const uint8_t *mac_addr){
-    
-    onc_data_t onc_pckt = xGenerateCodedPaket();
-    
-    // wrap data into a frame
-    size_t pckt_size = 2*sizeof(uint8_t) + onc_pckt.pckt_cnt*sizeof(uint16_t) + sizeof(native_data_t);       // packet size in bytes
-    uint8_t* buff = (uint8_t*) malloc(pckt_size);
-    assert(buff != NULL);
-
-    memcpy(&buff, &onc_pckt.type, 2*sizeof(uint8_t));                                                // copy type and packet count into buffer
-    memcpy(&buff[2*sizeof(uint8_t)], onc_pckt.pckt_id_array, onc_pckt.pckt_cnt*sizeof(uint16_t));    // copy packet id array into buffer
-    memcpy(&buff[2*sizeof(uint8_t)+onc_pckt.pckt_cnt*sizeof(uint16_t)], onc_pckt.encoded_data, sizeof(native_data_t));
-
-    ESP_ERROR_CHECK( esp_now_send(mac_addr, &buff, pckt_size) );
-
-    free(onc_pckt.pckt_id_array);
-    free(buff);
-
+static void send_onc_packet(const uint8_t *mac_addr){
     // log the new commission
     last_commission_t new_comm;
     new_comm.packet_type = ONC_DATA;
     new_comm.time_placed = esp_timer_get_time();
-    if (xQueueSend(last_commission_queue, &new_comm, 0) != pdTRUE){       // set next commissioned transmission
-        assert(1 == 0);
+    if (xQueueSend(last_commission_queue, &new_comm, portMAX_DELAY) == pdTRUE){       // set next commissioned transmission and block until last transmisssion is finished
+        onc_data_t onc_pckt = xGenerateCodedPaket();
+
+        // serialize data
+        size_t pckt_size = sizeof(onc_data_t) - sizeof(uint16_t*) + onc_pckt.pckt_cnt*sizeof(uint16_t);
+
+        uint8_t* buff = (uint8_t*) calloc(1, pckt_size);
+        assert(buff != NULL);
+
+        memcpy(buff, &onc_pckt.type, 2*sizeof(uint8_t));                                                        // copy type and packet count into buffer
+        memcpy(&buff[2*sizeof(uint8_t)], onc_pckt.pckt_id_array, onc_pckt.pckt_cnt*sizeof(uint16_t));           // copy packet id array into buffer
+        memcpy(&buff[2*sizeof(uint8_t)+onc_pckt.pckt_cnt*sizeof(uint16_t)], onc_pckt.encoded_data, sizeof(native_data_t));
+        
+        ESP_ERROR_CHECK( esp_now_send(mac_addr, buff, pckt_size));
+        ESP_LOGE("test", "crc over block = %d", esp_crc16_le(UINT16_MAX, (uint8_t const *)buff, pckt_size));
+
+        free(onc_pckt.pckt_id_array);
+        free(buff);
     }
+}
+
+// parses the serialized onc data into the struct and frfees data
+static void parse_serialized_onc_data(onc_data_t* parsed, uint8_t* data){
+    parsed->type = data[0];
+    assert(parsed->type = ONC_DATA);
+
+    parsed->pckt_cnt = data[1];          // extract packet count
+    
+    parsed->pckt_id_array = (uint16_t*)malloc(sizeof(uint16_t)*parsed->pckt_cnt);                           // allocate memory for pacekt id array - needs to be freed later on
+    
+    memcpy(parsed->pckt_id_array, &data[2], sizeof(uint16_t)*parsed->pckt_cnt);                             // copy packet ids into id array field
+    memcpy(parsed->encoded_data, &data[sizeof(uint16_t)*parsed->pckt_cnt + 2], sizeof(native_data_t));      // copy encoded data to struct
+
+    ESP_LOGE("test", "first byte payload = %d", parsed->encoded_data[0]);
+
+    free(data);
 }
 
 /* 
@@ -358,111 +388,68 @@ void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
     assert(err ==  ESP_OK);
 
     free(buf);
-}
-
-void IRAM_ATTR espnow_pseudo_broadcast(const uint8_t *mac_addr_list, encoded_data_t* enc_data){
-
-    // TO DO
-
-    if (esp_now_send(NULL, send_param->buffer, send_param->len) != ESP_OK) {        // pseudo broadcast encoded data
-        ESP_LOGE(TAG1, "Send error");
-        espnow_deinit(send_param);
-        vTaskDelete(NULL);
-    }
-
 } */
 
 static void msg_exchange_task(){
     if (blockUntilCycle(MESSAGE_EXCHANGE) == false) vTaskDelete(NULL);
 
     ESP_ERROR_CHECK( gpio_set_level(GPIO_DEBUG_PIN, 1) );                                                   // assert debug pin
-    
-    vTaskDelete(NULL);
-    /* ESP_LOGW(TAG4, "Testing bloom filter");
 
-    int64_t max_heap_block = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
-    ESP_LOGW(TAG4, "max heap block = %lld", max_heap_block);
+    vInitPacketPool();
 
-    bloom_t ExamplePool;
-    int8_t ret = bloom_init2(&ExamplePool, BLOOM_MAX_ENTRIES, BLOOM_ERROR_RATE);
-    assert(ret != 1);
-
-    bloom_print(&ExamplePool);
-
-    for (uint16_t i = 0; i < BLOOM_MAX_ENTRIES/2; i++){
-        uint32_t number = i*2;
-        ret = bloom_add(&ExamplePool, &number, (uint32_t)sizeof(uint32_t));
-        assert(ret != -1);
+    if (!master_flag){
+        vTaskDelay(5/portTICK_PERIOD_MS);
+        send_native_packet(s_relay_address);
     }
-
-    ESP_LOGE(TAG4, "Size of bloom =       %llu", (uint64_t)sizeof(bloom_t));
-    
-    uint64_t total_size = sizeof(reception_report_t) + sizeof(bloom_t) + ExamplePool.bytes;
-    ESP_LOGE(TAG4, "Size of total block = %llu", total_size);
-
-    vTaskDelay(200/portTICK_PERIOD_MS);    // wait 200 ms
-
-    pseudo_broadcast_report(&ExamplePool);
-
     // start event handle loop
     espnow_event_t evt;
     while (xQueueReceive(espnow_event_queue, &evt, portMAX_DELAY) == pdTRUE) {
-        switch (evt.id) {
-            case SEND_REPORT:                                               // WILL NEVER BE CALLED ########### FIX THIS ###########
-            {
-                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+        if (getCycle() != MESSAGE_EXCHANGE) break; 
 
-                ESP_LOGW(TAG4, "Sent reception pool to"MACSTR"", MAC2STR(send_cb->mac_addr));
-                break;
-            }
-            case RECV_REPORT:
-            {
+        switch(evt.id){
+            case RECV_NATIVE:{
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                reception_report_t *recv_data = (reception_report_t*)(recv_cb->data);
+                native_data_t *natPckt = (native_data_t *)(recv_cb->data);
 
-                if (recv_data->type != RECEP_REPORT){
-                    ESP_LOGE(TAG4, "Call back error");
+                ESP_LOGE(TAG4, "Received native data %d", natPckt->seq_num);
+
+                if (natPckt->type != NATIVE_DATA) {
+                    ESP_LOGE(TAG4, "Received native data event, but data is not of native type");
                     break;
                 }
+                
+                vRegisterNativeReception(natPckt, recv_cb->mac_addr);
 
-                // unwrap bloom filter from receive data
-                bloom_t* bloom = (bloom_t*)recv_data->bloom;
-                bloom->bf = recv_data->bloom+sizeof(bloom_t); 
-
-                // do some tests
-                bloom_print(bloom);
-
-                for (uint16_t i = 0; i < BLOOM_MAX_ENTRIES/2; i++){
-                    uint32_t number = i*2;
-                    int8_t ret = bloom_check(&ExamplePool, &number, (uint32_t)sizeof(uint32_t));
-                    if (ret == 0) ESP_LOGW(TAG4, "NOT FOUND");
-                    else ESP_LOGW(TAG4, "FOUND IT");
+                if (xGetCodingCnt() == getPeerCount()){              // check for coding opportunity
+                    send_onc_packet(s_broadcast_mac);   // broadcast coded packet
                 }
-
-                //vReplaceReport(peer_list, bloom, recv_cb->mac_addr);
-                free(recv_data);
-
-                pseudo_broadcast_report(&ExamplePool);
+                
                 break;
             }
-            case RECV_TIMESTAMP:
-            case RECV_ONC_DATA:                                             // delete data not related to receiption reports 
-            {                
-                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;   
-                uint8_t recv_type = recv_cb->data[0];
-                if ( (recv_type != RECV_ONC_DATA) ||  (recv_type != RECV_TIMESTAMP) ){
-                    ESP_LOGE(TAG4, "Call back error");
-                    break;
+            case RECV_ONC_DATA:{
+                // parse bytestream of onc data into a struct
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+
+                onc_data_t encPckt;
+                parse_serialized_onc_data(&encPckt, recv_cb->data);
+                
+                native_data_t* decPckt = (native_data_t*) malloc(sizeof(native_data_t));        // allocate memory for decoded native Packet (persistent in packet pool)
+                if (true != boDecodePacket(decPckt, &encPckt) ){                                // free memory if unsuccessful
+                    free(decPckt);                        
+                }else{
+                    xPacketPoolAdd(decPckt);                // add decoded packet to packet pool
                 }
 
-                free(recv_cb->data);
+                free(encPckt.pckt_id_array);                // free id array of onc data struct
+                send_native_packet(s_relay_address);        // send another native packet to the relay node
+
                 break;
             }
-            case SEND_TIMESTAMP:
-            case SEND_ONC_DATA:
             default: break;
-        }   
-    } */
+        }
+    }
+
+    vTaskDelete(NULL);
 }
 
 static void IRAM_ATTR network_sync_task(void* arg){
@@ -488,8 +475,7 @@ static void IRAM_ATTR network_sync_task(void* arg){
     // determine peer_count, max offset and coresponding peer address
     int64_t max_offset = getMaxOffset();
     uint8_t peer_count = getPeerCount();
-    uint8_t max_offset_addr[ESP_NOW_ETH_ALEN];
-    getMaxOffsetAddr(max_offset_addr);
+    getMaxOffsetAddr(s_relay_address);
 
     if (peer_count != 0){                                                     // check if any peers have been detected
         max_offset = max_offset - (avg_send_offset/2 -8);                            // extract max offset, take average send offset in to account
@@ -511,14 +497,14 @@ static void IRAM_ATTR network_sync_task(void* arg){
     ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
     
     if (max_offset > 0) {                                       // device does not hold the master time 
-        ESP_LOGW(TAG3, "Offset to master with %lld us by "MACSTR"", max_offset, MAC2STR(max_offset_addr));
+        ESP_LOGW(TAG3, "Offset to master with %lld us by "MACSTR"", max_offset, MAC2STR(s_relay_address));
     }else{                                                      // this device holds the master time
-        ESP_ERROR_CHECK( esp_read_mac(max_offset_addr, ESP_MAC_WIFI_SOFTAP) );
-        ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(max_offset_addr));
+        ESP_ERROR_CHECK( esp_read_mac(s_relay_address, ESP_MAC_TYPE) );
+        ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(s_relay_address));
+        master_flag = true;
     }
     ESP_LOGE(TAG3, "computed delay %lld us", delay_us);
 
-    //vDeletePeerList(peer_list);                                          // delete peer list 
     vTaskDelete(NULL);
 }
 
@@ -542,6 +528,7 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
         switch (evt.id) {
             case SEND_TIMESTAMP:
             {
+
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 
                 broadcasts_sent++;
@@ -588,19 +575,6 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                     vAddOffset(recv_cb->mac_addr, delta);
                 }
                 
-                break;
-            }
-            case RECV_ONC_DATA:                                 
-            case RECV_REPORT:                                                   // delete data not related to timestamps
-            {
-                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;            
-                uint8_t recv_type = recv_cb->data[0];
-                if (( recv_type != RECV_ONC_DATA) || (recv_type != RECV_REPORT) ){
-                    ESP_LOGE(TAG1, "Call back error");
-                    break;
-                }
-                
-                free(recv_cb->data);
                 break;
             }
             default: break;
@@ -650,7 +624,7 @@ static void espnow_init(void)
     // init espnow event queue
     espnow_event_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(espnow_event_t));
     assert(espnow_event_queue != NULL);
-    last_commission_queue = xQueueCreate(1, sizeof(last_commission_t));
+    last_commission_queue = xQueueCreate(5, sizeof(last_commission_t));
     assert(last_commission_queue != NULL);
 
     /* initialize ESPNOW and register sending and receiving callback function. */
@@ -671,7 +645,6 @@ static void espnow_init(void)
     memcpy(peer->peer_addr, s_broadcast_mac, ESP_NOW_ETH_ALEN);
     ESP_ERROR_CHECK( esp_now_add_peer(peer) );
     free(peer);
-
 }
 
 static void setup_timer(void){
@@ -751,11 +724,6 @@ void app_main(void)
 
     // if reset did not get triggered by deepsleep set systime so esps will be futher apart
     if (esp_reset_reason() != ESP_RST_DEEPSLEEP){
-        /* uint8_t mac_addr[ESP_NOW_ETH_ALEN];                                                 // derive systime from mac address
-        ESP_ERROR_CHECK( esp_read_mac(mac_addr, ESP_MAC_WIFI_SOFTAP) );
-        uint64_t some_val = (calcItemValue(mac_addr) % 100000L)*100000L; 
-        ESP_LOGE(TAG1, "Setting systime to %llu - not booting from deepsleep", some_val);
-        reset_systime(some_val); */
         printf("\n");
         ESP_LOGW(TAG0, "Waiting for start interrupt...");
         printf("\n");
