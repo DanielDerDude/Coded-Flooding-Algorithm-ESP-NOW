@@ -1,0 +1,28 @@
+PACKET HANDLER FÜR ERHALT EINES NATIVEN PACKETS
+1 parse the packet
+2 add packet to the packet pool
+3 refresh virtual queues virtual queues
+
+PACKET HANDLER FOR GENERATING DECODED PACKET
+1 gehe durch alle virtual queues und nimm referenz im packe pool
+2 hole jeweils das mit der referenz aus der virtual queue aus dem packet pool und tagge es als "benutzt im encoded packet"
+3 codiere alle packete zusammen und fürhe liste mit den verwendeten sequenznummern
+3 gehe davon aus, dass die packete dekodiert werden können und aktualisiere die reception reports der peers mit den
+4 serialisiere und wrappe das kodierte packet und broadcaste es
+
+PACKET HANDLER FOR RECEIVING DECODED PACKET
+1 parse kodiertes packet und finde alle packete aus dem packet pool und tagge sie als "encoded"
+2 xor alle packete mit dem kodierten packet - berechne crc checksum
+3 wenn packet erfolgreich dekodiert adde es in dem Packet pool und tagge es auch "kodieren verwendet"
+
+PACKET HANDLER FOR SENDING RECEPTION REPORT
+1 parse the packet pool
+2 if the packet is tagged as used in encoding, ad it to the bloom filter
+3 serialize and wrap the reception report 
+4 send it to relay node
+
+HANDLER WHEN RECEIVED ALLL RECEPTION REPORTS
+1 search every packet which is tagged as "endoded" in the pakcet pool
+2 check if packet is concurrent in the reception reports of the peers
+3 if yes then delete it from the pool
+4 if not update the virtual queue and remove the encoded tag

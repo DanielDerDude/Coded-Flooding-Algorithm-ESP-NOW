@@ -76,7 +76,7 @@ int8_t bloom_init2(struct bloom * bloom, uint32_t entries, double error)
 
   memset(bloom, 0, sizeof(struct bloom));
 
-  if (entries < 100 || error <= 0 || error >= 1) {
+  if (entries < 10 || error <= 0 || error >= 1) {
     return 1;
   }
 
@@ -130,31 +130,10 @@ void bloom_print(struct bloom * bloom)
   ESP_LOGW(TAG_BLOOM, " ->error = %lf", bloom->error);
   ESP_LOGW(TAG_BLOOM, " ->bits = %llu", bloom->bits);
   ESP_LOGW(TAG_BLOOM, " ->bits per elem = %lf", bloom->bpe);
-  ESP_LOGW(TAG_BLOOM, " ->bytes = %llu", bloom->bytes);
-  uint32_t KB = bloom->bytes / 1024;
-  uint32_t MB = KB / 1024;
-  ESP_LOGW(TAG_BLOOM, " (%lu KB, %lu MB)", KB, MB);
+  ESP_LOGW(TAG_BLOOM, " ->bytes = %u", bloom->bytes);
   ESP_LOGW(TAG_BLOOM, " ->hash functions = %d", bloom->hashes);
 }
 
-uint8_t* bloom_serialize(struct bloom * bloom)
-{
-  if (bloom->ready == 0) {
-    ESP_LOGE(TAG_BLOOM, "bloom at %p not initialized!", (void *)bloom);
-    return NULL;
-  }
-  
-  uint8_t* block = (uint8_t*)calloc(sizeof(bloom_t) + bloom->bytes, 1);
-  if (block == NULL) {
-    ESP_LOGE(TAG_BLOOM, "malloc failed!");
-    return NULL;
-  }
-  
-  memcpy(block, bloom, sizeof(struct bloom));
-  memcpy(block + sizeof(bloom_t), bloom->bf, sizeof(uint8_t) * bloom->bytes);
-
-  return 0;
-}
 
 void bloom_free(struct bloom * bloom)
 {
@@ -190,14 +169,6 @@ int8_t bloom_merge(struct bloom * bloom_dest, struct bloom * bloom_src)
   }
 
   if (bloom_dest->error != bloom_src->error) {
-    return 1;
-  }
-
-  if (bloom_dest->major != bloom_src->major) {
-    return 1;
-  }
-
-  if (bloom_dest->minor != bloom_src->minor) {
     return 1;
   }
 

@@ -21,16 +21,14 @@ typedef struct bloom
   // modify any of these.
   uint32_t entries;
   uint64_t bits;
-  uint64_t bytes;
+  uint16_t bytes;
   uint16_t hashes;
   double error;
 
   // Fields below are private to the implementation. These may go away or
   // change incompatibly at any moment. Client code MUST NOT access or rely
   // on these.
-  uint16_t ready;
-  uint16_t major;
-  uint16_t minor;
+  uint8_t ready;
   double bpe;       // bits per element
   uint8_t * bf;
 } __attribute__((packed)) bloom_t;
@@ -106,24 +104,6 @@ int8_t bloom_check(struct bloom * bloom, const void * buffer, uint32_t len);
  */
 int8_t bloom_add(struct bloom * bloom, const void * buffer, uint32_t len);
 
-/** ***************************************************************************
- * 
- * Serializes a bloom filter into one block of data.
- * Returns pointer to block of serialized data.
- *
- * Parameters:
- * -----------
- *     bloom  - Pointer to an allocated struct bloom (see above).
- *     block  - Pointer to serialized bloom filter after serialization.
- *
- * Return:
- * -------
- *  NULL - serialization of bloom filter failed
- *       - else the address to the block of serialized data
- *
- * Author: Daniel Fronk
- */
-uint8_t* bloom_serialize(struct bloom * bloom);
 
 /** ***************************************************************************
  * Print (to stdout) info about this bloom filter. Debugging aid.

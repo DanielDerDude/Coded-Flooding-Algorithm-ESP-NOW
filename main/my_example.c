@@ -9,7 +9,6 @@
 #endif
 
 #define ESPNOW_MAXDELAY 512
-#define CONFIG_ESPNOW_SEND_LEN 11
 
 #define GPIO_DEBUG_PIN          18
 #define GPIO_START_PIN          0
@@ -49,7 +48,6 @@ int64_t time_wifi_start = 0;
 bool master_flag = false;
 
 static void espnow_deinit();
-static void parse_serialized_onc_data(onc_data_t* parsed, uint8_t* data);
 
 static EventBits_t IRAM_ATTR getCycle(){                        // function for getting cycle through event group    
     EventBits_t evtBits = xEventGroupGetBits(CycleEventGroup);
@@ -92,8 +90,6 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
     int64_t time_now = get_systime_us();
     taskEXIT_CRITICAL(&spinlock);
 
-    assert(status == ESP_NOW_SEND_SUCCESS);
-
     if (mac_addr == NULL) {
         ESP_LOGE("send_cb", "Send cb arg error");
         return;
@@ -113,6 +109,7 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
         case TIMESTAMP:     evt.id = SEND_TIMESTAMP; break;
         case ONC_DATA:      evt.id = SEND_ONC_DATA;  break;
         case NATIVE_DATA:   evt.id = SEND_NATIVE;    break;
+        case RECEP_REPORT:  evt.id = SEND_RECEPREP;  break;
         case RESET:         evt.id = SEND_RESET;     break;
         default:            evt.id = EVENT_UNDEF;    break;
     }
@@ -174,7 +171,6 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
             }
             break;
         }
-        case ONC_DATA:          evt.id = RECV_ONC_DATA; break;
         case NATIVE_DATA:{
             evt.id = RECV_NATIVE;
             if (len != sizeof(native_data_t)){
@@ -191,7 +187,9 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
             esp_restart();
             break;
         }
-        default:            
+        case RECEP_REPORT:      evt.id = RECV_RECEPREP; break;
+        case ONC_DATA:          evt.id = RECV_ONC_DATA; break;
+        default:
         {
             ESP_LOGE("recv_cb", "Received undefinded packet! %d", data_type);
             return;
@@ -296,25 +294,24 @@ static void IRAM_ATTR broadcast_timestamp(uint16_t seq_num){
     }
 }
  
-static void IRAM_ATTR send_native_packet(const uint8_t *mac_addr){
+static void send_native_packet(const uint8_t *mac_addr){
     // log the new commission
     last_commission_t new_comm;
     new_comm.packet_type = NATIVE_DATA;
     new_comm.time_placed = esp_timer_get_time();
-    if (xQueueSend(last_commission_queue, &new_comm, portMAX_DELAY) == pdTRUE){                                 // set next commissioned transmission and block if last transmisssion is finished
+    if (xQueueSend(last_commission_queue, &new_comm, portMAX_DELAY) == pdTRUE){     // log next commissioned transmission of native packet
         native_data_t* buff = (native_data_t*) calloc(1, sizeof(native_data_t));
-    
+        assert(buff != NULL);
+
         buff->type = NATIVE_DATA;
         esp_fill_random(&buff->seq_num, sizeof(buff->seq_num));                                     // random sequence number
-        memset(&buff->payload, 0xFFFFFFFF, PAYLOAD_LEN);
-        //esp_fill_random(&buff->payload, PAYLOAD_LEN);                                             // fill with random data
+        esp_fill_random(&buff->payload, PAYLOAD_LEN);                                               // fill with random data
         buff->crc16 = esp_crc16_le(UINT16_MAX, (uint8_t const *)&buff->payload, PAYLOAD_LEN);       // compute crc over payload
 
-        xPacketPoolAdd(buff);
+        xPacketPoolAdd(buff);                                                                       // add this packet to the packet pool
 
         ESP_ERROR_CHECK( esp_now_send(mac_addr, (const uint8_t*)buff, sizeof(native_data_t)));
-
-        ESP_LOGW(TAG4, "Send native packet %d", buff->seq_num);
+        ESP_LOGW(TAG4, "Commissioned native packet %d", buff->seq_num);
     }
 }
 
@@ -337,58 +334,29 @@ static void send_onc_packet(const uint8_t *mac_addr){
         memcpy(&buff[2*sizeof(uint8_t)+onc_pckt.pckt_cnt*sizeof(uint16_t)], onc_pckt.encoded_data, sizeof(native_data_t));
         
         ESP_ERROR_CHECK( esp_now_send(mac_addr, buff, pckt_size));
-        ESP_LOGE("test", "crc over block = %d", esp_crc16_le(UINT16_MAX, (uint8_t const *)buff, pckt_size));
 
         free(onc_pckt.pckt_id_array);
         free(buff);
     }
 }
 
-// parses the serialized onc data into the struct and frfees data
-static void parse_serialized_onc_data(onc_data_t* parsed, uint8_t* data){
-    parsed->type = data[0];
-    assert(parsed->type = ONC_DATA);
+static void send_reception_report(const uint8_t *mac_addr){
+    // log the new commission
+    last_commission_t new_comm;
+    new_comm.packet_type = RECEP_REPORT;
+    new_comm.time_placed = esp_timer_get_time();
 
-    parsed->pckt_cnt = data[1];          // extract packet count
-    
-    parsed->pckt_id_array = (uint16_t*)malloc(sizeof(uint16_t)*parsed->pckt_cnt);                           // allocate memory for pacekt id array - needs to be freed later on
-    
-    memcpy(parsed->pckt_id_array, &data[2], sizeof(uint16_t)*parsed->pckt_cnt);                             // copy packet ids into id array field
-    memcpy(parsed->encoded_data, &data[sizeof(uint16_t)*parsed->pckt_cnt + 2], sizeof(native_data_t));      // copy encoded data to struct
+    uint8_t size = 0;                                                                 // size of the packet 
+    if (xQueueSend(last_commission_queue, &new_comm, portMAX_DELAY) == pdTRUE){       // sent next commissioned transmission
+        bloom_t temp = xCreateRecepRecepReport();
 
-    ESP_LOGE("test", "first byte payload = %d", parsed->encoded_data[0]);
-
-    free(data);
+        uint8_t* bytestream = serialize_reception_report(temp, &size);    // serialize bloom filter into bytestream
+        bloom_free(&temp);                                                // free temporary bloom filter
+        ESP_ERROR_CHECK( esp_now_send(mac_addr, bytestream, size) );      // send reception report
+        free(bytestream);                                                 // free byte stream
+    }
+    ESP_LOGE(TAG4, "Commissioned reception report - total size %d", size);
 }
-
-/* 
-void IRAM_ATTR pseudo_broadcast_report(bloom_t* bloom){
-    // create buffer
-    uint64_t buf_size = sizeof(reception_report_t) + sizeof(bloom) + bloom->bytes; 
-    uint8_t* buf = (uint8_t*)calloc(buf_size, 1);
-    assert(buf != NULL);
-
-    // create reception report frame
-    reception_report_t report;
-    memset(&report, 0, sizeof(reception_report_t));
-    report.type = RECEP_REPORT;
-    report.seq_num = s_espnow_seq[TIMESTAMP]++;
-    
-    // copy frame to buffer
-    memcpy(buf, &report, sizeof(reception_report_t));
-
-    // serialize bloom filter and also copy to buffer, also free block again
-    uint8_t* block = bloom_serialize(bloom);
-    assert(block != NULL);
-    memcpy(buf+sizeof(reception_report_t), block, sizeof(bloom_t) + bloom->bytes);
-    free(block);
-
-    // send data in buf
-    esp_err_t err = esp_now_send(NULL, (uint8_t*)&buf, sizeof(timing_data_t));        // send reception report to all peers
-    assert(err ==  ESP_OK);
-
-    free(buf);
-} */
 
 static void msg_exchange_task(){
     if (blockUntilCycle(MESSAGE_EXCHANGE) == false) vTaskDelete(NULL);
@@ -401,51 +369,110 @@ static void msg_exchange_task(){
         vTaskDelay(5/portTICK_PERIOD_MS);
         send_native_packet(s_relay_address);
     }
+
+    uint8_t decode_cnt = 0;        // counter for decoding attempts
+
     // start event handle loop
     espnow_event_t evt;
     while (xQueueReceive(espnow_event_queue, &evt, portMAX_DELAY) == pdTRUE) {
-        if (getCycle() != MESSAGE_EXCHANGE) break; 
+        if (getCycle() != MESSAGE_EXCHANGE) break;
 
         switch(evt.id){
-            case RECV_NATIVE:{
+            case RECV_NATIVE:
+            {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                native_data_t *natPckt = (native_data_t *)(recv_cb->data);
+                native_data_t *natPckt = (native_data_t *)(recv_cb->data);      // received native packet
 
-                ESP_LOGE(TAG4, "Received native data %d", natPckt->seq_num);
-
-                if (natPckt->type != NATIVE_DATA) {
-                    ESP_LOGE(TAG4, "Received native data event, but data is not of native type");
-                    break;
-                }
+                ESP_LOGW(TAG4, "Received native packet %d", natPckt->seq_num);
                 
-                vRegisterNativeReception(natPckt, recv_cb->mac_addr);
+                PoolElem_t* PoolElement = xPacketPoolAdd(natPckt);                    // add the packet to the packet pool
+                assert(PoolElement != NULL);
 
-                if (xGetCodingCnt() == getPeerCount()){              // check for coding opportunity
-                    send_onc_packet(s_broadcast_mac);   // broadcast coded packet
+                vAddReceptionToReport(recv_cb->mac_addr, natPckt->seq_num);           // update reception report
+                vRefreshVirtualQueues(PoolElement);                                   // refresh virtual queue
+
+                while(xGetCodingCnt() >= 2){                        // check for coding opportunity
+                    send_onc_packet(s_broadcast_mac);               // broadcast coded packet
                 }
                 
                 break;
             }
-            case RECV_ONC_DATA:{
-                // parse bytestream of onc data into a struct
+            case SEND_NATIVE:
+            {
+                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                if (send_cb->status == ESP_NOW_SEND_SUCCESS){
+                    vTaskDelay(CONFIG_NATIVE_SEND_DELAY/portTICK_PERIOD_MS);    // if send delay was successful wait send delay
+                    ESP_LOGW(TAG4, "Send native packet");
+                }else{
+                    ESP_LOGE(TAG4, "Send of native packet failed - retry sending");
+                }
+
+                send_native_packet(s_relay_address);        // send another native packet
+
+                break;
+            }
+            case RECV_ONC_DATA:
+            {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
 
                 onc_data_t encPckt;
-                parse_serialized_onc_data(&encPckt, recv_cb->data);
-                
+                parse_serialized_onc_data(&encPckt, recv_cb->data);                             // parse bytestream of onc data into encPakt
+
                 native_data_t* decPckt = (native_data_t*) malloc(sizeof(native_data_t));        // allocate memory for decoded native Packet (persistent in packet pool)
-                if (true != boDecodePacket(decPckt, &encPckt) ){                                // free memory if unsuccessful
-                    free(decPckt);                        
-                }else{
-                    xPacketPoolAdd(decPckt);                // add decoded packet to packet pool
+                assert(decPckt != NULL);
+                if (!boDecodePacket(decPckt, &encPckt) ){                                       
+                    free(decPckt);                                      // free memory if decoding was unsuccessful
+                }else{                                                  // if decoding was successful
+                    PoolElem_t * newElem = xPacketPoolAdd(decPckt);     // add decoded packet to packet pool
+                    vTagPacketInCoding(newElem);                        // tag that the packet was used in coded packet 
                 }
 
                 free(encPckt.pckt_id_array);                // free id array of onc data struct
-                send_native_packet(s_relay_address);        // send another native packet to the relay node
+                
+                decode_cnt++;
+                if (decode_cnt % 10*(getPeerCount()-1) == 0){       // send reception report for every 10 coding cycles (each cycle peer count-1 coded packets will be sent)
+                    vDeletePacketsLastReceptRep();                  // delete packets which where sent in previous reception report
+                    send_reception_report(s_relay_address);         // create and send reception report
+                }
 
                 break;
             }
-            default: break;
+            case SEND_ONC_DATA:
+            {
+                ESP_LOGE(TAG4, "Broadcasted onc data");
+                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                if (send_cb->status != ESP_NOW_SEND_SUCCESS){
+                    ESP_LOGE(TAG4, "Broadcasting onc data failed");   
+                }
+                break;                      // do nothing - even if send was unsuccessful on next reception of native packet a new coding opportunity is found
+            }
+            case RECV_RECEPREP:
+            {
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+                bloom_t* new_recep_rep = parse_serialized_recep_report(recv_cb->data, recv_cb->data_len);   // parse received data into reception report
+                free(recv_cb->data);                                                                        // free memory of byte stream
+
+                vReplaceReport(recv_cb->mac_addr, new_recep_rep);                                           // replace reception report of peer with new one
+                
+                if(boPeersSentReport()){                 // if every peer has sent his reception report
+                    vCheckForRecommissions();            // parses reception reports and checks if reekommissions need to be done and garbage collects the packet pool
+                }
+                
+                break;
+            }
+            case SEND_RECEPREP:
+            {
+                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+                ESP_LOGE(TAG4, "Send reception report");
+                send_native_packet(s_relay_address);        // send another native packet
+                break;
+            }
+            default:
+            {
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;        
+                if (recv_cb->data != NULL) free(recv_cb->data);         // delete data that is not associated to message exchange phase
+                break;
+            }
         }
     }
 
@@ -528,10 +555,8 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
         switch (evt.id) {
             case SEND_TIMESTAMP:
             {
-
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-                
-                broadcasts_sent++;
+                if (send_cb->status == ESP_NOW_SEND_SUCCESS) broadcasts_sent++;             // if send was successful increase broadcast counter
 
                 if (send_cb->send_offset != 0){                                             // post current average send offset to queue
                     send_offset_sum += send_cb->send_offset;
@@ -577,7 +602,12 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                 
                 break;
             }
-            default: break;
+            default:
+            {
+                espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;        
+                if (recv_cb->data != NULL) free(recv_cb->data);         // delete data that is not associated to neighbor detection
+                break;
+            }
         }
     }
     ESP_LOGW(TAG1, "broadcasts_sent = %u", broadcasts_sent);

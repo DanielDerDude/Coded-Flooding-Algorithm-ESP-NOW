@@ -1,0 +1,77 @@
+############################## UNKLARHEITEN UND FRAGEN ##############################
+
+WIE KANN ICH DIE PACKETE ACKN?
+
+Wenn der relay node ein kodiertes packet rausschickt und das bei einem peer nicht ankommt oder er es nicht dekodiert kriegt,
+dann wäre es cool, wenn ich auf grundlage des nächsten reception reports das nochmal kodieren könnte.
+
+1. Möglichkeit: Ich gehe einfach davon aus, dass die das immer kriegen weil in radio range..
+
+2. Möglichkeit: Nachdem jeder peer seinen reception report geschickt hat, wird der ganze pool durchlaufen und geschaut welches Packet der Peer noch nicht hat 
+   und das dann in seine virtual queue gelegt. Das ist natürlich "zeitintensiv" also O(n) und wenn vier reports nacheinander reinkommen, 
+   dann ist der relay node mal eine ganze weile damit beschäftigt.
+   - auch hier ist das problem mit den false positives - es kann sein, dass packete gelöscht werden, die ein peer noch gar nicht hat.
+
+GARBAGE COLLECTION & PACKET POOL HASHMAP
+
+Momentane Lösung:
+
+Alle nodes taggen sich zum coding verwendete pakete im pool. Alle n coding cyclen senden die peers ihre Reports an den relay node. Wenn der Relay node von jedem einen reception report hat, geht er die getagten packete durch und schaut,
+ob die getaggten Pakete in Report vorkommen, wenn ja löscht er sie aus seinem packet Pool. Wenn nein schmeißt er das packet wieder in die virtual queues. So kann der relay node den pool garabge collecten und nicht erhaltene packete nochmal kodieren.
+Bei den anderen Peers ist das nicht so leicht, da diese nicht wissen ob sie ein Packet eventuell nochmal zum dekodieren benötigen, da ein anderer Peer dieses vielleicht verloren hat. Hier mache ich das jetzt so, dass packete mit einem zweiten tag gesesezt wird, dass es bereits im reception report gesendet wurde.
+Wenn jetzt erneut ein Report gesendet wird, werden nun die packete die schon zuvor im Report verschickt wurden gelöscht.
+
+Außerdem sehe ich, dass nach ein paar packeten im packet pool kollisionen in meiner hashmap auftreten. Die Länge meiner Hashmap ist eine Primzahl und ich benutze eine gute Hashfunktion (murmurhash2).
+Es liegt wahrscheinlich daran, dass der Key für die murmurhash ein uint32 ist und ich sequenznummer im wertereich von uint16 hab. Ich caste die dann in uint32. Das wirkt sich dann negativ auf die verteilung aus.
+Ich könnte jetzt hier einfach nochmal hashen und dann erst den index ausrechnen, damit das besser verteilt wird. - ich hashe jetzt zweimal.
+
+Das gute ist, dass in der hashmap nur pointer auf die packete im heap gespeichert werden. Ich habe also die möglichkeit die hashmap zu überdimensionieren ohne, dass für jeden slot auch speicher für das packet drauf geht - das sollte die kollisionswahrscheinlichkeit auch reduzieren. 
+
+"OPPORTUNISTIC" FEHLT NOCH
+
+So wie es im moment läuft, ist der maximale goding gain 2, da keine packete gesnooped werden und sich nie eine coding möglichkeit von mehr als zwei packeten ergibt.
+Ich weiß nicht, ob ESP NOW im promiscoius mode funktioniert. Selbst wenn ich das hinkriege, dann müsste ich einen packet filter einbauen und aktiv packete überhören, 
+da alle peers in radio range sind und jeder dann direkt alle nativen pacekte mitkriegen und das coding dann sinnlos ist. Wenn ich jetzt die nodes auseinander ziehe und hidden nodes
+erzeuge, dann funktioniert mein synchronisations schema nicht mehr (in dem wird der ällteste node über broadcasts gesucht).
+
+Es ist in dem sinne "opportunistisch", dass der relay node beim senden eines kodierten packetes davon ausgeht, dass alle peers dieses packet dekodieren können und 
+das nächste kodieren darauf aufbaut. Über die erhaltenen reception reports können dann (wie in der ersten Frage beschrieben) die packete geacked werden und eventuell neu kodiert werden.    
+
+Du meintest ja, dass ich sowie so nur das Alice und Bob Beispiel machen soll aber wäre iregdnwie schon cool ein höheren coding gain als 2 zu bekommen...
+
+
+NUTZEN DES BLOOMFILTER
+
+So wie es jetzt ist, habe ich eine feste größe des reception reports/ bloomfilter und die ändert sich auch nicht. Im moment wird jedes packet, welches im packet pool befindet dem bloomfilter mit fester länge hinzugefügt.
+Mir ist aufgefallen, dass der Vorteil der Compression des PaketPools in einen Bloomfilter erst bei vielen Paketen Sinn macht - sonst ist der Bloomfilter hauptsächlich leer und man schickt wenig information in vielen Bytes.
+Jetzt gibt es zwei möglichkeiten das zu verbessern:
+
+   (1) Es wird weiterhin der vollständige packet pool dem bloomfilter hinzugefügt - aber man passt dessen Größe an die Anzahl der Pakete im pool an.   
+      
+      Es wäre am besten, wenn man die Größe des Bloomfilters an die momentanen Packete im Packcet pool anpasst.
+      Also wenn ein peer nur 10 Pakete hat, dann muss der Bloomfilter keine 151 Byte groß sein.
+      Die Lösung wäre, dass alle Peers mit einer gesetzten größe des Packetpools starten. Alle n packete wird ein reception report gesendet. Je nach Anzahl der pacekte im Pool wird die Größe des Bloomfilters gewählt (+20 zusätzlich einträge zursicherheit) 
+      und an den Relay node gesendet. Dieser ersetzt dann seine veralteten Pool mit dem neuen Größeren Pool. Problem ist nur, wenn der Relay node ausfällt und ein anderer gewählt wird, dann müssen alle sowieso nochmal ihren reception report senden.
+      Das Ausfallen eines Relay nodes ist noch nicht berücksichtigt, hierzu könnte man einen Timer stellen, wenn man innerhalb einer Zeitspanne kein ONC packet bekommen hatm, wird der der nöchst ällteste peer als relay gewählt. (Noch nicht implementiert..)  
+
+   (2) Man ACKed mit dem bloom filter nur die letzten erhaltenen Packete
+      Dann müsste ein Peer immer eine Liste führen an Sequencnummern, welche erfolgreich dekodiert wurden und diese dann als Bloomfilter dann dem Relay schicken.
+      Der Relay node muss nun für jeden peer eine Liste von Sequenznummern führen, die er im nächsten reception report von diesem Peer erwartet. Wenn er sieht, dass ein peer das Paket nicht bekommen hat, dann schickt er das für diesen peer wieder in die Virtual queue.
+      Vorteil hier wäre, dass der Bloomfilter immer nur n packete tragen muss und nicht den gesammten packet pool. 
+      Das ist etwas komplizierter und da ich sowieso in radio range bin, ist das dekodieren immer erfolgreich ist. 
+
+
+CODING GAIN MAXIMIEREN
+
+Jetzt ist es ja so, dass ich den Coding Gain "richtig" berechnen kann - also wieviele Bits benötigt werden um zu Codieren im Verhältnis zum echten Intformationsgehalt.
+Ich das meiste and Bits wird dabei der Bloomfilter nehmen, denn der ist ziemlich Groß um die Wkt für False Positives zu minimieren. Das ist vielleicht nicht mal wirklich effizient.
+Da ich dadurch vielleicht sogar die Coding Bilanz runterziehe, also ich nehme flasches Coding in kauf, dafür dass ich kürzere Reception Reports schicke. 
+Wie kann ich jetzt die optimale Länge des Bloomfilters finden, um den Coding Gain zu maximieren?
+
+
+WIE KANN ICH MEIN SYSTEM AM BESTEN AUSWERTEN
+
+Was soll ich denn darstellen? Ich könnte den Coding gain mit der Zeit plotten. Aber den kenne ich ja und kann ja theoretisch bewiesen werden. Im Coding gain sind ausßerdem nicht die Reception reports mit drinne, die das 
+ganze ja ineffizienter machen. Gibt es sowas wie ein Verhältnis aus Nutzbaren Bits und für Bits zur Umsetzung? Ich denke, das ist das nächst beste, was ich aufstellen kann um auf eine positive energieeffizienz 
+gegenüber herkömmlichen fooding algorithmen zu schließen. Ich kann ja schlecht den genauen Energieverbrauch mit anderen Netzwerken vergleichen. 
+

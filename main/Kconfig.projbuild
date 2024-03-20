@@ -39,11 +39,18 @@ menu "Example Configuration"
             Duration in which broadcast gets send around the WSN in ms.
 
     config TIMESTAMP_SEND_DELAY
-        int "Broadcast send interval"
+        int "Timestamp send interval"
         default 100
         range 10 65535
         help
-            Delay between broadcasts in ms.
+            Delay between timestamp broadcasts in ms during neighbor detection.
+    
+    config NATIVE_SEND_DELAY
+        int "Native packet send interval"
+        default 100
+        range 50 65535
+        help
+            Delay between sending native packets in ms during message exchange phase.
     
     config DEEPSLEEP_DURATION_MS
         int "Deepsleep duration, unit in ms"

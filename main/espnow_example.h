@@ -33,6 +33,7 @@ enum {
     TIMESTAMP,
     ONC_DATA,
     NATIVE_DATA,
+    RECEP_REPORT,
     RESET,
     UNDEF,
 };
@@ -45,6 +46,8 @@ typedef enum {
     SEND_NATIVE,
     RECV_ONC_DATA,
     SEND_ONC_DATA,
+    RECV_RECEPREP,
+    SEND_RECEPREP,
     SEND_RESET,
     RECV_RESET,
     EVENT_UNDEF,
@@ -82,20 +85,12 @@ typedef struct {
 
 // data structure to broadcasts timestamps
 typedef struct {
-    uint8_t type;                         // type for identification and error handeling
-    uint16_t seq_num;                     // sequence number of timing data
-    int64_t timestamp;                    // Timestamp of current systime               
+    uint8_t type;                           // type for identification and error handeling
+    uint16_t seq_num;                       // sequence number of timing data
+    int64_t timestamp;                      // Timestamp of current systime               
 } __attribute__((packed)) timing_data_t;
 
-// espnow reception reports
- 
-typedef struct {
-    uint8_t type;                         // type for identification and error handeling
-    uint8_t seq_num;                      // sequence number of reception report
-    uint8_t* bloom;                       // pointer to serialized bloomfilter
-} __attribute__((packed)) reception_report_t;
-
-// native data to be encoded
+// native data with reception report
 typedef struct{
     uint8_t type;
     uint16_t seq_num;                       // random sequence number of native data
@@ -103,7 +98,7 @@ typedef struct{
     uint16_t crc16;                         // crc value of native data
 } __attribute__((packed)) native_data_t;
 
-// esp now data type with encoded data
+// struct holding the encoded data and coding overhead
 typedef struct {
     uint8_t type;                                   // type for identification and error handeling
     uint8_t pckt_cnt;                               // number of packets used for encoding
