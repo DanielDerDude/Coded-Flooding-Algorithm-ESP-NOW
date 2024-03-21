@@ -8,7 +8,8 @@
 //#include "NVS_access.h"
 #endif
 
-#define ESPNOW_MAXDELAY 512
+#define ESPNOW_MAXDELAY                         512
+#define REPORT_PACKT_MIN_SIZE                   10       // minimum number of packets encoded in the reception report - cant be lower than 10
 
 #define GPIO_DEBUG_PIN          18
 #define GPIO_START_PIN          0
@@ -26,6 +27,8 @@ static const char *TAG4 = "msg_ex ";
 static TaskHandle_t network_reset_task_handle      = NULL;
 static TaskHandle_t network_sync_task_handle       = NULL;
 static TaskHandle_t neighbor_detection_task_handle = NULL;
+static TaskHandle_t msg_exchange_task_handle       = NULL;
+static TaskHandle_t shutdown_task_handle           = NULL;
 
 // queue handles
 static QueueHandle_t espnow_event_queue;        // espnow event queue
@@ -388,8 +391,7 @@ static void msg_exchange_task(){
                 PoolElem_t* PoolElement = xPacketPoolAdd(natPckt);                    // add the packet to the packet pool
                 assert(PoolElement != NULL);
 
-                vAddReceptionToReport(recv_cb->mac_addr, natPckt->seq_num);           // update reception report
-                vRefreshVirtualQueues(PoolElement);                                   // refresh virtual queue
+                vRefreshVirtualQueues(PoolElement, recv_cb->mac_addr);                                   // refresh virtual queue
 
                 while(xGetCodingCnt() >= 2){                        // check for coding opportunity
                     send_onc_packet(s_broadcast_mac);               // broadcast coded packet
@@ -401,8 +403,8 @@ static void msg_exchange_task(){
             {
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 if (send_cb->status == ESP_NOW_SEND_SUCCESS){
-                    vTaskDelay(CONFIG_NATIVE_SEND_DELAY/portTICK_PERIOD_MS);    // if send delay was successful wait send delay
                     ESP_LOGW(TAG4, "Send native packet");
+                    vTaskDelay(CONFIG_NATIVE_SEND_DELAY/portTICK_PERIOD_MS);    // if send delay was successful wait send delay
                 }else{
                     ESP_LOGE(TAG4, "Send of native packet failed - retry sending");
                 }
@@ -424,13 +426,13 @@ static void msg_exchange_task(){
                     free(decPckt);                                      // free memory if decoding was unsuccessful
                 }else{                                                  // if decoding was successful
                     PoolElem_t * newElem = xPacketPoolAdd(decPckt);     // add decoded packet to packet pool
-                    vTagPacketInCoding(newElem);                        // tag that the packet was used in coded packet 
+                    vTagPacketAsDecoded(newElem);                       // tag that the packet as successfully decoded
+                    decode_cnt++;                                       // count successful coding
                 }
 
-                free(encPckt.pckt_id_array);                // free id array of onc data struct
+                free(encPckt.pckt_id_array);                            // free id array of onc data struct
                 
-                decode_cnt++;
-                if (decode_cnt % 10*(getPeerCount()-1) == 0){       // send reception report for every 10 coding cycles (each cycle peer count-1 coded packets will be sent)
+                if (decode_cnt % REPORT_PACKT_MIN_SIZE*(getPeerCount()-1) == 0){       // send reception report for every REPORT_PACKT_MIN_SIZE coding cycles (each cycle peer count-1 coded packets will be sent)
                     vDeletePacketsLastReceptRep();                  // delete packets which where sent in previous reception report
                     send_reception_report(s_relay_address);         // create and send reception report
                 }
@@ -449,20 +451,21 @@ static void msg_exchange_task(){
             case RECV_RECEPREP:
             {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                bloom_t* new_recep_rep = parse_serialized_recep_report(recv_cb->data, recv_cb->data_len);   // parse received data into reception report
+                bloom_t new_recep_rep = parse_serialized_recep_report(recv_cb->data, recv_cb->data_len);   // parse received data into reception report
                 free(recv_cb->data);                                                                        // free memory of byte stream
 
-                vReplaceReport(recv_cb->mac_addr, new_recep_rep);                                           // replace reception report of peer with new one
+                ESP_LOGE(TAG4, "Received reception report");
+                vCheckForRecommissions(recv_cb->mac_addr, &new_recep_rep);            // parses reception reports and checks if reekommissions need to be done and garbage collects the packet pool
+                bloom_free(&new_recep_rep);                                           // delete reception report
                 
-                if(boPeersSentReport()){                 // if every peer has sent his reception report
-                    vCheckForRecommissions();            // parses reception reports and checks if reekommissions need to be done and garbage collects the packet pool
+                if (boAllPeersSentReports()){                                         // if every peer has sent his report
+                    vDeletePacketsLastReceptRep();                                    // delete all packets that have been acknowledged
                 }
                 
                 break;
             }
             case SEND_RECEPREP:
             {
-                espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 ESP_LOGE(TAG4, "Send reception report");
                 send_native_packet(s_relay_address);        // send another native packet
                 break;
@@ -475,62 +478,6 @@ static void msg_exchange_task(){
             }
         }
     }
-
-    vTaskDelete(NULL);
-}
-
-static void IRAM_ATTR network_sync_task(void* arg){
-    if (blockUntilCycle(INIT_MSG_EXCHANGE) == false) vTaskDelete(NULL);     // delete if unblocking because of higher Cycle 
-
-    // create msg exchange task
-    xTaskCreate(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, NULL);
-
-    taskENTER_CRITICAL(&spinlock);
-    //int64_t time_called = esp_timer_get_time();
-    //ESP_LOGW(TAG3, "Called Init at %lld us", time_called);
-    // get current average send offset from neighbor detection task
-    int64_t avg_send_offset = 0;
-    if (xQueuePeek(avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
-        //ESP_LOGE(TAG3, "No send offset available!");
-    }
-
-    int64_t avg_recv_offset = 0;
-    if (xQueuePeek(avg_recv_offset_queue, &avg_recv_offset, 0) != pdTRUE){
-        //ESP_LOGE(TAG3, "No recv offset available!");
-    }
-    
-    // determine peer_count, max offset and coresponding peer address
-    int64_t max_offset = getMaxOffset();
-    uint8_t peer_count = getPeerCount();
-    getMaxOffsetAddr(s_relay_address);
-
-    if (peer_count != 0){                                                     // check if any peers have been detected
-        max_offset = max_offset - (avg_send_offset/2 -8);                            // extract max offset, take average send offset in to account
-    }
-    
-    // compute delay to start msg exchange in sync with the master time (oldest node);
-    int64_t my_time = get_systime_us();
-    uint64_t master_time_us = (max_offset > 0) ? (my_time + max_offset) : my_time;
-    uint64_t delay_us = 50000L - (master_time_us % 50000L);                             // compute transit time for msg exchange
-    
-    // start scheduled phases according to master time
-    ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
-    taskEXIT_CRITICAL(&spinlock);
-    
-    // print stats
-    ESP_LOGW(TAG3, "Systime at %lld us", my_time);
-    ESP_LOGW(TAG3, "avg_send_offset = %lld us", avg_send_offset);
-    ESP_LOGW(TAG3, "avg_recv_offset = %lld us", avg_recv_offset);
-    ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
-    
-    if (max_offset > 0) {                                       // device does not hold the master time 
-        ESP_LOGW(TAG3, "Offset to master with %lld us by "MACSTR"", max_offset, MAC2STR(s_relay_address));
-    }else{                                                      // this device holds the master time
-        ESP_ERROR_CHECK( esp_read_mac(s_relay_address, ESP_MAC_TYPE) );
-        ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(s_relay_address));
-        master_flag = true;
-    }
-    ESP_LOGE(TAG3, "computed delay %lld us", delay_us);
 
     vTaskDelete(NULL);
 }
@@ -628,6 +575,83 @@ static void IRAM_ATTR network_reset_task(void* arg){
     }
     esp_now_deinit();
     esp_restart();
+}
+
+static void IRAM_ATTR shutdown_task(void* arg){
+    blockUntilCycle(SHUTDOWN);
+
+    printf("\n");
+    ESP_LOGE("shutdown", "initiating shutdown task");
+
+    // Delete all Tasks
+    if(network_reset_task_handle      != NULL) vTaskDelete(network_reset_task_handle);
+    if(network_sync_task_handle       != NULL) vTaskDelete(network_sync_task_handle);
+    if(neighbor_detection_task_handle != NULL) vTaskDelete(neighbor_detection_task_handle);
+    if(msg_exchange_task_handle       != NULL) vTaskDelete(msg_exchange_task_handle);
+    if(shutdown_task_handle           != NULL) vTaskDelete(shutdown_task_handle);
+
+    vDeletePeerList();          // delete peer list
+    vDeletePacketPool();        // delete packet pool
+    espnow_deinit();            // shutdown network related stuff
+
+    ESP_LOGE("shutdown", "shutdown finisehd");
+}
+
+static void IRAM_ATTR network_sync_task(void* arg){
+    if (blockUntilCycle(INIT_MSG_EXCHANGE) == false) vTaskDelete(NULL);     // delete if unblocking because of higher Cycle 
+
+    // create msg exchange task
+    xTaskCreatePinnedToCore(msg_exchange_task, "msg_exchange_task", 4096, NULL, 3, &msg_exchange_task_handle, 1);
+    xTaskCreatePinnedToCore(shutdown_task    , "shutdown_task"    , 1024, NULL, 1, &shutdown_task_handle, 1);
+
+    taskENTER_CRITICAL(&spinlock);
+    //int64_t time_called = esp_timer_get_time();
+    //ESP_LOGW(TAG3, "Called Init at %lld us", time_called);
+    // get current average send offset from neighbor detection task
+    int64_t avg_send_offset = 0;
+    if (xQueuePeek(avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
+        //ESP_LOGE(TAG3, "No send offset available!");
+    }
+
+    int64_t avg_recv_offset = 0;
+    if (xQueuePeek(avg_recv_offset_queue, &avg_recv_offset, 0) != pdTRUE){
+        //ESP_LOGE(TAG3, "No recv offset available!");
+    }
+    
+    // determine peer_count, max offset and coresponding peer address
+    int64_t max_offset = getMaxOffset();
+    uint8_t peer_count = getPeerCount();
+    getMaxOffsetAddr(s_relay_address);
+
+    if (peer_count != 0){                                                     // check if any peers have been detected
+        max_offset = max_offset - (avg_send_offset/2 -8);                            // extract max offset, take average send offset in to account
+    }
+    
+    // compute delay to start msg exchange in sync with the master time (oldest node);
+    int64_t my_time = get_systime_us();
+    uint64_t master_time_us = (max_offset > 0) ? (my_time + max_offset) : my_time;
+    uint64_t delay_us = 50000L - (master_time_us % 50000L);                             // compute transit time for msg exchange
+    
+    // start scheduled phases according to master time
+    ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
+    taskEXIT_CRITICAL(&spinlock);
+    
+    // print stats
+    ESP_LOGW(TAG3, "Systime at %lld us", my_time);
+    ESP_LOGW(TAG3, "avg_send_offset = %lld us", avg_send_offset);
+    ESP_LOGW(TAG3, "avg_recv_offset = %lld us", avg_recv_offset);
+    ESP_LOGW(TAG3, "Timestamps received from %d peers.", peer_count);
+    
+    if (max_offset > 0) {                                       // device does not hold the master time 
+        ESP_LOGW(TAG3, "Offset to master with %lld us by "MACSTR"", max_offset, MAC2STR(s_relay_address));
+    }else{                                                      // this device holds the master time
+        ESP_ERROR_CHECK( esp_read_mac(s_relay_address, ESP_MAC_TYPE) );
+        ESP_LOGW(TAG3, "I have the master time with "MACSTR"", MAC2STR(s_relay_address));
+        master_flag = true;
+    }
+    ESP_LOGE(TAG3, "computed delay %lld us", delay_us);
+
+    vTaskDelete(NULL);
 }
 
 static void deinit_neighbor_detection(void){

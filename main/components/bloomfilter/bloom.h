@@ -3,10 +3,18 @@
  *  All rights reserved.
  *
  *  This file is under BSD license. See LICENSE file.
+ * 
+ *  Altered by: Daniel Fronk
+ * 
+ *  This implemetnation is now available on the ESP32 platform. 
+ *  The blom filter size is drastically reduced to be able to send bloomfilters
+ *  via ESPNOW in one transmission.    
  */
 
 #ifndef _BLOOM_H
 #define _BLOOM_H
+
+#define BLOOM_MIN_ENTRIES     10
 
 /** ***************************************************************************
  * Structure to keep track of one bloom filter.  Caller needs to
@@ -19,17 +27,17 @@ typedef struct bloom
   // These fields are part of the public interface of this structure.
   // Client code may read these values if desired. Client code MUST NOT
   // modify any of these.
-  uint32_t entries;
-  uint64_t bits;
-  uint16_t bytes;
+  uint8_t entries;        // maximum number of entries which still holds the desired false positive rate
+  uint16_t bits;          // number of bits in bloom filter
+  uint8_t bytes;          // number of bytes in bloom filter
   uint16_t hashes;
-  double error;
+  double error;           // error rate of false positives
 
   // Fields below are private to the implementation. These may go away or
   // change incompatibly at any moment. Client code MUST NOT access or rely
   // on these.
   uint8_t ready;
-  double bpe;       // bits per element
+  double bpe;             // bits per element
   uint8_t * bf;
 } __attribute__((packed)) bloom_t;
 
@@ -61,7 +69,7 @@ typedef struct bloom
  *     1 - on failure
  *
  */
-int8_t bloom_init2(struct bloom * bloom, uint32_t entries, double error);
+int8_t bloom_init2(struct bloom * bloom, uint8_t entries, double error);
 
 
 /** ***************************************************************************

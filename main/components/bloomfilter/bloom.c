@@ -19,9 +19,9 @@
 
 #define TAG_BLOOM "bloom"
 
-inline static int test_bit_set_bit(uint8_t * buf, uint64_t bit, int8_t set_bit)
+inline static int test_bit_set_bit(uint8_t * buf, uint16_t bit, int8_t set_bit)
 {
-  uint64_t byte = bit >> 3;
+  uint8_t byte = bit >> 3;
   uint8_t c = buf[byte];             // expensive memory access
   uint8_t mask = 1 << (bit % 8ul);
 
@@ -66,17 +66,11 @@ static int8_t bloom_check_add(struct bloom * bloom, const void * buffer, uint32_
 }
 
 
-int8_t bloom_init2(struct bloom * bloom, uint32_t entries, double error)
+int8_t bloom_init2(struct bloom * bloom, uint8_t entries, double error)
 {
-  if (sizeof(uint64_t) < 8) {
-    ESP_LOGE(TAG_BLOOM, "error: libbloom will not function correctly because");
-    ESP_LOGE(TAG_BLOOM, "sizeof(uint64_t) == %llu", (uint64_t)sizeof(uint64_t));
-    exit(1);
-  }
-
   memset(bloom, 0, sizeof(struct bloom));
 
-  if (entries < 10 || error <= 0 || error >= 1) {
+  if (entries < BLOOM_MIN_ENTRIES || error <= 0 || error >= 1) {
     return 1;
   }
 
@@ -89,7 +83,7 @@ int8_t bloom_init2(struct bloom * bloom, uint32_t entries, double error)
 
   long double dentries = (long double)entries;
   long double allbits = dentries * bloom->bpe;
-  bloom->bits = (uint64_t)allbits;
+  bloom->bits = (uint16_t)allbits;
 
   if (bloom->bits % 8) {
     bloom->bytes = (bloom->bits / 8) + 1;
@@ -126,11 +120,11 @@ void bloom_print(struct bloom * bloom)
 {
   ESP_LOGW(TAG_BLOOM, "bloom at %p", (void *)bloom);
   if (!bloom->ready) { ESP_LOGW(TAG_BLOOM, " *** NOT READY ***"); }
-  ESP_LOGW(TAG_BLOOM, " ->entries = %lu", bloom->entries);
+  ESP_LOGW(TAG_BLOOM, " ->entries = %d", bloom->entries);
   ESP_LOGW(TAG_BLOOM, " ->error = %lf", bloom->error);
-  ESP_LOGW(TAG_BLOOM, " ->bits = %llu", bloom->bits);
+  ESP_LOGW(TAG_BLOOM, " ->bits = %d", bloom->bits);
   ESP_LOGW(TAG_BLOOM, " ->bits per elem = %lf", bloom->bpe);
-  ESP_LOGW(TAG_BLOOM, " ->bytes = %u", bloom->bytes);
+  ESP_LOGW(TAG_BLOOM, " ->bytes = %d", bloom->bytes);
   ESP_LOGW(TAG_BLOOM, " ->hash functions = %d", bloom->hashes);
 }
 

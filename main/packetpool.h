@@ -8,8 +8,9 @@
 
 enum {
     UNTOUCHED,
-    ENCODED,
+    DECODED,
     INRECEPREP,
+    GARGABE,
 };
 
 typedef struct PoolElem{
@@ -22,7 +23,7 @@ typedef struct PoolElem{
 typedef struct PacketPool{
     uint16_t size;                  // maximum packets the packet pool can hold
     uint16_t entries;               // current number of packets the pool holds
-    uint16_t cnt_tag_coded;         // counter of coded packets - optimises the reception report size
+    uint16_t decoded_cnt;           // number of packets that where decoded successfully
     uint16_t idx_free;              // free slot with largest index in hash table 
     PoolElem_t* hashtable;          // actual hashtable array
 } PacketPool_t;
@@ -31,8 +32,6 @@ static PacketPool_t packet_pool = {0};          // global variable for packet po
 
 static const char *TAG_POOL = "packet pool";    // tag for log output
 
-bool boPaketConcurrentInReports(uint16_t packet_seq_num);       // this is implemented in the peer_management.h but kept seperate for better overview
-void vRefreshVirtualQueues(PoolElem_t* PoolElem);               // this is implemented in the peer_management.h but kept seperate for better overview
 
 // PRIVATE: finds a packet in packet pool and returns it, returns NULL if not found
 static PoolElem_t* xPacketPoolFindElem(uint16_t seq_num){
@@ -106,7 +105,7 @@ void vInitPacketPool(){
 
 // garbage collects every packet from the packet pool which was sent in a reception report
 void vDeletePacketsLastReceptRep(){
-    ESP_LOGE(TAG_POOL, "Deleting packets from last reception report - packet pool at %d entries", packet_pool.entries);
+    ESP_LOGE(TAG_POOL, "Deleting acknowledged packets - packet pool at %d entries", packet_pool.entries);
     uint8_t entries_before = packet_pool.entries;
     for(uint8_t i = 0; i < packet_pool.size; i++){                                      // go through every slot in hashmap
         if(packet_pool.hashtable[i].tag == INRECEPREP){                                 // check if packet was in last reception report
@@ -117,14 +116,19 @@ void vDeletePacketsLastReceptRep(){
 }
 
 // tag packet as used in encoding
-void vTagPacketInCoding(PoolElem_t* Elem){
+/* void vTagPacketInCoding(PoolElem_t* Elem){
     if(Elem->tag != ENCODED) packet_pool.cnt_tag_coded++;       // increase tag counter if packet was not tagged before
     Elem->tag = ENCODED;                                        // tag packet as used in encoding
+} */
+
+void vTagPacketAsDecoded(PoolElem_t* Elem){
+    if(Elem->tag != DECODED) packet_pool.decoded_cnt++;
+    Elem->tag = DECODED;
 }
 
 //tag packet as used in reception report
 void vTagPacketInPeport(PoolElem_t* Elem){
-    if(Elem->tag == ENCODED) packet_pool.cnt_tag_coded--;       // decrease tag counter if packet was tagged as used in encoding
+    if(Elem->tag == DECODED) packet_pool.decoded_cnt--;       // decrease tag counter if packet was tagged as used in encoding
     Elem->tag = INRECEPREP;
 }
 
@@ -150,6 +154,15 @@ PoolElem_t* xPacketPoolAdd(native_data_t* pckt){
     }else{                                                                          // traverse chain until found a free packet slot
         while (current->next != NULL){
             current = current->next;
+            if (current->pckt->seq_num == pckt->seq_num){                           // check if sequence enumber is already in hash map
+                if (memcmp(current->pckt, pckt, sizeof(native_data_t)) == 0){       // check if packet or sequence number is dublicate
+                    ESP_LOGE(TAG_POOL, "Found dublicate packet in report!");
+                }else{
+                    ESP_LOGE(TAG_POOL, "Found dublicate sequence number in report!");
+                }
+                free(pckt);                                                         // in any case free the new packet and leave the old one
+                return current;
+            }
         }
 
         current->next = &packet_pool.hashtable[packet_pool.idx_free];               // link free slot to last chain element
@@ -180,29 +193,8 @@ native_data_t* xPacketPoolGetPacket(uint16_t seq_num){
 
     PoolElem_t* ret = xPacketPoolFindElem(seq_num);     // find the pool element with the sequence number
     if (ret == NULL) return NULL;
-    vTagPacketInCoding(ret);                            // tag that packet was used in coding
 
     return ret->pckt;
-}
-
-// parses the tagged packets in pool and checks if every peer received his encoded packets - also cleans packet pool
-void vCheckForRecommissions(){
-    ESP_LOGE(TAG_POOL, "Checking if recommissions need to be made");
-    uint8_t entries_before = packet_pool.entries;
-    uint8_t resend_cnt = 0;
-    for(uint8_t i = 0; i < packet_pool.size; i++){                                      // go through every slot in hashmap
-        if(packet_pool.hashtable[i].tag == ENCODED){                                    // check every packet which was used for encoding
-            uint16_t seq_num = packet_pool.hashtable[i].pckt->seq_num;
-            if (boPaketConcurrentInReports(seq_num)){                                   // remove packet from pool if it is concurrent in every reception report
-                vRemoveElemFromPool(&packet_pool.hashtable[i]);                         
-            }else{                                                                      // if not every peer has received this packet
-                vRefreshVirtualQueues(&packet_pool.hashtable[i]);                       // schedule retransmission by refreshing virtual queues with packet
-                packet_pool.hashtable[i].tag = UNTOUCHED;                               // remove tag that this packet was used in an encoded packet
-                resend_cnt++;
-            }
-        }
-    }
-    ESP_LOGE(TAG_POOL, "Scheduled %d retransmissions - deleted %d packets from pool", resend_cnt, entries_before-packet_pool.entries);
 }
 
 // deletes every packet from packet pool and frees allocated memory 

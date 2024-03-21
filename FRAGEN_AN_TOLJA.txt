@@ -75,3 +75,10 @@ Was soll ich denn darstellen? Ich könnte den Coding gain mit der Zeit plotten. 
 ganze ja ineffizienter machen. Gibt es sowas wie ein Verhältnis aus Nutzbaren Bits und für Bits zur Umsetzung? Ich denke, das ist das nächst beste, was ich aufstellen kann um auf eine positive energieeffizienz 
 gegenüber herkömmlichen fooding algorithmen zu schließen. Ich kann ja schlecht den genauen Energieverbrauch mit anderen Netzwerken vergleichen. 
 
+
+
+VORTEILE MEINER ARCHITECKTUR
+
+Packete werden automatisch in das netzwerk verteilt über den relay node. Es ist super einfach das System so anzupassen, dass wenn der Relay node ausfällt, einfach der nächste peer in der list weiter macht.
+Die nodes könnten zum beispiel einen timer für eine bestimmte Zeit setzem, in in der sie ein coded packet bekommen müssen. Läuft dieser Timer ab, dann gehen die Nodes davon aus, dass der Raly node ausgefallen ist und es wird der Nächste peer als relay node ausgewählt.
+Das ist möglich, da die peers zu beginn der neighbor detection phase eine liste aller peers sortiert nach ihrer mac addressen erstellt haben. 
