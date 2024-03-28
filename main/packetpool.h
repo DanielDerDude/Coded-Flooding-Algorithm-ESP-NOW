@@ -10,7 +10,6 @@ enum {
     UNTOUCHED,
     DECODED,
     INRECEPREP,
-    GARGABE,
 };
 
 typedef struct PoolElem{
@@ -62,17 +61,20 @@ static void vRemoveElemFromPool(PoolElem_t* delElem){
     delElem->tag = UNTOUCHED;                                               // untouched packet
     
     if (delElem->prev == NULL){                                             // delElem is head of chain - will be replaced with second link
-        
-        if ((uintptr_t)&packet_pool.hashtable[packet_pool.idx_free] < (uintptr_t)delElem->next){          // if address of second link is higher than current addres of slot with highest free index
-            packet_pool.idx_free = (delElem->next - &packet_pool.hashtable[0])/ sizeof(PacketPool_t) ;    // compute index through address of compared element
-        }
+
         if (delElem->next != NULL){                                             // delElem has a link successor
+            if ((uintptr_t)&packet_pool.hashtable[packet_pool.idx_free] < (uintptr_t)delElem->next){                            // if address of second link is higher than current addres of slot with highest free index
+                packet_pool.idx_free = ((uintptr_t)delElem->next - (uintptr_t)packet_pool.hashtable)/ sizeof(PacketPool_t) ;    // compute index through address of compared element
+            }
             PoolElem_t newHead;
             memcpy(&newHead, delElem->next, sizeof(PoolElem_t));                // save second link of chain
             newHead.prev = NULL;                                                // previous of new head is NULL
             memset(delElem->next, 0, sizeof(PoolElem_t));                       // delete second chain link
             memcpy(delElem, &newHead, sizeof(PoolElem_t));                      // overwrite head of chain with second element
         }else{                                                                  // del element was only link in chain
+            if ((uintptr_t)&packet_pool.hashtable[packet_pool.idx_free] < (uintptr_t)delElem){                         // update largest free index if necessary 
+                packet_pool.idx_free = ((uintptr_t)delElem - (uintptr_t)packet_pool.hashtable)/ sizeof(PoolElem_t);    // compute index through address of compared element        
+            }
             memset(delElem, 0, sizeof(PoolElem_t));                             // set delElem to zero
         }
     }else{
@@ -103,7 +105,7 @@ void vInitPacketPool(){
     packet_pool.entries = 0;
 }
 
-// garbage collects every packet from the packet pool which was sent in a reception report
+// garbage collects every packet from the packet pool which is tagged as "INRECEPREP"
 void vDeletePacketsLastReceptRep(){
     ESP_LOGE(TAG_POOL, "Deleting acknowledged packets - packet pool at %d entries", packet_pool.entries);
     uint8_t entries_before = packet_pool.entries;
@@ -115,12 +117,7 @@ void vDeletePacketsLastReceptRep(){
     ESP_LOGE(TAG_POOL, "finished - removed %d entries", entries_before- packet_pool.entries);
 }
 
-// tag packet as used in encoding
-/* void vTagPacketInCoding(PoolElem_t* Elem){
-    if(Elem->tag != ENCODED) packet_pool.cnt_tag_coded++;       // increase tag counter if packet was not tagged before
-    Elem->tag = ENCODED;                                        // tag packet as used in encoding
-} */
-
+// tags a pool element as decoded and increases the encoded counter
 void vTagPacketAsDecoded(PoolElem_t* Elem){
     if(Elem->tag != DECODED) packet_pool.decoded_cnt++;
     Elem->tag = DECODED;

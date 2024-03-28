@@ -1,7 +1,7 @@
 PACKET HANDLER FÜR ERHALT EINES NATIVEN PACKETS
 1 parse the packet
 2 add packet to the packet pool
-3 refresh virtual queues virtual queues
+3 refresh virtual queues
 
 PACKET HANDLER FOR GENERATING DECODED PACKET
 1 gehe durch alle virtual queues und nimm referenz im packe pool
@@ -16,13 +16,14 @@ PACKET HANDLER FOR RECEIVING DECODED PACKET
 3 wenn packet erfolgreich dekodiert adde es in dem Packet pool und tagge es auch "kodieren verwendet"
 
 PACKET HANDLER FOR SENDING RECEPTION REPORT
+0 get number of packets tagged as decoded and initialize empty bloom filter
 1 parse the packet pool
 2 if the packet is tagged as used in encoding, ad it to the bloom filter
 3 serialize and wrap the reception report 
 4 send it to relay node
 
 HANDLER WHEN RECEIVED ALLL RECEPTION REPORTS
-1 search every packet which is tagged as "endoded" in the pakcet pool
-2 check if packet is concurrent in the reception reports of the peers
-3 if yes then delete it from the pool
-4 if not update the virtual queue and remove the encoded tag
+0 lookup ack queue of peer 
+1 search every packet in the ackqueue in the packet pool
+2 if packet was found tag it as "in reception report"
+3 if not found, update virtual queue (packet will be added into ackQ!ueue when encoding)

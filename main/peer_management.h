@@ -268,7 +268,7 @@ static const char* TAG_RECREP = "recept_reort";
 bloom_t xCreateRecepRecepReport(){    
     uint8_t pkt_cnt = packet_pool.decoded_cnt;    // number packets that have been successfully decoded
     
-    ESP_LOGE("TESTETSTETS", "Packets in reception report %d", pkt_cnt);
+    ESP_LOGE(TAG_RECREP, "Packets in reception report %d", pkt_cnt);
 
     bloom_t recep_report;
     uint8_t ret = bloom_init2(&recep_report, pkt_cnt, BLOOM_ERROR_RATE);   // initialize bloom filter as reception report
@@ -279,7 +279,7 @@ bloom_t xCreateRecepRecepReport(){
             uint32_t seq_num32 = (uint32_t) packet_pool.hashtable[i].pckt->seq_num; // current sequence number
             int8_t ret = bloom_add(&recep_report, &seq_num32, sizeof(uint32_t));    // add the sequence number to bloomfilter
             assert(ret != -1);
-            vTagPacketInPeport(&packet_pool.hashtable[i]);                           // tag packet as used in reception report
+            vTagPacketInPeport(&packet_pool.hashtable[i]);                          // tag packet as used in reception report
         }
     }
 
@@ -335,7 +335,7 @@ void vCheckForRecommissions(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* r
             PoolElem->tag = UNTOUCHED;                                      // remove tags
             resend_cnt++;
         }
-    }    
+    }
     
     if (resend_cnt != 0) ESP_LOGE(TAG_POOL, "Scheduled %d retransmissions", resend_cnt);
 }

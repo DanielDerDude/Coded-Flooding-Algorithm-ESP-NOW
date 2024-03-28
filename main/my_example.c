@@ -2,10 +2,7 @@
 #define _INCLUDES_H_
 #include "includes.h"
 #include "./components/bloomfilter/bloom.c"
-//#include "./components/linreg/linreg.h"
 #include "peer_management.h"
-#include "timing_functions.h"
-//#include "NVS_access.h"
 #endif
 
 #define ESPNOW_MAXDELAY                         512
@@ -42,15 +39,36 @@ static esp_timer_handle_t cycle_timer_handle;
 // event group handle
 static EventGroupHandle_t CycleEventGroup;
 
+// spinlock semaphore 
+portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;   // for time critical and uninterrupted code 
+
+// mac address variables
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };  // broadcast mac address
 static uint8_t s_relay_address[ESP_NOW_ETH_ALEN];                                           // address of relay node
 
 // time when wifi counter start - for receive offset correction
 int64_t time_wifi_start = 0;
 
+// master flag if a node is the relay node
 bool master_flag = false;
 
 static void espnow_deinit();
+
+/////////////   SYSTIME FUNCTION   /////////////
+
+static IRAM_ATTR int64_t get_systime_us(void){
+    taskENTER_CRITICAL(&spinlock);
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    int ret = gettimeofday(&tv, NULL);
+    
+    assert(ret == 0);
+    taskEXIT_CRITICAL(&spinlock);
+    return (int64_t)tv.tv_sec * 1000000L + (int64_t)tv.tv_usec;
+}
+
+/////////////   CYCLE FUNCTIONS    /////////////
 
 static EventBits_t IRAM_ATTR getCycle(){                        // function for getting cycle through event group    
     EventBits_t evtBits = xEventGroupGetBits(CycleEventGroup);
@@ -86,6 +104,8 @@ static bool IRAM_ATTR blockUntilCycle(EventBits_t cycle){
     return (EventBits | cycle) == cycle;
 }
 
+///////////// CB AND ISR FUNCTIONS /////////////
+
 static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
     taskENTER_CRITICAL(&spinlock);
@@ -93,10 +113,7 @@ static void IRAM_ATTR espnow_send_cb(const uint8_t *mac_addr, esp_now_send_statu
     int64_t time_now = get_systime_us();
     taskEXIT_CRITICAL(&spinlock);
 
-    if (mac_addr == NULL) {
-        ESP_LOGE("send_cb", "Send cb arg error");
-        return;
-    }
+    assert(mac_addr != NULL);
 
     last_commission_t last_commission = {0};
     if (xQueueReceive(last_commission_queue, &last_commission, 0) != pdTRUE){    // get last commission feedback
@@ -262,6 +279,8 @@ static void IRAM_ATTR start_manually_isr(void* arg){
     }
 }
 
+/////////////    SEND FUNCTIONS    /////////////
+
 static void IRAM_ATTR broadcast_reset(){
     uint8_t buf = RESET;
 
@@ -296,7 +315,7 @@ static void IRAM_ATTR broadcast_timestamp(uint16_t seq_num){
         assert(1 == 0);
     }
 }
- 
+
 static void send_native_packet(const uint8_t *mac_addr){
     // log the new commission
     last_commission_t new_comm;
@@ -360,6 +379,8 @@ static void send_reception_report(const uint8_t *mac_addr){
     }
     ESP_LOGE(TAG4, "Commissioned reception report - total size %d", size);
 }
+
+/////////////         TASKS        /////////////
 
 static void msg_exchange_task(){
     if (blockUntilCycle(MESSAGE_EXCHANGE) == false) vTaskDelete(NULL);
@@ -503,14 +524,15 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
             case SEND_TIMESTAMP:
             {
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
-                if (send_cb->status == ESP_NOW_SEND_SUCCESS) broadcasts_sent++;             // if send was successful increase broadcast counter
+                if (send_cb->status == ESP_NOW_SEND_SUCCESS){                                   // if broadcast timestamp was successfull
+                    broadcasts_sent++;                                                          // increase broadcast counter
 
-                if (send_cb->send_offset != 0){                                             // post current average send offset to queue
-                    send_offset_sum += send_cb->send_offset;
-                    int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;
-                    xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
+                    if (send_cb->send_offset != 0){                                             // post current average send offset to queue
+                        send_offset_sum += send_cb->send_offset;
+                        int64_t avg_send_offset = send_offset_sum / ++sent_offset_cnt / 2;
+                        xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
+                    }
                 }
-
                 if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval 
                 broadcast_timestamp(broadcasts_sent);                                                               // broadcast another timestamp
                 
@@ -520,11 +542,6 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
             {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
                 timing_data_t *recv_data = (timing_data_t *)(recv_cb->data);
-
-                if (recv_data->type != TIMESTAMP) {
-                    ESP_LOGE(TAG1, "Received timestamp event, but data is not a timestamp");
-                    break;
-                }
 
                 if (recv_cb->recv_offset != 0){
                     recv_offset_sum += recv_cb->recv_offset;
@@ -537,7 +554,6 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                 // compute transmission time and systime offset to peer 
                 int64_t time_TX = recv_data->timestamp;
                 int64_t time_RX = evt.timestamp;
-                //const int64_t time_tm = (recv_cb->sig_len) * 8 / 54;                      // transmission delay [us] = framesize / bandwidth = ( 54 * 8 ) / ( 54 * 1e6) *1e6 = 8 us 
 
                 int64_t delta = time_TX - time_RX;
 
@@ -605,8 +621,7 @@ static void IRAM_ATTR network_sync_task(void* arg){
     xTaskCreatePinnedToCore(shutdown_task    , "shutdown_task"    , 1024, NULL, 1, &shutdown_task_handle, 1);
 
     taskENTER_CRITICAL(&spinlock);
-    //int64_t time_called = esp_timer_get_time();
-    //ESP_LOGW(TAG3, "Called Init at %lld us", time_called);
+    
     // get current average send offset from neighbor detection task
     int64_t avg_send_offset = 0;
     if (xQueuePeek(avg_send_offset_queue, &avg_send_offset, 0) != pdTRUE){
@@ -624,13 +639,13 @@ static void IRAM_ATTR network_sync_task(void* arg){
     getMaxOffsetAddr(s_relay_address);
 
     if (peer_count != 0){                                                     // check if any peers have been detected
-        max_offset = max_offset - (avg_send_offset/2 -8);                            // extract max offset, take average send offset in to account
+        max_offset = max_offset - (avg_send_offset/2 -8);                     // extract max offset, take average send offset in to account
     }
     
     // compute delay to start msg exchange in sync with the master time (oldest node);
     int64_t my_time = get_systime_us();
     uint64_t master_time_us = (max_offset > 0) ? (my_time + max_offset) : my_time;
-    uint64_t delay_us = 50000L - (master_time_us % 50000L);                             // compute transit time for msg exchange
+    uint64_t delay_us = 50000L - (master_time_us % 50000L);                             // compute transit delay for msg exchange
     
     // start scheduled phases according to master time
     ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, delay_us) );              // set timer for when to start masg exchange
@@ -654,10 +669,11 @@ static void IRAM_ATTR network_sync_task(void* arg){
     vTaskDelete(NULL);
 }
 
+//////  SETUP, INIT AND DEINIT FUNCTIONS  //////
+
 static void deinit_neighbor_detection(void){
     vQueueDelete(avg_send_offset_queue);
     vQueueDelete(avg_recv_offset_queue);
-    // what else ???????
 }
 
 static void espnow_init(void)
@@ -749,11 +765,13 @@ static void espnow_deinit()
     vQueueDelete(espnow_event_queue);
 }
 
+/////////////       APP MAIN       /////////////
+
 void app_main(void)
 {
     setup_GPIO();
 
-    CycleEventGroup = xEventGroupCreate();      // create event group
+    CycleEventGroup = xEventGroupCreate();      // create event group for network cycles
     assert(CycleEventGroup != NULL);
 
     esp_err_t ret = nvs_flash_init();                                                   // init flash
