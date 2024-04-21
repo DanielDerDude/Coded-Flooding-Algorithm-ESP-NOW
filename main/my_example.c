@@ -392,7 +392,6 @@ static void msg_exchange_task(){
         send_native_packet(s_relay_address);
     }
     
-    uint8_t coded_receive_cnt = 0;  // counter to distinguish coding rounds
     uint8_t decode_cnt = 0;         // counter for decoding attempts
 
     // start event handle loop
@@ -434,14 +433,14 @@ static void msg_exchange_task(){
             case RECV_RECEPREP:
             {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-                bloom_t new_recep_rep = parse_serialized_recep_report(recv_cb->data, recv_cb->data_len);   // parse received data into reception report
+                bloom_t new_recep_rep = parse_serialized_recep_report(recv_cb->data, recv_cb->data_len);        // parse received data into reception report
 
                 ESP_LOGE(TAG4, "Received reception report from "MACSTR"", MAC2STR(recv_cb->mac_addr));
-                vCheckForRecommissions(recv_cb->mac_addr, &new_recep_rep);            // parses reception reports and checks if reekommissions need to be done and garbage collects the packet pool
-                bloom_free(&new_recep_rep);                                           // delete reception report
+                vCheckForRetransmissions(recv_cb->mac_addr, &new_recep_rep);                                    // parses reception reports and logs the retransmission counter in reception report
+                bloom_free(&new_recep_rep);                                                                     // delete reception report
                 
-                if (boAllPeersSentReports()){                                         // if every peer has sent his report
-                    vDeletePacketsLastReceptRep();                                    // delete all packets that have been acknowledged
+                if (boAllPeersSentReports()){                          // if every peer has sent his report
+                    vScheduleRetransmissions();                        // execute the collected retransmissions of unacknowledged packets
                 }
                 
                 break;
@@ -478,7 +477,7 @@ static void msg_exchange_task(){
                     for(uint8_t i = 0; i < getCashedPacketCnt(); i++){                                      // try to decode all packets from cash
                         native_data_t* decCashPckt = (native_data_t*) calloc(1, sizeof(native_data_t));     // allocate memory for decoded native Packet (persistent in packet pool)
                         assert(decCashPckt != NULL);
-                        if( boDecodePacketFromCash(decCashPckt) ){                                          // if one was successful
+                        if( boDecodePacketFromCash(decCashPckt) ){                                          // if decoding from cash was successful
                             PoolElem_t * newCashElem = xPacketPoolAdd(decCashPckt);                         // add decoded packet to packet pool
                             vTagPacketAsDecoded(newCashElem);                                               // tag that the packet as successfully decoded
                             decode_cnt++;                                                                   // count successful coding
@@ -486,13 +485,9 @@ static void msg_exchange_task(){
                     }
                 }
                 
-                coded_receive_cnt++;
-                if(coded_receive_cnt == getPeerCount()-1){                        // check if coding round is over
-                    if (xPacketPoolGetDecodeCnt() >= REPORT_PACKT_MIN_SIZE){    // send reception report for every REPORT_PACKT_MIN_SIZE successfully decoded packet
-                        vDeletePacketsLastReceptRep();                          // delete packets which where sent in previous reception report
-                        send_reception_report(s_relay_address);                 // create and send reception report
-                    }
-                    coded_receive_cnt = 0;
+                if (xPacketPoolGetDecodeCnt() >= REPORT_PACKT_MIN_SIZE){    // send reception report for every REPORT_PACKT_MIN_SIZE successfully decoded packet
+                    vGarbageCollectInRecepRep();                            // delete packets which where sent in previous reception report
+                    send_reception_report(s_relay_address);                 // create and send reception report
                 }
                 
                 break;

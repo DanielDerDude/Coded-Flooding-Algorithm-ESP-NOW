@@ -8,7 +8,7 @@
 #define BRADCAST_COUNT_ESTIMATE     (CONFIG_NEIGHBOR_DETECTION_DURATION / CONFIG_TIMESTAMP_SEND_DELAY)
 
 #define BLOOM_ERROR_RATE                        0.01    // estimated false positive rate of bloom fitlers used in  reception reports and virtual queue query
-#define VIRTUAL_QUEUES_SIZE                     30      // size of output queue and all virtual queues
+#define VIRTUAL_QUEUES_SIZE                     30      // size of all virtual queues
 #define ACK_QUEUE_SIZE          MAX_PACKETS_IN_POOL
 
 // offset type
@@ -39,7 +39,8 @@ typedef struct ListHandle {
     xPeerElem_t* pxHead;                         // points to first peer Elem in list
     xPeerElem_t* pxTail;                         // points to last peer Elem in list
     struct xPeerElem* pxPrio;                    // coding iterator points to prioritised peer in coding round - changes in round robin fashing for each coding round
-    QueueHandle_t onc_queue;                     // opportunistic cash queue for packets which where not decoded 
+    QueueHandle_t onc_queue;                     // opportunistic cash queue for packets which where not decoded
+    QueueHandle_t retrans_queue;                 // queue for retransmissions - this is prioretised when coding
 } PeerListHandle_t;
 
 static PeerListHandle_t* list;
@@ -122,8 +123,7 @@ void vInitPeerList() {
     list->pxTail = NULL;
     
     list->onc_queue = xQueueCreate(VIRTUAL_QUEUES_SIZE, sizeof(onc_data_t*));
-
-    return;
+    list->retrans_queue = xQueueCreate(ACK_QUEUE_SIZE, sizeof(uint16_t));
 }
 
 // deletes the peer list and frees theallocated memory
@@ -141,6 +141,8 @@ void vDeletePeerList(){
         current = next;
     }
     vQueueDelete(list->onc_queue);
+    vQueueDelete(list->retrans_queue);
+
     memset(&list, 0, sizeof(list));
 }
 
@@ -300,7 +302,7 @@ bool boAllPeersSentReports(){
     if (ret){                                                                                       // if all where set then go through list again and deassert flag
         for (xPeerElem_t* ListElem = list->pxHead; ListElem != NULL; ListElem = ListElem->pxNext) ListElem->has_sent_report = false;
     }
-    
+
     return ret;
 }
 
@@ -313,37 +315,37 @@ bool boPacketInReport(bloom_t* recep_rep, uint16_t seq_num){
     return ret == 1;
 }
 
-// parses the tagged packets in pool and checks if every peer received his encoded packets - tags packets which where acked as "in reception report"
-void vCheckForRecommissions(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* recep_rep){
+// parses reception report of a peer and 
+void vCheckForRetransmissions(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t* recep_rep){
     assert(list != NULL);
     assert(list->pxHead != NULL);
     assert(recep_rep != NULL);
     
-    uint8_t resend_cnt = 0;
     xPeerElem_t* ListElem = xFindElem(mac_addr);    // list entry of peer who just send his report
     assert(ListElem != NULL);
     ListElem->has_sent_report = true;               // set flag that this peer has sent his report
 
     uint16_t ack_seqnum = 0;
     uint8_t ack_cnt = uxQueueMessagesWaiting(ListElem->ack_queue);
-    for(uint8_t i = 0; i <ack_cnt; i++){                                        // check every sequence number in ack queue
+    for(uint8_t i = 0; i < ack_cnt; i++){                                        // check every sequence number in ack queue
         if( xQueueReceive(ListElem->ack_queue, &ack_seqnum, 0) == pdTRUE ){     // get sequence number from ack queue
             PoolElem_t* PoolElem = xPacketPoolFindElem(ack_seqnum);             // look pool element up from packet pool
-            assert(PoolElem != NULL);
+            if (PoolElem == NULL) continue;
             if (boPacketInReport(recep_rep, ack_seqnum)){                       // if packet in reception report
                 vTagPacketInPeport(PoolElem);                                   // tag element as "in reception report" in packet pool
             }else{
                 BaseType_t ret;
-                ret = xQueueSend(ListElem->virtual_queue, &ack_seqnum, 0);      // place unacknowledged packet seqnum manually back into virtual queue
-                assert(ret == pdTRUE);
-                ret = xQueueSend(ListElem->ack_queue, &ack_seqnum, 0);           // place unacknowledged sequence queue back into ack queue
+                ret = xQueueSend(ListElem->ack_queue, &ack_seqnum, 0);          // place unacknowledged sequence queue back into ack queue
                 assert(ret == pdTRUE);
                 vTagPacketUntouched(PoolElem);                                  // remove existing tag in packet pool so it wont be garbage collected
-                resend_cnt++;
             }
         }
     }
-    
+}
+
+// garbage collect all packets from packet pool and pushes all packets that have not been acknowledged by all peers back into coding rotation
+void vScheduleRetransmissions(){
+    uint8_t resend_cnt = xGrgCollectAndRetransmit(getPeerCount()-1, list->retrans_queue);
     if (resend_cnt != 0) ESP_LOGE(TAG_POOL, "Scheduled %d retransmissions", resend_cnt);
     else                 ESP_LOGE(TAG_POOL, "No retransmissions scheduled");
 }
@@ -364,7 +366,6 @@ void vRefreshAckQueues(uint16_t seq_num, const uint8_t mac_addr[ESP_NOW_ETH_ALEN
         ListElem = ListElem->pxNext;
     }
 }
-
 
 // serializes a reception report as bloom filter into a byte stream
 // already adds the packet type and crc - returns pointer to bytestream and writes size into ret_size
@@ -471,17 +472,30 @@ bool boGenerateCodedPaket(onc_data_t* enc_pckt){                                
 
     if (0 == uxQueueMessagesWaiting(list->pxPrio->virtual_queue)) return false;               // if the prioritised peer of the current coding round has not sent his native packet yet
 
-    // find availabvle packet from virtual queue except of coding pointer
+    // find available packet in virtual queues to code together with virtual queue of prioritised peer
     xPeerElem_t* PeerIt = (list->pxPrio->pxNext == NULL) ? list->pxHead : list->pxPrio->pxNext;     // peer iterator points to neighbor next to coidng pointer - or head if coding pointer points to last peer in list
     while(PeerIt != list->pxPrio){      	                                                            // find available packet of current coding round to code together with the packet pointet to by coding pointer   
-        if (PeerIt->virtHeadRound == list->pxPrio->virtHeadRound){                                // and packet of virtual queue head is in the same coding round  
+        // first check packets in retransmission queue
+        if (xQueueReceive(list->retrans_queue, &seqnum, 0) == pdTRUE){                  // proritise retransmissions
+            native_data_t* pckt = xPacketPoolGetPacket(seqnum);                         // look up packet with the sequence number
+            if (pckt == NULL) continue;                                                 // assume packet was already retransmitted
+            memcpy(enc_pckt->encoded_data, pckt, sizeof(native_data_t));                // copy packet into encoded packet (XORing with zero is always just copying)
+            id_buff[pckt_cnt] = seqnum;                                                 // add sequence number of native packet to packet id list of onc packet 
+            pckt_cnt++;                                                                 // increase seqnum counter (redundant I know since only two packets will be encoded)
+
+            char temp[7];
+            sprintf(temp, "%5d ", seqnum);                                              // save string of packet id in string list for later logging
+            strcat(str_buff, temp);
+            break;                                                                      // break while loop since next packet has been found
+        // then the other virtual queues
+        }else if (PeerIt->virtHeadRound == list->pxPrio->virtHeadRound){                            // and packet of virtual queue head is in the same coding round  
             if (xQueueReceive(PeerIt->virtual_queue, &seqnum, 0) == pdTRUE){                        // can retreive sequence number from virtual queue
                 PeerIt->virtHeadRound = !PeerIt->virtHeadRound;                                     // switch round identifier
                 native_data_t* pckt = xPacketPoolGetPacket(seqnum);                         // look up packet with the sequence number
                 if(pckt == NULL){
-                    ESP_LOGE("YOYOYO", "seqnum %d", seqnum);
-                    assert(1 == 0);
+                    ESP_LOGE("TESTEST", "seqnum %d", seqnum);
                 }
+                assert(pckt != NULL);
                 memcpy(enc_pckt->encoded_data, pckt, sizeof(native_data_t));                // copy packet into encoded packet (XORing with zero is always just copying)
                 id_buff[pckt_cnt] = seqnum;                                                 // add sequence number of native packet to packet id list of onc packet 
                 pckt_cnt++;                                                                 // increase seqnum counter (redundant I know since only two packets will be encoded)
@@ -532,7 +546,6 @@ bool boGenerateCodedPaket(onc_data_t* enc_pckt){                                
 
     return enc_pckt;
 }
-
 
 // returns true if decoding was successfull and writes decoded packet into delPckt
 bool boDecodePacket(native_data_t* decPckt, onc_data_t* encPckt){
@@ -613,6 +626,7 @@ uint8_t getCashedPacketCnt(){
     return uxQueueMessagesWaiting(list->onc_queue);
 }
 
+// returns true if decoding from cash was successfull and writes decoded packet into delPckt
 bool boDecodePacketFromCash(native_data_t* decPckt){
 
     onc_data_t* encPckt = NULL;
