@@ -219,7 +219,7 @@ static void IRAM_ATTR espnow_recv_cb(const esp_now_recv_info_t *recv_info, const
     recv_cb->data_len = len;
 
     if (xQueueSend(espnow_event_queue, &evt, ESPNOW_MAXDELAY) != pdTRUE) {    // place event into queue
-        ESP_LOGW("recv_cb", "Send receive queue fail");
+        ESP_LOGW("recv_cb", "Event queue full");
         free(recv_cb->data);
     }
 }
@@ -243,7 +243,7 @@ static void IRAM_ATTR cycle_timer_isr(void* arg){
 
         case MESSAGE_EXCHANGE:
         {
-            ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, 1000));  // start timer for shutdown cycle
+            ESP_ERROR_CHECK( esp_timer_start_once(cycle_timer_handle, 10000));  // start timer for shutdown cycle
             break;
         }
 
@@ -606,18 +606,12 @@ static void IRAM_ATTR shutdown_task(void* arg){
     printf("\n");
     ESP_LOGE("shutdown", "initiating shutdown task");
 
-    // Delete all Tasks
-    if(network_reset_task_handle      != NULL) vTaskDelete(network_reset_task_handle);
-    if(network_sync_task_handle       != NULL) vTaskDelete(network_sync_task_handle);
-    if(neighbor_detection_task_handle != NULL) vTaskDelete(neighbor_detection_task_handle);
-    if(msg_exchange_task_handle       != NULL) vTaskDelete(msg_exchange_task_handle);
-    if(shutdown_task_handle           != NULL) vTaskDelete(shutdown_task_handle);
-
     vDeletePeerList();          // delete peer list
     vDeletePacketPool();        // delete packet pool
     espnow_deinit();            // shutdown network related stuff
 
     ESP_LOGE("shutdown", "shutdown finisehd");
+    vTaskDelete(NULL);
 }
 
 static void IRAM_ATTR network_sync_task(void* arg){
