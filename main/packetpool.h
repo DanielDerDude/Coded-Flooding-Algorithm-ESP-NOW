@@ -3,7 +3,7 @@
 #include "includes.h"
 #endif
 
-#define MAX_PACKETS_IN_POOL           151      // maximum packets to be stored in the packet pool - NEEDS TO BE PRIME NUMBER for uniformly distribution 
+#define MAX_PACKETS_IN_POOL           251      // maximum packets to be stored in the packet pool - NEEDS TO BE PRIME NUMBER for uniformly distribution 
 #define HASH_SEED               0x9747b28c     // seed for murmurhash2      
 
 enum {
