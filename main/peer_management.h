@@ -346,7 +346,7 @@ void vCheckForRetransmissions(const uint8_t mac_addr[ESP_NOW_ETH_ALEN], bloom_t*
 // garbage collect all packets from packet pool and pushes all packets that have not been acknowledged by all peers back into coding rotation
 void vScheduleRetransmissions(){
     uint8_t resend_cnt = xGrgCollectAndRetransmit(getPeerCount()-1, list->retrans_queue);
-    if (resend_cnt != 0) ESP_LOGE(TAG_POOL, "Scheduled %d retransmissions", resend_cnt);
+    if (resend_cnt != 0) ESP_LOGE(TAG_POOL, "Number of retransmissions: %d", resend_cnt);
     else                 ESP_LOGE(TAG_POOL, "No retransmissions scheduled");
 }
 
@@ -470,15 +470,17 @@ bool boGenerateCodedPaket(onc_data_t* enc_pckt){                                
 
     FIND_PACKET:                             // label to jump back to
 
-    if (0 == uxQueueMessagesWaiting(list->pxPrio->virtual_queue)) return false;               // if the prioritised peer of the current coding round has not sent his native packet yet
+    bool prio_avail = (0 != uxQueueMessagesWaiting(list->pxPrio->virtual_queue));   // flag if prioretised peer has packet in virtual queue
+
+    if ( !prio_avail ) return false;                                                // return if prio virtual queue is empty
 
     // find available packet in virtual queues to code together with virtual queue of prioritised peer
     xPeerElem_t* PeerIt = (list->pxPrio->pxNext == NULL) ? list->pxHead : list->pxPrio->pxNext;     // peer iterator points to neighbor next to coidng pointer - or head if coding pointer points to last peer in list
-    while(PeerIt != list->pxPrio){      	                                                            // find available packet of current coding round to code together with the packet pointet to by coding pointer   
-        // first check packets in retransmission queue
-        if (xQueueReceive(list->retrans_queue, &seqnum, 0) == pdTRUE){                  // proritise retransmissions
-            native_data_t* pckt = xPacketPoolGetPacket(seqnum);                         // look up packet with the sequence number
-            if (pckt == NULL) continue;                                                 // assume packet was already retransmitted
+    while(PeerIt != list->pxPrio){      	                                                        // find available packet of current coding round to code together with the packet pointet to by coding pointer   
+        
+        if (xQueueReceive(list->retrans_queue, &seqnum, 0) == pdTRUE){                              // prioritise retransmission queue over peer iterator
+            native_data_t* pckt = xPacketPoolGetPacket(seqnum);                                     // look up packet with the sequence number
+            assert(pckt != NULL);
             memcpy(enc_pckt->encoded_data, pckt, sizeof(native_data_t));                // copy packet into encoded packet (XORing with zero is always just copying)
             id_buff[pckt_cnt] = seqnum;                                                 // add sequence number of native packet to packet id list of onc packet 
             pckt_cnt++;                                                                 // increase seqnum counter (redundant I know since only two packets will be encoded)
@@ -487,14 +489,14 @@ bool boGenerateCodedPaket(onc_data_t* enc_pckt){                                
             sprintf(temp, "%5d ", seqnum);                                              // save string of packet id in string list for later logging
             strcat(str_buff, temp);
             break;                                                                      // break while loop since next packet has been found
-        // then the other virtual queues
-        }else if (PeerIt->virtHeadRound == list->pxPrio->virtHeadRound){                            // and packet of virtual queue head is in the same coding round  
+        
+        }
+        
+        if (PeerIt->virtHeadRound == list->pxPrio->virtHeadRound){                            // and packet of virtual queue head is in the same coding round  
+            
             if (xQueueReceive(PeerIt->virtual_queue, &seqnum, 0) == pdTRUE){                        // can retreive sequence number from virtual queue
                 PeerIt->virtHeadRound = !PeerIt->virtHeadRound;                                     // switch round identifier
                 native_data_t* pckt = xPacketPoolGetPacket(seqnum);                         // look up packet with the sequence number
-                if(pckt == NULL){
-                    ESP_LOGE("TESTEST", "seqnum %d", seqnum);
-                }
                 assert(pckt != NULL);
                 memcpy(enc_pckt->encoded_data, pckt, sizeof(native_data_t));                // copy packet into encoded packet (XORing with zero is always just copying)
                 id_buff[pckt_cnt] = seqnum;                                                 // add sequence number of native packet to packet id list of onc packet 
@@ -505,24 +507,29 @@ bool boGenerateCodedPaket(onc_data_t* enc_pckt){                                
                 strcat(str_buff, temp);
                 break;                                                                      // break while loop since next packet has been found
             }
+
         }else{
             wrong_round_count++;
         }
         PeerIt = (PeerIt->pxNext == NULL) ? list->pxHead : PeerIt->pxNext;      // peer iterator points to next peer (wrap around if end of list is reached)
     }
-    if (PeerIt == list->pxPrio){                                                        // no packet to encode has been found because either  
+    
+    if (PeerIt == list->pxPrio){                                                            // no packet to encode has been found because either  
         if(wrong_round_count == getPeerCount()-1){                                          // coding round is over
-            assert( xQueueReceive(list->pxPrio->virtual_queue, &seqnum, 0) == pdTRUE);              // delete sequence number from virtual queue at coding pointer
-            list->pxPrio->virtHeadRound = !list->pxPrio->virtHeadRound;                             // switch to label of head for next round
-            list->pxPrio = (list->pxPrio->pxNext == NULL) ? list->pxHead : list->pxPrio->pxNext;    // shift priority to next peer
-            goto FIND_PACKET;                                                                       // try to find a packet fro the new prio with new coding round again
+            if( xQueueReceive(list->pxPrio->virtual_queue, &seqnum, 0) == pdTRUE){
+                list->pxPrio->virtHeadRound = !list->pxPrio->virtHeadRound;                             // switch to label of head for next round
+                list->pxPrio = (list->pxPrio->pxNext == NULL) ? list->pxHead : list->pxPrio->pxNext;    // shift priority to next peer
+                goto FIND_PACKET;                                                                       // try to find a packet fro the new prio with new coding round again
+            }
         }else{                                                                          // packet of current coding round is still missing
             return false;
         }
     }
 
     // now XOR packet head of prio peer into encoded packet
-    assert(xQueuePeek(list->pxPrio->virtual_queue, &seqnum, 0) == pdTRUE);    // get sequence number from virtual queue of peer which coding pointer points (do not delete)
+    
+    assert(xQueuePeek(list->pxPrio->virtual_queue, &seqnum, 0) == pdTRUE);    // get sequence number from virtual queue of peer which coding pointer points (do not delete)   
+    
     native_data_t* pckt = xPacketPoolGetPacket(seqnum);                         // look up packet with sequence number of vitual queue of coding pointer peer
     assert(pckt != NULL);
     
