@@ -66,7 +66,7 @@ static int8_t bloom_check_add(struct bloom * bloom, const void * buffer, uint32_
 }
 
 
-int8_t bloom_init2(struct bloom * bloom, uint8_t entries, double error)
+int8_t bloom_init2(struct bloom * bloom, uint8_t entries, float error)
 {
   memset(bloom, 0, sizeof(struct bloom));
 
@@ -77,12 +77,12 @@ int8_t bloom_init2(struct bloom * bloom, uint8_t entries, double error)
   bloom->entries = entries;
   bloom->error = error;
 
-  double num = -log(bloom->error);
-  double denom = 0.480453013918201; // ln(2)^2
+  float num = -log(bloom->error);
+  float denom = 0.480453013918201; // ln(2)^2
   bloom->bpe = (num / denom);
 
-  long double dentries = (long double)entries;
-  long double allbits = dentries * bloom->bpe;
+  float dentries = (float)entries;
+  float allbits = dentries * bloom->bpe;
   bloom->bits = (uint16_t)allbits;
 
   if (bloom->bits % 8) {
