@@ -371,7 +371,7 @@ void vRefreshAckQueues(uint16_t seq_num, const uint8_t mac_addr[ESP_NOW_ETH_ALEN
 // already adds the packet type and crc - returns pointer to bytestream and writes size into ret_size
 uint8_t* serialize_reception_report(bloom_t bloom, uint8_t* ret_size){
     assert(bloom.ready != 0);   
-
+    
     uint8_t pckt_type = RECEP_REPORT;                                                                   // pacekt type
 
     uint16_t size = sizeof(pckt_type) + sizeof(bloom)-sizeof(bloom.bf) + bloom.bytes + sizeof(uint16_t);        // define and check size of bytestream 
@@ -396,18 +396,17 @@ bloom_t parse_serialized_recep_report(uint8_t* bytestream, uint8_t size){
 
     bloom_t bloom;                                                                  // init empty bloom struct
     uint8_t* bloomheader = bytestream + 1;                                          // pointing to bloom header in bytestream 
-    uint8_t* bloomfilter = bytestream + 1 + sizeof(bloom) - sizeof(bloom.bf);    // pointing to bloom filter in bytestream
+    uint8_t* bloomfilter = bytestream + 1 + sizeof(bloom) - sizeof(bloom.bf);       // pointing to bloom filter in bytestream
 
-    memcpy(&bloom, bloomheader, sizeof(bloom) - sizeof(bloom.bf));              // copy bloom header into struct
-    bloom.bf = (uint8_t*)calloc(bloom.bytes, 1);                                // allocate memory for bloomfilter
+    memcpy(&bloom, bloomheader, sizeof(bloom) - sizeof(bloom.bf));                  // copy bloom header into struct
+    bloom.bf = (uint8_t*)calloc(bloom.bytes, 1);                                    // allocate memory for bloomfilter
     assert(bloom.bf != NULL);
-    memcpy(bloom.bf, bloomfilter, bloom.bytes);                                 // copy bloom filter from bytestream into allocated memory
+    memcpy(bloom.bf, bloomfilter, bloom.bytes);                                     // copy bloom filter from bytestream into allocated memory
 
     uint16_t crc_recv;
-    memcpy(&crc_recv, &bytestream[size - sizeof(uint16_t)], sizeof(uint16_t));  // extract crc from bytestream
-
+    memcpy(&crc_recv, &bytestream[size - sizeof(uint16_t)], sizeof(uint16_t));      // extract crc from bytestream
     uint16_t crc_calc = esp_crc16_le(UINT16_MAX, bytestream, size-sizeof(uint16_t));    // calculate crc16 over bloomfilter
-    
+
     if (crc_calc != crc_recv){                                                          // compare checksums
         ESP_LOGE(TAG_RECREP, "Parsing reception report failed - invalid crc!");
         ESP_LOGE(TAG_RECREP, "crc_calc = %d", crc_calc);
@@ -506,6 +505,8 @@ bool boGenerateCodedPaket(onc_data_t* enc_pckt){                                
                 sprintf(temp, "%5d ", seqnum);                                              // save string of packet id in string list for later logging
                 strcat(str_buff, temp);
                 break;                                                                      // break while loop since next packet has been found
+            }else{
+                return false;
             }
 
         }else{
