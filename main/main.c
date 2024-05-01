@@ -423,12 +423,14 @@ static void msg_exchange_task(){
             }
             case SEND_ONC_DATA:
             {
-                ESP_LOGE(TAG4, "Broadcasted onc data");
+                
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 if (send_cb->status != ESP_NOW_SEND_SUCCESS){
                     ESP_LOGE(TAG4, "Broadcasting onc data failed");   
+                }else{
+                    ESP_LOGE(TAG4, "Broadcasted onc data");
                 }
-                break;                      // do nothing - even if send was unsuccessful on next reception of native packet a new coding opportunity is found
+                break;                      // do nothing - even if send was unsuccessful they will be not acknowledged and retransmitted
             }
             case RECV_RECEPREP:
             {
@@ -533,7 +535,7 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
         if (getCycle() != NEIGHBOR_DETECTION) break; 
         
         switch (evt.id) {
-            case SEND_TIMESTAMP:
+            case SEND_TIMESTAMP:        // timestamp was send
             {
                 espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
                 if (send_cb->status == ESP_NOW_SEND_SUCCESS){                                   // if broadcast timestamp was successfull
@@ -545,12 +547,12 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                         xQueueOverwrite(avg_send_offset_queue, &avg_send_offset);
                     }
                 }
-                if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval 
+                if (CONFIG_TIMESTAMP_SEND_DELAY > 0) vTaskDelay(CONFIG_TIMESTAMP_SEND_DELAY/portTICK_PERIOD_MS);    // wait for some interval
                 broadcast_timestamp(broadcasts_sent);                                                               // broadcast another timestamp
                 
                 break;
             }
-            case RECV_TIMESTAMP:
+            case RECV_TIMESTAMP:        // timestamp was received
             {
                 espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
                 timing_data_t *recv_data = (timing_data_t *)(recv_cb->data);
@@ -562,7 +564,7 @@ static void IRAM_ATTR neighbor_detection_task(void* arg){
                 }else{
                     ESP_LOGE(TAG1, "Receive offset missing!");
                 }
-                
+
                 // compute transmission time and systime offset to peer 
                 int64_t time_TX = recv_data->timestamp;
                 int64_t time_RX = evt.timestamp;
@@ -647,8 +649,8 @@ static void IRAM_ATTR network_sync_task(void* arg){
     uint8_t peer_count = getPeerCount();
     getMaxOffsetAddr(s_relay_address);
 
-    if (peer_count != 0){                                                     // check if any peers have been detected
-        max_offset = max_offset - (avg_send_offset/2 -8);                     // extract max offset, take average send offset in to account
+    if (peer_count != 0){                                                       // check if any peers have been detected
+        max_offset = max_offset - avg_send_offset; //- avg_recv_offset;         // extract max offset, take average send offset (avg_recv_offset is very inacurate and transmission delay is in sub microsecond range)
     }
     
     // compute delay to start msg exchange in sync with the master time (oldest node);
